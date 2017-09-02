@@ -3,7 +3,6 @@ module RFC.Redis
   , ConnectionPool
   , HasRedis(..)
   , RedisException(..)
-  , ConnectionPool
   , get
   ) where
 
