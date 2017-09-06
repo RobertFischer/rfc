@@ -45,10 +45,13 @@ library
                      , postgresql-simple
                      , resource-pool
                      , hedis
+                     , async
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
                      , RFC.String
+                     , RFC.Concurrent
+                     , RFC.Throttle
 
 source-repository head
   type:     git

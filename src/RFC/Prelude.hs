@@ -6,6 +6,7 @@ module RFC.Prelude
   , module Data.String.Conversions
   ) where
 
+import Prelude ()
 import ClassyPrelude hiding (Handler, unpack)
 import Data.Char (isLower, isUpper)
 import Data.UUID.Types hiding (null, fromString)
