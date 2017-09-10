@@ -1,6 +1,8 @@
 module RFC.Json
 ( jsonOptions
 , deriveJSON
+, FromJSON
+, ToJSON
 ) where
 
 import RFC.Prelude
@@ -16,11 +18,11 @@ jsonOptions = defaultOptions
     }
   where
     flm [] = []
-    flm (c:[]) = [c]
-    flm (c:cs)
-      | isLower c =
-        case flm cs of
-          [] -> (c:cs)
-          result -> result
-      | otherwise = (charToLower c):cs
+    flm (x:[]) = [x]
+    flm (x:xs)
+      | charIsLower x =
+          case flm xs of
+            [] -> (x:xs)
+            result -> result
+      | otherwise = (charToLower x):xs
 

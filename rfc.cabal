@@ -46,12 +46,18 @@ library
                      , resource-pool
                      , hedis
                      , async
+                     , simple-logger
+                     , http-client-tls
+                     , wreq
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
                      , RFC.String
                      , RFC.Concurrent
                      , RFC.Throttle
+                     , RFC.Json
+                     , RFC.Log
+                     , RFC.HTTP.Client
 
 source-repository head
   type:     git

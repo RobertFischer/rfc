@@ -1,13 +1,21 @@
 module RFC.Psql
   ( module Database.PostgreSQL.Simple
+  , module Database.PostgreSQL.Simple.FromField
+  , module Database.PostgreSQL.Simple.FromRow
+  , module Database.PostgreSQL.Simple.ToField
+  , module Database.PostgreSQL.Simple.ToRow
   , module RFC.Psql
   ) where
 
 import RFC.Prelude
 import RFC.String
-import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo)
+import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo, FromRow, query, query_, execute, execute_)
 import qualified Database.PostgreSQL.Simple as Psql
 import Data.Pool
+import Database.PostgreSQL.Simple.FromField
+import Database.PostgreSQL.Simple.FromRow
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.ToRow
 import Control.Monad.Trans.Control
 
 type ConnectionPool = Pool Connection

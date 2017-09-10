@@ -37,9 +37,13 @@ resolver: lts-9.3
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - .
+#- location: https://hackage.haskell.org/package/simple-logger-0.0.4/simple-logger-0.0.4.tar.gz
+#  extra-dep: true
+
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps: 
+  - simple-logger-0.0.4
 
 # Override default flag values for local packages and extra-deps
 flags: {}
