@@ -31,6 +31,7 @@ library
                      , FlexibleContexts
                      , TypeSynonymInstances
                      , FlexibleInstances
+                     , DeriveGeneric
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant
@@ -49,6 +50,17 @@ library
                      , simple-logger
                      , http-client-tls
                      , wreq
+                     , servant-docs
+                     , servant-pandoc
+                     , pandoc
+                     , data-default
+                     , servant-blaze
+                     , wai-extra
+                     , temporary
+                     , blaze-html
+                     , servant-swagger
+                     , swagger2
+                     , markdown
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
@@ -59,6 +71,9 @@ library
                      , RFC.Log
                      , RFC.HTTP.Client
                      , RFC.Servant
+                     , RFC.Servant.ApiDoc
+                     , RFC.Wai
+                     , RFC.Env
 
 source-repository head
   type:     git

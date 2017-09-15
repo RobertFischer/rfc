@@ -5,6 +5,10 @@ module RFC.Servant
   , IdAnd(..)
   , ResourceDefinition(..)
   , module Servant
+  , module Servant.Docs
+  , module Servant.HTML.Blaze
+  , module Text.Blaze.Html
+  , module Data.Swagger
   ) where
 
 import RFC.Prelude
@@ -19,6 +23,10 @@ import Data.HashMap.Lazy as HashMap
 import Data.UUID.Types as UUID
 import Data.Map as Map
 import Data.List as List hiding ((++))
+import Servant.Docs hiding (API)
+import Servant.HTML.Blaze (HTML)
+import Text.Blaze.Html
+import Data.Swagger (Swagger, ToSchema)
 
 type ApiCtx = ReaderT Psql.ConnectionPool
   ( ReaderT Redis.ConnectionPool
@@ -42,7 +50,9 @@ apiCtxToHandler redisPool psqlPool = NT toHandler
 
 -- |Represents something which has an ID.
 newtype IdAnd a = IdAnd (UUID, a)
-  deriving (Eq, Ord, Read, Show)
+  deriving (Eq, Ord, Read, Show, Generic, Typeable)
+
+instance (ToSchema a) => ToSchema (IdAnd a)
 
 valuesToIdAnd :: UUID -> a -> IdAnd a
 valuesToIdAnd id a = IdAnd (id, a)
