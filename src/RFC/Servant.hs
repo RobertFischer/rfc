@@ -4,6 +4,7 @@ module RFC.Servant
   , idAndsToMap
   , IdAnd(..)
   , ResourceDefinition(..)
+  , RestServerAPI
   , module Servant
   , module Servant.Docs
   , module Servant.HTML.Blaze
@@ -94,11 +95,20 @@ instance (FromRow UUID) where
 instance (ToRow UUID) where
   toRow uuid = [toField (toString uuid)]
 
+type FetchAllRestAPI a = ApiCtx (Map UUID a)
+type FetchRestAPI a = UUID -> ApiCtx (IdAnd a)
+type CreateRestAPI a = a -> ApiCtx (IdAnd a)
+
+type RestServerAPI a =
+  (FetchAllRestAPI a)
+  :<|> (FetchRestAPI a)
+  :<|> (CreateRestAPI a)
+
 class (FromJSON a, ToJSON a) => ResourceDefinition a where
-  restFetchAll :: ApiCtx (Map UUID a)
+  restFetchAll :: FetchAllRestAPI a
   restFetchAll = Map.fromList <$> List.map idAndToTuple <$> fetchAllResources
 
-  restFetch :: UUID -> ApiCtx (IdAnd a)
+  restFetch :: FetchRestAPI a
   restFetch uuid = do
     maybeResource <- fetchResource uuid
     case maybeResource of
@@ -108,16 +118,15 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
         }
       Just r -> return $ IdAnd (uuid, r)
 
-  restCreate :: a -> ApiCtx (IdAnd a)
+  restCreate :: CreateRestAPI a
   restCreate a = do
     id <- createResource a
     restFetch id
 
-  restServer :: (ApiCtx (Map UUID a))
-                :<|> (UUID -> ApiCtx (IdAnd a))
-                :<|> (a -> ApiCtx (IdAnd a))
+  restServer :: RestServerAPI a
   restServer = restFetchAll :<|> restFetch :<|> restCreate
 
   fetchResource :: UUID -> ApiCtx (Maybe a)
   fetchAllResources :: ApiCtx [IdAnd a]
   createResource :: a -> ApiCtx UUID
+
