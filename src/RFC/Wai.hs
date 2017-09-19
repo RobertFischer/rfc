@@ -3,7 +3,7 @@ module RFC.Wai
   ) where
 
 import RFC.Prelude
-import RFC.Env (checkDevelopment)
+import RFC.Env (isDevelopment)
 import Network.Wai
 import Network.Wai.Middleware.AcceptOverride
 import Network.Wai.Middleware.Approot (envFallback)
@@ -16,7 +16,7 @@ import System.IO.Temp (getCanonicalTemporaryDirectory, createTempDirectory)
 
 defaultMiddleware :: IO Middleware
 defaultMiddleware = do
-  isDev <- checkDevelopment
+  isDev <- isDevelopment
   approot <- envFallback
   tmpDir <- getCanonicalTemporaryDirectory
   gzipDir <- createTempDirectory tmpDir "wai-gzip-middleware"
