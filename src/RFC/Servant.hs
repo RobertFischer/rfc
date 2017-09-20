@@ -4,7 +4,8 @@ module RFC.Servant
   , idAndsToMap
   , IdAnd(..)
   , ResourceDefinition(..)
-  , RestServerAPI
+  , ServerAPI
+  , ServerImpl
   , module Servant
   , module Servant.Docs
   , module Servant.HTML.Blaze
@@ -16,7 +17,7 @@ import RFC.Prelude
 import Servant
 import qualified RFC.Redis as Redis
 import qualified RFC.Psql as Psql
-import RFC.Json
+import RFC.JSON
 import RFC.Psql
 import Data.Aeson as JSON
 import Data.Aeson.Types as JSON
@@ -95,20 +96,28 @@ instance (FromRow UUID) where
 instance (ToRow UUID) where
   toRow uuid = [toField (toString uuid)]
 
-type FetchAllRestAPI a = ApiCtx (Map UUID a)
-type FetchRestAPI a = UUID -> ApiCtx (IdAnd a)
-type CreateRestAPI a = a -> ApiCtx (IdAnd a)
+type FetchAllImpl a = ApiCtx (Map UUID a)
+type FetchAllAPI a = Get '[JSON] (Map UUID a)
+type FetchImpl a = UUID -> ApiCtx (IdAnd a)
+type FetchAPI a = Capture "id" UUID :> Get '[JSON] (IdAnd a)
+type CreateImpl a = a -> ApiCtx (IdAnd a)
+type CreateAPI a = ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
 
-type RestServerAPI a =
-  (FetchAllRestAPI a)
-  :<|> (FetchRestAPI a)
-  :<|> (CreateRestAPI a)
+type ServerImpl a =
+  (FetchAllImpl a)
+  :<|> (FetchImpl a)
+  :<|> (CreateImpl a)
+type ServerAPI a =
+  (FetchAllAPI a)
+  :<|> (FetchAPI a)
+  :<|> (CreateAPI a)
+
 
 class (FromJSON a, ToJSON a) => ResourceDefinition a where
-  restFetchAll :: FetchAllRestAPI a
+  restFetchAll :: FetchAllImpl a
   restFetchAll = Map.fromList <$> List.map idAndToTuple <$> fetchAllResources
 
-  restFetch :: FetchRestAPI a
+  restFetch :: FetchImpl a
   restFetch uuid = do
     maybeResource <- fetchResource uuid
     case maybeResource of
@@ -116,17 +125,17 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
         { errReasonPhrase = "No resource found for id"
         , errBody = cs $ "Could not find a resource with UUID: " ++ show uuid
         }
-      Just r -> return $ IdAnd (uuid, r)
+      Just r -> return r
 
-  restCreate :: CreateRestAPI a
+  restCreate :: CreateImpl a
   restCreate a = do
-    id <- createResource a
+    (IdAnd (id,_)) <- createResource a
     restFetch id
 
-  restServer :: RestServerAPI a
+  restServer :: ServerImpl a
   restServer = restFetchAll :<|> restFetch :<|> restCreate
 
-  fetchResource :: UUID -> ApiCtx (Maybe a)
+  fetchResource :: UUID -> ApiCtx (Maybe (IdAnd a))
   fetchAllResources :: ApiCtx [IdAnd a]
-  createResource :: a -> ApiCtx UUID
+  createResource :: a -> ApiCtx (IdAnd a)
 

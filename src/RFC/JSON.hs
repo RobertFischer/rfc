@@ -1,8 +1,10 @@
-module RFC.Json
+module RFC.JSON
 ( jsonOptions
 , deriveJSON
-, FromJSON
-, ToJSON
+, FromJSON(..)
+, ToJSON(..)
+, eitherDecode
+, eitherDecode'
 ) where
 
 import RFC.Prelude

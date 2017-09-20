@@ -51,8 +51,6 @@ library
                      , http-client-tls
                      , wreq
                      , servant-docs
-                     , servant-pandoc
-                     , pandoc
                      , data-default
                      , servant-blaze
                      , wai-extra
@@ -61,19 +59,23 @@ library
                      , servant-swagger
                      , swagger2
                      , markdown
+                     , url
+                     , lens
+                     , http-types
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
                      , RFC.String
                      , RFC.Concurrent
                      , RFC.Throttle
-                     , RFC.Json
+                     , RFC.JSON
                      , RFC.Log
                      , RFC.HTTP.Client
                      , RFC.Servant
                      , RFC.Servant.ApiDoc
                      , RFC.Wai
                      , RFC.Env
+                     , RFC.Google.Places.NearbySearch
 
 source-repository head
   type:     git

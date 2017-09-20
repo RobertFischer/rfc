@@ -24,3 +24,10 @@ charIsLower = Char.isLower
 
 uniq :: (Eq a) => [a] -> [a]
 uniq = List.nub
+
+mapFst :: (a -> c) -> (a,b) -> (c,b)
+mapFst f (a,b) = (f a, b)
+
+mapSnd :: (b -> c) -> (a,b) -> (a,c)
+mapSnd f (a,b) = (a, f b)
+
