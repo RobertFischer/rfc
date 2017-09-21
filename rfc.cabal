@@ -62,6 +62,7 @@ library
                      , url
                      , lens
                      , http-types
+                     , exceptions
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis

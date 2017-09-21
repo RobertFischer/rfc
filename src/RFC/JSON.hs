@@ -4,7 +4,11 @@ module RFC.JSON
 , FromJSON(..)
 , ToJSON(..)
 , eitherDecode
+, decodeEither
 , eitherDecode'
+, decodeEither'
+, decodeOrDie
+, DecodeError
 ) where
 
 import RFC.Prelude
@@ -28,3 +32,18 @@ jsonOptions = defaultOptions
             result -> result
       | otherwise = (charToLower x):xs
 
+
+decodeEither :: (FromJSON a) => LazyByteString -> Either String a
+decodeEither = eitherDecode
+
+decodeEither' :: (FromJSON a) => LazyByteString -> Either String a
+decodeEither' = eitherDecode'
+
+newtype DecodeError = DecodeError (LazyByteString, String) deriving (Show,Eq,Ord,Generic,Typeable)
+instance Exception DecodeError
+
+decodeOrDie :: (FromJSON a, MonadThrow m) => LazyByteString -> m a
+decodeOrDie input =
+  case decodeEither' input of
+    Left err -> throwM $ DecodeError (input, err)
+    Right a -> return a
