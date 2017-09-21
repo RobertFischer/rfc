@@ -19,6 +19,7 @@ import qualified RFC.Redis as Redis
 import qualified RFC.Psql as Psql
 import RFC.JSON
 import RFC.Psql
+import RFC.HTTP.Client
 import Data.Aeson as JSON
 import Data.Aeson.Types as JSON
 import Data.HashMap.Lazy as HashMap
@@ -29,24 +30,32 @@ import Servant.Docs hiding (API)
 import Servant.HTML.Blaze (HTML)
 import Text.Blaze.Html
 import Data.Swagger (Swagger, ToSchema)
+import Network.Wreq.Session as Wreq
 
-type ApiCtx = ReaderT Psql.ConnectionPool
-  ( ReaderT Redis.ConnectionPool
-    Handler
-  )
+type ApiCtx =
+  ReaderT Wreq.Session
+    ( ReaderT Psql.ConnectionPool
+      ( ReaderT Redis.ConnectionPool
+        Handler
+      )
+    )
+
+instance HasAPIClient ApiCtx where
+  getAPIClient = ask
 
 instance Psql.HasPsql ApiCtx where
-  getPsqlPool = ask
+  getPsqlPool = lift ask
 
 instance Redis.HasRedis ApiCtx where
-  getRedisPool = lift ask
+  getRedisPool = lift $ lift ask
 
-apiCtxToHandler :: Redis.ConnectionPool -> Psql.ConnectionPool -> ApiCtx :~> Handler
-apiCtxToHandler redisPool psqlPool = NT toHandler
+apiCtxToHandler :: Wreq.Session -> Redis.ConnectionPool -> Psql.ConnectionPool -> ApiCtx :~> Handler
+apiCtxToHandler apiClient redisPool psqlPool = NT toHandler
   where
     toHandler :: forall a. ApiCtx a -> Handler a
-    toHandler a = withRedis $ withPsql a
+    toHandler a = withRedis $ withPsql $ withAPIClient a
       where
+        withAPIClient m = runReaderT m apiClient
         withRedis m = runReaderT m redisPool
         withPsql m = runReaderT m psqlPool
 
