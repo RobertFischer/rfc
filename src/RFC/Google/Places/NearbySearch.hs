@@ -81,13 +81,14 @@ paramsToPairs params =
 optionalParamToPair :: Params -> (Params -> Maybe String) -> String -> Maybe (String,String)
 optionalParamToPair param field paramName = (\paramVal -> (paramName, paramVal)) <$> field param
 
-paramsToUrl :: Params -> String
+paramsToUrl :: Params -> URL
 paramsToUrl params =
-    exportURL $ List.foldr fold endpoint $ paramsToPairs params
+    List.foldr fold endpoint $ paramsToPairs params
   where
     fold = flip add_param
 
-newtype Results = Results (String, [Result])
+type ResultsStatus = String
+newtype Results = Results (ResultsStatus, [Result])
 
 instance FromJSON Results where
   parseJSON = withObject "NearbySearch.Results" $ \topObj -> do
@@ -112,15 +113,5 @@ instance FromJSON Result where
     id <- topObj .: "place_id"
     return $ Result latLngLoc name id
 
-
-query :: Session -> Params -> IO (Either String Results)
-query session params = do
-  let url = paramsToUrl params
-  r <- get session url
-  let status = r ^. responseStatus
-  return $
-    if status ^. statusCode == 200
-    then
-      eitherDecode' $ r ^. responseBody
-    else
-      Left $ "Error retrieving url => " ++ (show status)
+query :: (HasAPIClient m) => Params -> m Results
+query = apiGet . paramsToUrl
