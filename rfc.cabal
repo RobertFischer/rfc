@@ -63,6 +63,8 @@ library
                      , lens
                      , http-types
                      , exceptions
+                     , http-api-data
+                     , time-units
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
@@ -72,6 +74,7 @@ library
                      , RFC.JSON
                      , RFC.Log
                      , RFC.HTTP.Client
+                     , RFC.HTTP.Types
                      , RFC.Servant
                      , RFC.Servant.ApiDoc
                      , RFC.Wai

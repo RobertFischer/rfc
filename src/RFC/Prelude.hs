@@ -5,16 +5,18 @@ module RFC.Prelude
   , module Data.String.Conversions
   , module GHC.Generics
   , module Text.Read
+  , module Data.Time.Units
   ) where
 
 import Prelude ()
-import ClassyPrelude hiding (Handler, unpack)
+import ClassyPrelude hiding (Handler, unpack, Day)
 import Data.Char as Char
 import Data.UUID.Types hiding (null, fromString)
 import Data.String.Conversions (cs, LazyByteString, StrictByteString, LazyText, StrictText)
 import GHC.Generics (Generic)
 import Data.List as List
 import Text.Read (Read, read)
+import Data.Time.Units
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
