@@ -9,6 +9,8 @@ module RFC.JSON
 , decodeEither'
 , decodeOrDie
 , DecodeError
+, Value(..)
+, encode
 ) where
 
 import RFC.Prelude

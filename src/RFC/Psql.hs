@@ -9,7 +9,7 @@ module RFC.Psql
 
 import RFC.Prelude
 import RFC.String
-import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo, FromRow, query, query_, execute, execute_)
+import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo, FromRow, query, query_, execute, execute_, Only(..), In(..), executeMany)
 import qualified Database.PostgreSQL.Simple as Psql
 import Data.Pool
 import Database.PostgreSQL.Simple.FromField

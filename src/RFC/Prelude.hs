@@ -33,3 +33,6 @@ mapFst f (a,b) = (f a, b)
 mapSnd :: (b -> c) -> (a,b) -> (a,c)
 mapSnd f (a,b) = (a, f b)
 
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x:_) = Just x

@@ -4,9 +4,7 @@ module RFC.HTTP.Client
   , BadStatusException
   , apiGet
   , module Network.Wreq.Session
-  , module Network.Wreq.Lens
   , module Network.URL
-  , module Control.Lens
   , module Network.HTTP.Types.Status
   ) where
 

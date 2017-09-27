@@ -1,5 +1,6 @@
 module RFC.Google.Places.NearbySearch
   ( module RFC.Google.Places.NearbySearch
+  , HasAPIClient
   ) where
 
 import Data.Aeson ((.:), (.:?), withObject)
