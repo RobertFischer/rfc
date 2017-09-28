@@ -13,6 +13,7 @@ import Network.Wai.Middleware.Jsonp
 import Network.Wai.Middleware.MethodOverridePost
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 import System.IO.Temp (getCanonicalTemporaryDirectory, createTempDirectory)
+import Network.Wai.Middleware.Cors (simpleCors)
 
 defaultMiddleware :: IO Middleware
 defaultMiddleware = do
@@ -21,6 +22,7 @@ defaultMiddleware = do
   tmpDir <- getCanonicalTemporaryDirectory
   gzipDir <- createTempDirectory tmpDir "wai-gzip-middleware"
   return $
+    simpleCors .
     autohead .
     acceptOverride .
     jsonp .

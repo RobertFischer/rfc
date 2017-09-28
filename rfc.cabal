@@ -65,6 +65,7 @@ library
                      , exceptions
                      , http-api-data
                      , time-units
+                     , wai-cors
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
