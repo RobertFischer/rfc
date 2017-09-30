@@ -13,7 +13,9 @@ import Network.Wai.Middleware.Jsonp
 import Network.Wai.Middleware.MethodOverridePost
 import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
 import System.IO.Temp (getCanonicalTemporaryDirectory, createTempDirectory)
-import Network.Wai.Middleware.Cors (simpleCors)
+import Network.Wai.Middleware.Cors
+import Network.HTTP.Types.Method
+import Network.HTTP.Types.Header
 
 defaultMiddleware :: IO Middleware
 defaultMiddleware = do
@@ -22,7 +24,7 @@ defaultMiddleware = do
   tmpDir <- getCanonicalTemporaryDirectory
   gzipDir <- createTempDirectory tmpDir "wai-gzip-middleware"
   return $
-    simpleCors .
+    (cors $ const $ Just corsConfig).
     autohead .
     acceptOverride .
     jsonp .
@@ -31,6 +33,20 @@ defaultMiddleware = do
     gzip (gzipConfig gzipDir) .
     (if isDev then logStdoutDev else logStdout)
   where
+    corsConfig = simpleCorsResourcePolicy
+      { corsRequireOrigin = True
+      , corsVaryOrigin = False
+      , corsMaxAge = Nothing
+      , corsRequestHeaders = hContentType : simpleHeaders
+      , corsMethods =
+        [ methodGet
+        , methodPost
+        , methodHead
+        , methodDelete
+        , methodPatch
+        , methodOptions
+        ]
+      }
     gzipConfig gzipDir = def
       { gzipFiles = GzipCacheFolder gzipDir
       , gzipCheckMime = const True

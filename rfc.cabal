@@ -32,6 +32,7 @@ library
                      , TypeSynonymInstances
                      , FlexibleInstances
                      , DeriveGeneric
+                     , ScopedTypeVariables
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant
@@ -66,6 +67,7 @@ library
                      , http-api-data
                      , time-units
                      , wai-cors
+                     , aeson-diff
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
