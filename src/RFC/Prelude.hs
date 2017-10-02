@@ -14,7 +14,7 @@ import Data.Char as Char
 import Data.UUID.Types hiding (null, fromString)
 import Data.String.Conversions (cs, LazyByteString, StrictByteString, LazyText, StrictText)
 import GHC.Generics (Generic)
-import Data.List as List
+import qualified Data.List as List
 import Text.Read (Read, read)
 import Data.Time.Units
 
@@ -36,3 +36,4 @@ mapSnd f (a,b) = (a, f b)
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
 safeHead (x:_) = Just x
+
