@@ -34,7 +34,7 @@ defaultMiddleware = do
     (if isDev then logStdoutDev else logStdout)
   where
     corsConfig = simpleCorsResourcePolicy
-      { corsRequireOrigin = True
+      { corsRequireOrigin = False
       , corsVaryOrigin = False
       , corsMaxAge = Nothing
       , corsRequestHeaders = hContentType : simpleHeaders
