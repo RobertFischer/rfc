@@ -1,8 +1,6 @@
 module RFC.Servant
   ( ApiCtx
   , apiCtxToHandler
-  , idAndsToMap
-  , IdAnd(..)
   , ResourceDefinition(..)
   , ServerAPI
   , ServerImpl
@@ -11,6 +9,7 @@ module RFC.Servant
   , module Servant.HTML.Blaze
   , module Text.Blaze.Html
   , module Data.Swagger
+  , module RFC.Data.IdAnd
   ) where
 
 import RFC.Prelude
@@ -18,12 +17,8 @@ import Servant
 import qualified RFC.Redis as Redis
 import qualified RFC.Psql as Psql
 import RFC.JSON
-import RFC.Psql
 import RFC.HTTP.Client
 import Data.Aeson as JSON
-import Data.Aeson.Types as JSON
-import Data.HashMap.Lazy as HashMap
-import Data.UUID.Types as UUID
 import Data.Map as Map
 import Data.List as List hiding ((++))
 import Servant.Docs hiding (API)
@@ -33,6 +28,7 @@ import Data.Swagger (Swagger, ToSchema)
 import Network.Wreq.Session as Wreq
 import qualified Data.Aeson.Diff as JSON
 import Database.PostgreSQL.Simple (SqlError(..))
+import RFC.Data.IdAnd
 
 type ApiCtx =
   ReaderT Wreq.Session
@@ -61,52 +57,6 @@ apiCtxToHandler apiClient redisPool psqlPool = NT toHandler
         withRedis m = runReaderT m redisPool
         withPsql m = runReaderT m psqlPool
 
--- |Represents something which has an ID.
-newtype IdAnd a = IdAnd (UUID, a)
-  deriving (Eq, Ord, Read, Show, Generic, Typeable)
-
-instance (ToSchema a) => ToSchema (IdAnd a)
-
-valuesToIdAnd :: UUID -> a -> IdAnd a
-valuesToIdAnd id a = IdAnd (id, a)
-
-idAndToTuple :: IdAnd a -> (UUID, a)
-idAndToTuple (IdAnd it) = it
-
-idAndsToMap :: [IdAnd a] -> Map UUID a
-idAndsToMap list = Map.fromList $ List.map idAndToTuple list
-
-instance (FromJSON a) => FromJSON (IdAnd a) where
-  parseJSON (Object v) = valuesToIdAnd
-    <$> v .: "id"
-    <*> v .: "value"
-
-  parseJSON invalid = JSON.typeMismatch "IdAnd" invalid
-
-
-instance (ToJSON a) => ToJSON (IdAnd a) where
-  toJSON (IdAnd (uuid, a)) = JSON.Object map
-    where
-      map = HashMap.union idMap aMap
-      idMap = HashMap.singleton "id" uuidStr
-      uuidStr = String $ cs $ UUID.toString uuid
-      aMap = HashMap.singleton "value" aJson
-      aJson = toJSON a
-
-instance (FromRow a) => FromRow (IdAnd a) where
-  fromRow = valuesToIdAnd <$> field <*> fromRow
-
-instance (ToRow a) => ToRow (IdAnd a) where
-  toRow (IdAnd (id,a)) = toField id : toRow a
-
-instance (FromRow UUID) where
-  fromRow = uuidFromString <$> field
-    where
-      uuidFromString str = fromMaybe UUID.nil $ UUID.fromString str
-
-instance (ToRow UUID) where
-  toRow uuid = [toField (toString uuid)]
-
 type FetchAllImpl a = ApiCtx (Map UUID a)
 type FetchAllAPI a = Get '[JSON] (Map UUID a)
 type FetchImpl a = UUID -> ApiCtx (IdAnd a)
@@ -114,7 +64,7 @@ type FetchAPI a = Capture "id" UUID :> Get '[JSON] (IdAnd a)
 type CreateImpl a = a -> ApiCtx (IdAnd a)
 type CreateAPI a = ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
 type PatchImpl a = UUID -> JSON.Patch -> ApiCtx (IdAnd a)
-type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
+-- type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
 type ReplaceImpl a = UUID -> a -> ApiCtx (IdAnd a)
 type ReplaceAPI a = Capture "id" UUID :> ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
 
@@ -122,13 +72,13 @@ type ServerImpl a =
   (FetchAllImpl a)
   :<|> (FetchImpl a)
   :<|> (CreateImpl a)
-  :<|> (PatchImpl a)
+  -- :<|> (PatchImpl a)
   :<|> (ReplaceImpl a)
 type ServerAPI a =
   (FetchAllAPI a)
   :<|> (FetchAPI a)
   :<|> (CreateAPI a)
-  :<|> (PatchAPI a)
+  -- :<|> (PatchAPI a)
   :<|> (ReplaceAPI a)
 
 
@@ -175,7 +125,12 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
       newValue = IdAnd (id,value)
 
   restServer :: ServerImpl a
-  restServer = restFetchAll :<|> restFetch :<|> restCreate :<|> restPatch :<|> restReplace
+  restServer =
+    restFetchAll
+    :<|> restFetch
+    :<|> restCreate
+    -- :<|> restPatch
+    :<|> restReplace
 
   fetchResource :: UUID -> ApiCtx (Maybe a)
   fetchAllResources :: ApiCtx [IdAnd a]

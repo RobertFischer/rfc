@@ -68,6 +68,7 @@ library
                      , time-units
                      , wai-cors
                      , aeson-diff
+                     , vector
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
@@ -83,6 +84,9 @@ library
                      , RFC.Wai
                      , RFC.Env
                      , RFC.Google.Places.NearbySearch
+                     , RFC.Google.Places.PlaceSearch
+                     , RFC.Data.LatLng
+                     , RFC.Data.IdAnd
 
 source-repository head
   type:     git

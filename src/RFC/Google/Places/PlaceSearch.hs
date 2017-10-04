@@ -1,5 +1,5 @@
-module RFC.Google.Places.NearbySearch
-  ( module RFC.Google.Places.NearbySearch
+module RFC.Google.Places.PlaceSearch
+  ( module RFC.Google.Places.PlaceSearch
   , module RFC.Data.LatLng
   , HasAPIClient
   ) where
@@ -15,29 +15,17 @@ import RFC.Data.LatLng
 endpoint :: URL
 endpoint =
   case importURL endpointStr of
-    Nothing -> error $ "Could not parse the Google Places API endpoint into a URL: " ++ endpointStr
+    Nothing -> error $ "Could not parse the Google Place Search API endpoint into a URL: " ++ endpointStr
     (Just it) -> it
   where
-    endpointStr = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    endpointStr = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 
 data Params = Params
   { apiKey :: String
-  , location :: LatLng
-  , radiusMeters :: Integer -- ^ maximum of 50,000
-  , rankBy :: RankBy
-  , keyword :: Maybe String
+  , search :: String
   , language :: Maybe String
-  , region :: Maybe String
   , placeType :: Maybe PlaceType -- ^ "type"
   }
-
-data RankBy = Distance | Prominence
-
-rankByToString :: RankBy -> String
-rankByToString Distance = "distance"
-rankByToString Prominence = "prominence"
-
-data OptionalParams = OptionalParams
 
 data PlaceType =
   Hospital | Doctor
@@ -49,18 +37,12 @@ placeTypeToString Doctor = "doctor"
 paramsToPairs :: Params -> [(String,String)]
 paramsToPairs params =
     [ ("key", apiKey params)
-    , ("location", (show lat) ++ "," ++ (show lng))
-    , ("radius", show $ radiusMeters params)
-    , ("rankBy", rankByToString $ rankBy params)
-    ] ++ optionalPairs
+    , ("query", search params)
+    ]  ++ optionalPairs
   where
-    loc = location params
-    (lat,lng) = (latitude loc, longitude loc)
     toPair = optionalParamToPair params
     optionalPairs = Maybe.catMaybes
-      [ toPair keyword "keyword"
-      , toPair language "language"
-      , toPair region "region"
+      [ toPair language "language"
       , toPair (fmap placeTypeToString . placeType) "type"
       ]
 
@@ -77,7 +59,7 @@ type ResultsStatus = String
 newtype Results = Results (ResultsStatus, [Result])
 
 instance FromJSON Results where
-  parseJSON = withObject "NearbySearch.Results" $ \topObj -> do
+  parseJSON = withObject "PlacesSearch.Results" $ \topObj -> do
     status <- topObj .: "status"
     results <- topObj .:? "results"
     return $ Results (status, Maybe.fromMaybe [] results)
@@ -89,7 +71,7 @@ data Result = Result
   }
 
 instance FromJSON Result where
-  parseJSON = withObject "NearbySearch.Result" $ \topObj -> do
+  parseJSON = withObject "PlacesSearch.Result" $ \topObj -> do
     geometry <- topObj .: "geometry"
     location <- geometry .: "location"
     lat <- location .: "lat"
