@@ -9,6 +9,7 @@ module RFC.Psql
 
 import RFC.Prelude
 import RFC.String
+import RFC.Env
 import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo, FromRow, query, query_, execute, execute_, Only(..), In(..), executeMany)
 import qualified Database.PostgreSQL.Simple as Psql
 import Data.Pool
@@ -32,15 +33,8 @@ class (MonadIO m, MonadCatch m, MonadBaseControl IO m) => HasPsql m where
   withPsqlTransaction action = withPsqlConnection $ \conn ->
     (liftBaseOp_ (Psql.withTransaction conn)) (action conn)
 
-defaultConnectInfo :: (ConvertibleStrings a String) => a -> ConnectInfo
-defaultConnectInfo rawProjectThunk = Psql.defaultConnectInfo
-    { connectUser = projectThunk
-    , connectPassword = projectThunk
-    , connectDatabase = projectThunk
-    }
-  where
-    projectThunk :: String
-    projectThunk = cs rawProjectThunk
+defaultConnectInfo :: (MonadIO m, ConvertibleStrings a String) => a -> m ConnectInfo
+defaultConnectInfo projectThunk = RFC.Env.readConnectInfo $ cs projectThunk
 
 createConnectionPool :: (MonadIO m) => ConnectInfo -> m ConnectionPool
 createConnectionPool connInfo = liftIO $

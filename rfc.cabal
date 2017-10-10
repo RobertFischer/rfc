@@ -33,6 +33,7 @@ library
                      , FlexibleInstances
                      , DeriveGeneric
                      , ScopedTypeVariables
+                     , MultiParamTypeClasses
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant
@@ -88,6 +89,7 @@ library
                      , RFC.Google.Places.SearchResults
                      , RFC.Data.LatLng
                      , RFC.Data.IdAnd
+                     , RFC.Data.UUID
 
 source-repository head
   type:     git

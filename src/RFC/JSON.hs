@@ -25,15 +25,11 @@ jsonOptions = defaultOptions
     , fieldLabelModifier = flm
     }
   where
-    flm [] = []
-    flm (x:[]) = [x]
-    flm (x:xs)
-      | charIsLower x =
-          case flm xs of
-            [] -> (x:xs)
-            result -> result
-      | otherwise = (charToLower x):xs
-
+    flm = flm' . span charIsLower
+    flm' (cs, []) = cs
+    flm' (_, cs) = lowerFirst cs
+    lowerFirst [] = []
+    lowerFirst (c:cs) = (charToLower c):cs
 
 decodeEither :: (FromJSON a) => LazyByteString -> Either String a
 decodeEither = eitherDecode

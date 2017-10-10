@@ -24,12 +24,12 @@ defaultMiddleware = do
   tmpDir <- getCanonicalTemporaryDirectory
   gzipDir <- createTempDirectory tmpDir "wai-gzip-middleware"
   return $
+    methodOverridePost .
+    acceptOverride .
     (cors $ const $ Just corsConfig).
     autohead .
-    acceptOverride .
     jsonp .
     approot .
-    methodOverridePost .
     gzip (gzipConfig gzipDir) .
     (if isDev then logStdoutDev else logStdout)
   where
@@ -45,6 +45,7 @@ defaultMiddleware = do
         , methodDelete
         , methodPatch
         , methodOptions
+        , methodPut
         ]
       }
     gzipConfig gzipDir = def

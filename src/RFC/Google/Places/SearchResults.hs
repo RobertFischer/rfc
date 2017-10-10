@@ -21,6 +21,7 @@ data Result = Result
   { resultLocation :: LatLng
   , resultName :: String
   , resultPlaceId :: String
+  , resultVicinity :: Maybe String
   }
 
 instance FromJSON Result where
@@ -32,4 +33,5 @@ instance FromJSON Result where
     let latLngLoc = latLng lat lng
     name <- topObj .: "name"
     id <- topObj .: "place_id"
-    return $ Result latLngLoc name id
+    vicinity <- topObj .:? "vicinity"
+    return $ Result latLngLoc name id vicinity

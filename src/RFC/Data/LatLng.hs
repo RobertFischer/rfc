@@ -4,8 +4,6 @@ module RFC.Data.LatLng
   , Latitude
   , latLng
   , lngLat
-  , longitude
-  , latitude
   ) where
 
 import RFC.Prelude
@@ -15,23 +13,25 @@ import RFC.JSON as JSON
 type Latitude = Double
 type Longitude = Double
 
-newtype LatLng = LatLng (Latitude,Longitude) deriving (Eq, Ord, Show, Typeable, Generic)
+data LatLng = LatLng {
+  latitude :: Latitude,
+  longitude :: Longitude
+} deriving (Eq, Ord, Show, Typeable, Generic)
 $(JSON.deriveJSON JSON.jsonOptions ''LatLng)
 
 instance FromRow LatLng where
   fromRow = latLng <$> Psql.field <*> Psql.field
 
 instance FromRow (Maybe LatLng) where
-  fromRow = Just <$> fromRow
+  fromRow = do
+    parsed <- (fromRow :: RowParser (Maybe (Maybe Latitude, Maybe Longitude)))
+    case parsed of
+      (Just (Just lat, Just lng)) -> return $ Just $ latLng lat lng
+      _ -> return Nothing
+
 
 latLng :: Latitude -> Longitude -> LatLng
-latLng lat lng = LatLng (lat,lng)
+latLng lat lng = LatLng lat lng
 
 lngLat :: Longitude -> Latitude -> LatLng
 lngLat = flip latLng
-
-longitude :: LatLng -> Longitude
-longitude (LatLng(_,l)) = l
-
-latitude :: LatLng -> Latitude
-latitude (LatLng(l,_)) = l

@@ -28,7 +28,7 @@ data Params = Params
   }
 
 data PlaceType =
-  Hospital | Doctor
+  Hospital | Doctor deriving (Show,Eq,Ord,Enum,Bounded,Generic,Typeable)
 
 placeTypeToString :: PlaceType -> String
 placeTypeToString Hospital = "hospital"

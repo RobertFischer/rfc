@@ -1,7 +1,7 @@
 module RFC.Prelude
   ( module ClassyPrelude
   , module RFC.Prelude
-  , module Data.UUID.Types
+  , module RFC.Data.UUID
   , module Data.String.Conversions
   , module GHC.Generics
   , module Text.Read
@@ -11,12 +11,12 @@ module RFC.Prelude
 import Prelude ()
 import ClassyPrelude hiding (Handler, unpack, Day)
 import Data.Char as Char
-import Data.UUID.Types hiding (null, fromString)
 import Data.String.Conversions (cs, LazyByteString, StrictByteString, LazyText, StrictText)
 import GHC.Generics (Generic)
 import qualified Data.List as List
 import Text.Read (Read, read)
 import Data.Time.Units
+import RFC.Data.UUID (UUID)
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
