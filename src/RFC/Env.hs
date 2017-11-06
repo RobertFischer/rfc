@@ -1,11 +1,15 @@
 module RFC.Env
-  ( module RFC.Env
+  ( readGoogleMapsAPIKey
+  , isDevelopment
+  , readEnvironment
+  , readPsqlConnectInfo
+  , readRedisConnectInfo
   ) where
 
 import RFC.Prelude
-import Control.Logger.Simple (logInfo, logWarn)
 import System.Environment (lookupEnv)
 import Database.PostgreSQL.Simple as Psql
+import Database.Redis as Redis
 import Data.Word (Word16)
 
 -- TODO Create a Monad that only logs reading the env var once, and reads all the environment variables at once, and is pure.
@@ -18,10 +22,8 @@ readEnv envKey defaultValue = do
       case defaultValue of
         Nothing -> fail $ "No value of " ++ (show envKey) ++ " environment variable, and no default configured."
         (Just s) -> do
-          logWarn . cs $ "No value of " ++ (show envKey) ++ " environment variable, using default " ++ (show s)
           return s
     (Just s) -> do
-      logInfo . cs $ "Reading Env Var. Key=" ++ (show envKey) ++ " Value=" ++ (show s)
       return s
 
 isDevelopment :: (MonadIO m) =>  m Bool
@@ -52,11 +54,42 @@ readPsqlPort = do
   result <- readEnv "PSQL_PORT" $ Just $ show $ Psql.connectPort Psql.defaultConnectInfo
   return $ read result
 
-readConnectInfo :: (MonadIO m) => String -> m ConnectInfo
-readConnectInfo projectThunk =
-  ConnectInfo
+readPsqlConnectInfo :: (MonadIO m) => String -> m Psql.ConnectInfo
+readPsqlConnectInfo projectThunk =
+  Psql.ConnectInfo
     <$> readPsqlHost
     <*> readPsqlPort
     <*> readPsqlUser projectThunk
     <*> readPsqlPassword projectThunk
     <*> readPsqlDatabase projectThunk
+
+readRedisConnectInfo :: (MonadIO m) => m Redis.ConnectInfo
+readRedisConnectInfo =
+  Redis.ConnInfo
+    <$> readRedisHost
+    <*> readRedisPort
+    <*> readRedisPassword
+    <*> readRedisDbNumber
+    <*> (return $ Redis.connectMaxConnections Redis.defaultConnectInfo)
+    <*> (return $ Redis.connectMaxIdleTime Redis.defaultConnectInfo)
+
+readRedisHost :: (MonadIO m) => m Redis.HostName
+readRedisHost = readEnv "REDIS_HOST" $ Just $ Redis.connectHost Redis.defaultConnectInfo
+
+readRedisPort :: (MonadIO m) => m Redis.PortID
+readRedisPort = do
+  result <- readEnv "REDIS_PORT" $ Just "6379" -- Default Redis port
+  return $ PortNumber $ read result
+
+readRedisPassword :: (MonadIO m) => m (Maybe ByteString)
+readRedisPassword = do
+  result <- readEnv "REDIS_PASSWORD" $ Just ""
+  return $
+    case result of
+      "" -> Nothing
+      _ -> Just $ cs result
+
+readRedisDbNumber :: (MonadIO m) => m Integer
+readRedisDbNumber = read <$> readEnv "REDIS_DATABASE" (Just $ show $ Redis.connectDatabase Redis.defaultConnectInfo)
+
+
