@@ -3,6 +3,7 @@ module RFC.Data.IdAnd
   , IdAnd(..)
   , valuesToIdAnd
   , idAndToTuple
+  , tupleToIdAnd
   ) where
 
 import RFC.Prelude
@@ -18,6 +19,9 @@ import Database.PostgreSQL.Simple.FromField()
 -- |Represents something which has an ID.
 newtype IdAnd a = IdAnd (UUID, a)
   deriving (Eq, Ord, Read, Show, Generic, Typeable)
+
+tupleToIdAnd :: (UUID, a) -> IdAnd a
+tupleToIdAnd = IdAnd
 
 valuesToIdAnd :: UUID -> a -> IdAnd a
 valuesToIdAnd id a = IdAnd(id,a)
