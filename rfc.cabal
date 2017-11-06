@@ -34,6 +34,7 @@ library
                      , DeriveGeneric
                      , ScopedTypeVariables
                      , MultiParamTypeClasses
+                     , DefaultSignatures
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant
@@ -70,6 +71,8 @@ library
                      , wai-cors
                      , aeson-diff
                      , vector
+                     , lifted-async
+                     , text
   exposed-modules:     RFC.Prelude
                      , RFC.Psql
                      , RFC.Redis
@@ -89,6 +92,7 @@ library
                      , RFC.Google.Places.SearchResults
                      , RFC.Data.LatLng
                      , RFC.Data.IdAnd
+                     , RFC.Data.ListMoveDirection
                      , RFC.Data.UUID
 
 source-repository head
