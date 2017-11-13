@@ -6,6 +6,7 @@ module RFC.Google.Places.PlaceSearch
   ) where
 
 import RFC.Prelude
+import RFC.Log
 import RFC.HTTP.Client
 import qualified Data.Maybe as Maybe
 import qualified Data.List as List
@@ -55,5 +56,10 @@ paramsToUrl params =
   where
     fold = flip add_param
 
-query :: (HasAPIClient m) => Params -> m Results
-query = apiGet . paramsToUrl
+query :: (MonadCatch m, HasAPIClient m) => Params -> m Results
+query params = apiGet (paramsToUrl params) onError
+  where
+    onError :: (MonadIO m) => SomeException -> m Results
+    onError err = do
+      logWarn . cs $ "Error performing Google Place Search: " ++ (show err)
+      return $ Results (show err, [])

@@ -38,9 +38,9 @@ apiExecute rawUrl action converter = do
     url = exportURL rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)
 
-apiGet :: (HasAPIClient m, FromJSON a) => URL -> m a
-apiGet url =
-    apiExecute url get decodeOrDie
+apiGet :: (HasAPIClient m, FromJSON a, MonadCatch m, Exception e) => URL -> (e -> m a) -> m a
+apiGet url onError =
+    handle onError $ apiExecute url get decodeOrDie
 
 class (MonadThrow m, MonadIO m) => HasAPIClient m where
   getAPIClient :: m Session

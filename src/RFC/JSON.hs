@@ -11,6 +11,7 @@ module RFC.JSON
 , DecodeError
 , Value(..)
 , encode
+, decode
 ) where
 
 import RFC.Prelude

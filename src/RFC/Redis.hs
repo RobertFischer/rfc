@@ -9,11 +9,10 @@ module RFC.Redis
 
 import RFC.Prelude
 import qualified Database.Redis as R
-import Database.Redis
-  ( Redis, connect, defaultConnectInfo, Connection )
 import RFC.String
+import RFC.Env as Env
 
-type ConnectionPool = Connection
+type ConnectionPool = R.Connection
 
 newtype RedisException = RedisException R.Reply deriving (Typeable, Show)
 instance Exception RedisException
@@ -21,13 +20,15 @@ instance Exception RedisException
 class (MonadIO m, MonadThrow m) => HasRedis m where
   getRedisPool :: m ConnectionPool
 
-  runRedis :: Redis a -> m a
+  runRedis :: R.Redis a -> m a
   runRedis r = do
     conn <- getRedisPool
     liftIO $ R.runRedis conn r
 
 createConnectionPool :: (MonadIO m) => m ConnectionPool
-createConnectionPool = liftIO $ connect $ defaultConnectInfo
+createConnectionPool = do
+  connInfo <- Env.readRedisConnectInfo
+  liftIO $ R.connect connInfo
 
 get :: (HasRedis m, ConvertibleToSBS tIn, ConvertibleFromSBS tOut) => tIn -> m (Maybe tOut)
 get key = do

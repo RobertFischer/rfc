@@ -29,6 +29,14 @@ readEnv envKey defaultValue = do
 isDevelopment :: (MonadIO m) =>  m Bool
 isDevelopment = ((==) "development") <$> readEnvironment
 
+forDevOnly :: (MonadIO m) => String -> m (Maybe String)
+forDevOnly defaultValue = do
+  isDev <- isDevelopment
+  return $ if isDev then
+    Just defaultValue
+  else
+    Nothing
+
 readEnvironment :: (MonadIO m) => m String
 readEnvironment = readEnv "ENV" defaultEnv
   where
@@ -37,14 +45,20 @@ readEnvironment = readEnv "ENV" defaultEnv
 readGoogleMapsAPIKey :: (MonadIO m) => m String
 readGoogleMapsAPIKey = readEnv "GMAPS_API_KEY" Nothing
 
-readPsqlUser :: (MonadIO m) => String -> m String
-readPsqlUser projectThunk = readEnv "PSQL_USERNAME" $ Just projectThunk
+readPsqlUser :: (MonadIO m) => m String
+readPsqlUser = do
+  projectThunk <- readAppSlug >>= forDevOnly
+  readEnv "PSQL_USERNAME" $ projectThunk
 
-readPsqlPassword :: (MonadIO m) => String -> m String
-readPsqlPassword projectThunk = readEnv "PSQL_PASSWORD" $ Just projectThunk
+readPsqlPassword :: (MonadIO m) => m String
+readPsqlPassword = do
+  projectThunk <- readAppSlug >>= forDevOnly
+  readEnv "PSQL_PASSWORD" projectThunk
 
-readPsqlDatabase :: (MonadIO m) => String -> m String
-readPsqlDatabase projectThunk = readEnv "PSQL_DATABASE" $ Just projectThunk
+readPsqlDatabase :: (MonadIO m) => m String
+readPsqlDatabase = do
+  projectThunk <- readAppSlug >>= forDevOnly
+  readEnv "PSQL_DATABASE" projectThunk
 
 readPsqlHost :: (MonadIO m) => m String
 readPsqlHost = readEnv "PSQL_HOST" $ Just $ Psql.connectHost Psql.defaultConnectInfo
@@ -54,14 +68,14 @@ readPsqlPort = do
   result <- readEnv "PSQL_PORT" $ Just $ show $ Psql.connectPort Psql.defaultConnectInfo
   return $ read result
 
-readPsqlConnectInfo :: (MonadIO m) => String -> m Psql.ConnectInfo
-readPsqlConnectInfo projectThunk =
+readPsqlConnectInfo :: (MonadIO m) => m Psql.ConnectInfo
+readPsqlConnectInfo =
   Psql.ConnectInfo
     <$> readPsqlHost
     <*> readPsqlPort
-    <*> readPsqlUser projectThunk
-    <*> readPsqlPassword projectThunk
-    <*> readPsqlDatabase projectThunk
+    <*> readPsqlUser
+    <*> readPsqlPassword
+    <*> readPsqlDatabase
 
 readRedisConnectInfo :: (MonadIO m) => m Redis.ConnectInfo
 readRedisConnectInfo =
@@ -92,4 +106,5 @@ readRedisPassword = do
 readRedisDbNumber :: (MonadIO m) => m Integer
 readRedisDbNumber = read <$> readEnv "REDIS_DATABASE" (Just $ show $ Redis.connectDatabase Redis.defaultConnectInfo)
 
-
+readAppSlug :: (MonadIO m) => m String
+readAppSlug = readEnv "APP_SLUG" Nothing

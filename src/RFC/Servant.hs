@@ -19,8 +19,6 @@ import qualified RFC.Psql as Psql
 import RFC.JSON
 import RFC.HTTP.Client
 import Data.Aeson as JSON
-import Data.Map as Map
-import Data.List as List hiding ((++))
 import Servant.Docs hiding (API)
 import Servant.HTML.Blaze (HTML)
 import Text.Blaze.Html
@@ -29,6 +27,7 @@ import Network.Wreq.Session as Wreq
 import qualified Data.Aeson.Diff as JSON
 import Database.PostgreSQL.Simple (SqlError(..))
 import RFC.Data.IdAnd
+import qualified Data.Map.Strict as Map
 
 type ApiCtx =
   ReaderT Wreq.Session
@@ -84,7 +83,9 @@ type ServerAPI a =
 
 class (FromJSON a, ToJSON a) => ResourceDefinition a where
   restFetchAll :: FetchAllImpl a
-  restFetchAll = Map.fromList <$> List.map idAndToTuple <$> fetchAllResources
+  restFetchAll = do
+    resources <- fetchAllResources
+    return $ Map.fromList $ map idAndToTuple resources
 
   restFetch :: FetchImpl a
   restFetch uuid = do
@@ -120,7 +121,7 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
   restReplace :: ReplaceImpl a
   restReplace id value = handleDupes $ do
       replaceResource newValue
-      return newValue
+      restFetch id
     where
       newValue = IdAnd (id,value)
 
