@@ -81,7 +81,7 @@ type ServerAPI a =
   :<|> (ReplaceAPI a)
 
 
-class (FromJSON a, ToJSON a) => ResourceDefinition a where
+class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
   restFetchAll :: FetchAllImpl a
   restFetchAll = do
     resources <- fetchAllResources
@@ -99,8 +99,13 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
 
   restCreate :: CreateImpl a
   restCreate a = handleDupes $ do
-      id <- createResource a
-      restFetch id
+      maybeId <- createResource a
+      case maybeId of
+        (Just id) -> restFetch id
+        Nothing -> throwIO $ err400
+          { errReasonPhrase = "Could not create resource"
+          , errBody = cs $ show a
+          }
 
   restPatch :: PatchImpl a
   restPatch id patch = handleDupes $ do
@@ -135,7 +140,7 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
 
   fetchResource :: UUID -> ApiCtx (Maybe a)
   fetchAllResources :: ApiCtx [IdAnd a]
-  createResource :: a -> ApiCtx UUID
+  createResource :: a -> ApiCtx (Maybe UUID)
   replaceResource :: (IdAnd a) -> ApiCtx ()
 
 handleDupes :: ApiCtx a -> ApiCtx a
