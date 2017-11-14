@@ -4,6 +4,7 @@ module RFC.Data.IdAnd
   , valuesToIdAnd
   , idAndToTuple
   , tupleToIdAnd
+  , idAndToPair
   ) where
 
 import RFC.Prelude
@@ -18,7 +19,7 @@ import Database.PostgreSQL.Simple.FromField()
 
 -- |Represents something which has an ID.
 newtype IdAnd a = IdAnd (UUID, a)
-  deriving (Eq, Ord, Read, Show, Generic, Typeable)
+  deriving (Eq, Ord, Show, Generic, Typeable)
 
 tupleToIdAnd :: (UUID, a) -> IdAnd a
 tupleToIdAnd = IdAnd
@@ -28,6 +29,9 @@ valuesToIdAnd id a = IdAnd(id,a)
 
 idAndToTuple :: IdAnd a -> (UUID, a)
 idAndToTuple (IdAnd it) = it
+
+idAndToPair :: IdAnd a -> (UUID, IdAnd a)
+idAndToPair idAnd@(IdAnd (id,_)) = (id, idAnd)
 
 idAndsToMap :: [IdAnd a] -> Map UUID a
 idAndsToMap list = Map.fromList $ List.map idAndToTuple list

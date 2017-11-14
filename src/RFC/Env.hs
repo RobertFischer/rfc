@@ -86,6 +86,7 @@ readRedisConnectInfo =
     <*> readRedisDbNumber
     <*> (return $ Redis.connectMaxConnections Redis.defaultConnectInfo)
     <*> (return $ Redis.connectMaxIdleTime Redis.defaultConnectInfo)
+    <*> (return $ Just 10)
 
 readRedisHost :: (MonadIO m) => m Redis.HostName
 readRedisHost = readEnv "REDIS_HOST" $ Just $ Redis.connectHost Redis.defaultConnectInfo

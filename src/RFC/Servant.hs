@@ -56,8 +56,8 @@ apiCtxToHandler apiClient redisPool psqlPool = NT toHandler
         withRedis m = runReaderT m redisPool
         withPsql m = runReaderT m psqlPool
 
-type FetchAllImpl a = ApiCtx (Map UUID a)
-type FetchAllAPI a = Get '[JSON] (Map UUID a)
+type FetchAllImpl a = ApiCtx (Map UUID (IdAnd a))
+type FetchAllAPI a = Get '[JSON] (Map UUID (IdAnd a))
 type FetchImpl a = UUID -> ApiCtx (IdAnd a)
 type FetchAPI a = Capture "id" UUID :> Get '[JSON] (IdAnd a)
 type CreateImpl a = a -> ApiCtx (IdAnd a)
@@ -85,7 +85,7 @@ class (FromJSON a, ToJSON a) => ResourceDefinition a where
   restFetchAll :: FetchAllImpl a
   restFetchAll = do
     resources <- fetchAllResources
-    return $ Map.fromList $ map idAndToTuple resources
+    return $ Map.fromList $ map idAndToPair resources
 
   restFetch :: FetchImpl a
   restFetch uuid = do
