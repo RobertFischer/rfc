@@ -6,6 +6,8 @@ module RFC.Prelude
   , module GHC.Generics
   , module Text.Read
   , module Data.Time.Units
+  , module Data.Function
+  , module Data.Typeable
   ) where
 
 import Prelude ()
@@ -17,6 +19,8 @@ import qualified Data.List as List
 import Text.Read (Read, read)
 import Data.Time.Units
 import RFC.Data.UUID (UUID)
+import Data.Function ((&))
+import Data.Typeable (TypeRep, typeOf)
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
@@ -36,4 +40,5 @@ mapSnd f (a,b) = (a, f b)
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
 safeHead (x:_) = Just x
+
 
