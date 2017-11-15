@@ -46,7 +46,7 @@ library
                      , unordered-containers
                      , string-conversions
                      , monad-control
-                     , postgresql-simple
+                     , postgresql-simple >= 0.5.3.0
                      , resource-pool
                      , hedis
                      , async
