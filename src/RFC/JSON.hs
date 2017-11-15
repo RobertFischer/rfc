@@ -24,8 +24,11 @@ jsonOptions = defaultOptions
     { sumEncoding = ObjectWithSingleField
     , unwrapUnaryRecords = True
     , fieldLabelModifier = flm
+    , constructorTagModifier = ctm
     }
   where
+    ctm [] = []
+    ctm (c:cs) = (charToLower c):cs
     flm = flm' . span charIsLower
     flm' (cs, []) = cs
     flm' (_, cs) = lowerFirst cs
