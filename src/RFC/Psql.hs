@@ -4,6 +4,8 @@ module RFC.Psql
   , module Database.PostgreSQL.Simple.FromRow
   , module Database.PostgreSQL.Simple.ToField
   , module Database.PostgreSQL.Simple.ToRow
+  , module Database.PostgreSQL.Simple.SqlQQ
+  , module Database.PostgreSQL.Simple.Types
   , module RFC.Psql
   ) where
 
@@ -12,10 +14,12 @@ import RFC.Env
 import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo, FromRow, Only(..), In(..), commit, Query)
 import qualified Database.PostgreSQL.Simple as Psql
 import Data.Pool
-import Database.PostgreSQL.Simple.FromField
+import Database.PostgreSQL.Simple.FromField hiding (Binary)
 import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.ToRow
+import Database.PostgreSQL.Simple.SqlQQ
+import Database.PostgreSQL.Simple.Types
 import Control.Monad.Trans.Control
 import RFC.Log
 
