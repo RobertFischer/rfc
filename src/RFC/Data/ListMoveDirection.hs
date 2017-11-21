@@ -3,16 +3,12 @@ module RFC.Data.ListMoveDirection (
 ) where
 
 import RFC.Prelude
-import RFC.Servant
 import RFC.JSON
 import Data.Text as Text
 import Data.Aeson as Aeson
 
 data ListMoveDirection = TowardsHead | TowardsTail
   deriving (Show,Eq,Generic,Typeable)
-
-instance ToSample ListMoveDirection where
-  toSamples _ = noSamples
 
 instance FromJSON ListMoveDirection where
     parseJSON = withText "ListMoveDirection" $ \t -> do
@@ -40,6 +36,9 @@ instance FromJSON ListMoveDirection where
 
         "TOWARDSHEAD" -> head
         "TOWARDSTAIL" -> tail
+
+        "HEADWARDS" -> head
+        "TAILWARDS" -> tail
 
         _ -> fail . cs $ Text.append "Could not parse string to direction: " t
 
