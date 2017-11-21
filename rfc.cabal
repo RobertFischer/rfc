@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.1
+version:             0.0.0.2
 synopsis:            Robert Fischer's Common library, for all Robert Fischer's common needs.
 description:         See README.md
 homepage:            https://github.com/RobertFischer/rfc#README.md
@@ -13,11 +13,19 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
+Flag Development
+  Description: Enable warnings
+  Default:     False
+  Manual:      True
+
 library
   hs-source-dirs:      src
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
-  ghc-options:         -Wall -fno-warn-orphans -fno-warn-name-shadowing -Werror -O2
+  if flag(development)
+    ghc-options:       -Wall -Werror -fno-warn-orphans -fno-warn-name-shadowing -O0
+  else
+    ghc-options:       -O2
   default-extensions:  NoImplicitPrelude
                      , DataKinds
                      , TemplateHaskell
