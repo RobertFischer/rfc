@@ -8,7 +8,7 @@ import Data.Text as Text
 import Data.Aeson as Aeson
 
 data ListMoveDirection = TowardsHead | TowardsTail
-  deriving (Show,Eq,Generic,Typeable)
+  deriving (Show,Eq,Ord,Generic,Typeable)
 
 instance FromJSON ListMoveDirection where
     parseJSON = withText "ListMoveDirection" $ \t -> do
