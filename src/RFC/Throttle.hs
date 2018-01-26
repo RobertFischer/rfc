@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module RFC.Throttle
   ( createThrottle
   , withThrottle

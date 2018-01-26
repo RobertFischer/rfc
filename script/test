@@ -1,0 +1,6 @@
+#!/bin/bash -exu
+
+cd `dirname $0`/..
+
+stack clean && stack build --flag rfc:development
+stack clean && stack clean --stack-yaml=./stack.ghcjs.yaml && stack build --stack-yaml=./stack.ghcjs.yaml --flag rfc:development 

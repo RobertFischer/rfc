@@ -1,13 +1,16 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module RFC.Google.Places.SearchResults
   ( module RFC.Google.Places.SearchResults
   ) where
 
-import Data.Aeson ((.:), (.:?), withObject)
-import RFC.Prelude
-import RFC.JSON
-import qualified Data.Maybe as Maybe
-import RFC.Data.LatLng
-import Data.Map as Map
+import           Data.Aeson      (withObject, (.:), (.:?))
+import           Data.Map        as Map
+import qualified Data.Maybe      as Maybe
+import           RFC.Data.LatLng
+import           RFC.JSON
+import           RFC.Prelude
 
 type ResultsStatus = String
 newtype Results = Results (ResultsStatus, [Result])
@@ -27,8 +30,8 @@ instance FromJSON Results where
 
 data Result = Result
   { resultLocation :: LatLng
-  , resultName :: String
-  , resultPlaceId :: String
+  , resultName     :: String
+  , resultPlaceId  :: String
   , resultVicinity :: Maybe String
   }
 

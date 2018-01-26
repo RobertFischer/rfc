@@ -1,3 +1,14 @@
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE Rank2Types           #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
 module RFC.Servant
   ( ApiCtx
   , apiCtxToHandler
@@ -12,22 +23,22 @@ module RFC.Servant
   , module RFC.Data.IdAnd
   ) where
 
-import RFC.Prelude
-import Servant
-import qualified RFC.Redis as Redis
-import qualified RFC.Psql as Psql
-import RFC.JSON
-import RFC.HTTP.Client
-import Data.Aeson as JSON
-import Servant.Docs hiding (API)
-import Servant.HTML.Blaze (HTML)
-import Text.Blaze.Html
-import Data.Swagger (Swagger, ToSchema)
-import Network.Wreq.Session as Wreq
-import qualified Data.Aeson.Diff as JSON
-import Database.PostgreSQL.Simple (SqlError(..))
-import RFC.Data.IdAnd
-import qualified Data.Map.Strict as Map
+import           Data.Aeson                 as JSON
+import qualified Data.Aeson.Diff            as JSON
+import qualified Data.Map.Strict            as Map
+import           Data.Swagger               (Swagger, ToSchema)
+import           Database.PostgreSQL.Simple (SqlError (..))
+import           Network.Wreq.Session       as Wreq
+import           RFC.Data.IdAnd
+import           RFC.HTTP.Client
+import           RFC.JSON                   ()
+import           RFC.Prelude
+import qualified RFC.Psql                   as Psql
+import qualified RFC.Redis                  as Redis
+import           Servant
+import           Servant.Docs               hiding (API)
+import           Servant.HTML.Blaze         (HTML)
+import           Text.Blaze.Html
 
 type ApiCtx =
   ReaderT Wreq.Session
@@ -46,11 +57,13 @@ instance Psql.HasPsql ApiCtx where
 instance Redis.HasRedis ApiCtx where
   getRedisPool = lift $ lift ask
 
+type (:~>) a b = forall x. a x -> b x
+
 apiCtxToHandler :: Wreq.Session -> Redis.ConnectionPool -> Psql.ConnectionPool -> ApiCtx :~> Handler
-apiCtxToHandler apiClient redisPool psqlPool = NT toHandler
+apiCtxToHandler apiClient redisPool psqlPool = toHandler
   where
-    toHandler :: forall a. ApiCtx a -> Handler a
-    toHandler a = withRedis $ withPsql $ withAPIClient a
+    toHandler :: ApiCtx :~> Handler
+    toHandler = withRedis . withPsql . withAPIClient
       where
         withAPIClient m = runReaderT m apiClient
         withRedis m = runReaderT m redisPool

@@ -1,3 +1,8 @@
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+
 module RFC.HTTP.Client
   ( withAPISession
   , HasAPIClient(..)
@@ -8,18 +13,18 @@ module RFC.HTTP.Client
   , module Network.HTTP.Types.Status
   ) where
 
-import RFC.Prelude
-import RFC.String
-import RFC.JSON (FromJSON, decodeOrDie)
-import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.Wreq.Session hiding (withAPISession)
-import Network.URL
-import Network.Wreq.Lens
-import Control.Lens
-import Network.HTTP.Types.Status hiding (statusMessage, statusCode)
+import           Control.Lens
+import           Network.HTTP.Client.TLS   (tlsManagerSettings)
+import           Network.HTTP.Types.Status hiding (statusCode, statusMessage)
+import           Network.URL
+import           Network.Wreq.Lens
+import           Network.Wreq.Session      hiding (withAPISession)
+import           RFC.JSON                  (FromJSON, decodeOrDie)
+import           RFC.Prelude
+import           RFC.String
 
 withAPISession :: (Session -> IO a) -> IO a
-withAPISession = withSessionControl Nothing tlsManagerSettings
+withAPISession = (>>=) $ newSessionControl Nothing tlsManagerSettings
 
 newtype BadStatusException = BadStatusException (Status,URL)
   deriving (Show,Eq,Ord,Generic,Typeable)
@@ -33,7 +38,7 @@ apiExecute rawUrl action converter = do
     let status = response ^. responseStatus
     case status ^. statusCode of
       200 -> converter . cs $ response ^. responseBody
-      _ -> throwM $ badResponseStatus status
+      _   -> throwM $ badResponseStatus status
   where
     url = exportURL rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)

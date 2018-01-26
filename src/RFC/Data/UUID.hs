@@ -1,14 +1,18 @@
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
+
 module RFC.Data.UUID
   ( module Data.UUID.Types
   ) where
 
-import Prelude (return, ($), String)
-import Data.UUID.Types
-import qualified Data.UUID.Types as UUID
-import Database.PostgreSQL.Simple.FromRow
-import Database.PostgreSQL.Simple.ToRow
-import Database.PostgreSQL.Simple.Types (Only(..))
-import RFC.String
+import           Data.UUID.Types
+import qualified Data.UUID.Types                    as UUID
+import           Database.PostgreSQL.Simple.FromRow
+import           Database.PostgreSQL.Simple.ToRow
+import           Database.PostgreSQL.Simple.Types   (Only (..))
+import           Prelude                            (String, return, ($))
+import           RFC.String
 
 instance FromRow UUID where
   fromRow = do

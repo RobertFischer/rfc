@@ -1,11 +1,14 @@
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module RFC.Data.ListMoveDirection (
   module RFC.Data.ListMoveDirection
 ) where
 
-import RFC.Prelude
-import RFC.JSON
-import Data.Text as Text
-import Data.Aeson as Aeson
+import           Data.Aeson  as Aeson
+import           Data.Text   as Text
+import           RFC.Prelude
 
 data ListMoveDirection = TowardsHead | TowardsTail
   deriving (Show,Eq,Ord,Generic,Typeable)

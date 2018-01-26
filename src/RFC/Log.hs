@@ -1,13 +1,17 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module RFC.Log
   ( module Control.Logger.Simple
   , module RFC.Log
   ) where
 
-import RFC.Prelude
-import RFC.Env as Env
-import Control.Logger.Simple (pureDebug, pureInfo, pureWarn, pureError, logDebug, logInfo, logWarn, logError)
-import Control.Logger.Simple as Log
-import System.IO (stderr, hSetBuffering, BufferMode(..))
+import           Control.Logger.Simple (logDebug, logError, logInfo, logWarn,
+                                        pureDebug, pureError, pureInfo,
+                                        pureWarn)
+import           Control.Logger.Simple as Log
+import           RFC.Env               as Env
+import           RFC.Prelude
+import           System.IO             (BufferMode (..), hSetBuffering, stderr)
 
 withLogging :: IO a -> IO a
 withLogging action = do

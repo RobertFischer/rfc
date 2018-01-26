@@ -1,3 +1,6 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module RFC.Google.Places.NearbySearch
   ( module RFC.Google.Places.NearbySearch
   , module RFC.Google.Places.SearchResults
@@ -5,13 +8,13 @@ module RFC.Google.Places.NearbySearch
   , HasAPIClient
   ) where
 
-import RFC.Prelude
-import RFC.Log
-import RFC.HTTP.Client
-import qualified Data.Maybe as Maybe
-import qualified Data.List as List
-import RFC.Data.LatLng
-import RFC.Google.Places.SearchResults
+import qualified Data.List                       as List
+import qualified Data.Maybe                      as Maybe
+import           RFC.Data.LatLng
+import           RFC.Google.Places.SearchResults
+import           RFC.HTTP.Client
+import           RFC.Log
+import           RFC.Prelude
 
 endpoint :: URL
 endpoint =
@@ -22,20 +25,20 @@ endpoint =
     endpointStr = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
 
 data Params = Params
-  { apiKey :: String
-  , location :: LatLng
+  { apiKey       :: String
+  , location     :: LatLng
   , radiusMeters :: Integer -- ^ maximum of 50,000
-  , rankBy :: RankBy
-  , keyword :: Maybe String
-  , language :: Maybe String
-  , region :: Maybe String
-  , placeType :: Maybe PlaceType -- ^ "type"
+  , rankBy       :: RankBy
+  , keyword      :: Maybe String
+  , language     :: Maybe String
+  , region       :: Maybe String
+  , placeType    :: Maybe PlaceType -- ^ "type"
   }
 
 data RankBy = Distance | Prominence
 
 rankByToString :: RankBy -> String
-rankByToString Distance = "distance"
+rankByToString Distance   = "distance"
 rankByToString Prominence = "prominence"
 
 data OptionalParams = OptionalParams
@@ -45,7 +48,7 @@ data PlaceType =
 
 placeTypeToString :: PlaceType -> String
 placeTypeToString Hospital = "hospital"
-placeTypeToString Doctor = "doctor"
+placeTypeToString Doctor   = "doctor"
 
 paramsToPairs :: Params -> [(String,String)]
 paramsToPairs params =

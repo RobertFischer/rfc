@@ -1,10 +1,15 @@
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+
 module RFC.Concurrent
   ( module RFC.Concurrent
   , module Control.Concurrent.Async.Lifted
   ) where
 
-import RFC.Prelude hiding (mapConcurrently)
-import Control.Concurrent.Async.Lifted (mapConcurrently, mapConcurrently_)
+import           Control.Concurrent.Async.Lifted (mapConcurrently,
+                                                  mapConcurrently_)
+import           RFC.Prelude                     hiding (mapConcurrently)
 
 -- |Executes all the IO actions simultaneously and returns the original data structure with the arguments replaced
 --  by the results of the execution.

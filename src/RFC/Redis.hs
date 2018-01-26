@@ -1,3 +1,7 @@
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+
+
 module RFC.Redis
   ( createConnectionPool
   , ConnectionPool
@@ -7,10 +11,10 @@ module RFC.Redis
   , setex
   ) where
 
-import RFC.Prelude
 import qualified Database.Redis as R
-import RFC.String
-import RFC.Env as Env
+import           RFC.Env        as Env
+import           RFC.Prelude
+import           RFC.String
 
 type ConnectionPool = R.Connection
 
@@ -38,7 +42,7 @@ get key = do
 
 unpack :: (MonadThrow m) => Either R.Reply a -> m a
 unpack (Left reply) = throw $ RedisException reply
-unpack (Right it) = return it
+unpack (Right it)   = return it
 
 setex :: (HasRedis m, ConvertibleToSBS key, ConvertibleToSBS value, TimeUnit expiry) => key -> value -> expiry -> m ()
 setex key value expiry = do

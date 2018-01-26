@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module RFC.Data.IdAnd
   ( idAndsToMap
   , IdAnd(..)
@@ -7,15 +11,14 @@ module RFC.Data.IdAnd
   , idAndToPair
   ) where
 
-import RFC.Prelude
-import RFC.JSON
-import Data.Aeson as JSON
-import Data.Map as Map
-import Data.List as List hiding ((++))
-import Database.PostgreSQL.Simple.ToRow
-import Database.PostgreSQL.Simple.FromRow
-import Database.PostgreSQL.Simple.ToField
-import Database.PostgreSQL.Simple.FromField()
+import           Data.Aeson                           as JSON
+import           Data.List                            as List hiding ((++))
+import           Data.Map                             as Map
+import           Database.PostgreSQL.Simple.FromField ()
+import           Database.PostgreSQL.Simple.FromRow
+import           Database.PostgreSQL.Simple.ToField
+import           Database.PostgreSQL.Simple.ToRow
+import           RFC.Prelude
 
 -- |Represents something which has an ID.
 newtype IdAnd a = IdAnd (UUID, a)

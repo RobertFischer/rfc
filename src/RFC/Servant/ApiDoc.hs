@@ -1,15 +1,19 @@
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+
 module RFC.Servant.ApiDoc
   ( apiToHtml
   , apiToAscii
   , apiToSwagger
   ) where
 
-import RFC.Prelude
-import RFC.String
-import RFC.Servant
-import Servant.Swagger
-import Data.Default (def)
-import qualified Text.Markdown as MD
+import           Data.Default    (def)
+import           RFC.Prelude
+import           RFC.Servant
+import           RFC.String
+import           Servant.Swagger
+import qualified Text.Markdown   as MD
 
 apiToHtml :: (HasDocs a) => Proxy a -> Html
 apiToHtml = preEscapedToHtml . (MD.markdown mdSettings) . cs . markdown . docs

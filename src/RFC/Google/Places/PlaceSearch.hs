@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module RFC.Google.Places.PlaceSearch
   ( module RFC.Google.Places.PlaceSearch
   , module RFC.Google.Places.SearchResults
@@ -5,13 +9,13 @@ module RFC.Google.Places.PlaceSearch
   , HasAPIClient
   ) where
 
-import RFC.Prelude
-import RFC.Log
-import RFC.HTTP.Client
-import qualified Data.Maybe as Maybe
-import qualified Data.List as List
-import RFC.Data.LatLng
-import RFC.Google.Places.SearchResults
+import qualified Data.List                       as List
+import qualified Data.Maybe                      as Maybe
+import           RFC.Data.LatLng
+import           RFC.Google.Places.SearchResults
+import           RFC.HTTP.Client
+import           RFC.Log
+import           RFC.Prelude
 
 endpoint :: URL
 endpoint =
@@ -22,9 +26,9 @@ endpoint =
     endpointStr = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 
 data Params = Params
-  { apiKey :: String
-  , search :: String
-  , language :: Maybe String
+  { apiKey    :: String
+  , search    :: String
+  , language  :: Maybe String
   , placeType :: Maybe PlaceType -- ^ "type"
   }
 
@@ -33,7 +37,7 @@ data PlaceType =
 
 placeTypeToString :: PlaceType -> String
 placeTypeToString Hospital = "hospital"
-placeTypeToString Doctor = "doctor"
+placeTypeToString Doctor   = "doctor"
 
 paramsToPairs :: Params -> [(String,String)]
 paramsToPairs params =

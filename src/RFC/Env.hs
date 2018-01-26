@@ -1,3 +1,5 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 module RFC.Env
   ( readGoogleMapsAPIKey
   , isDevelopment
@@ -6,11 +8,11 @@ module RFC.Env
   , readRedisConnectInfo
   ) where
 
-import RFC.Prelude
-import System.Environment (lookupEnv)
-import Database.PostgreSQL.Simple as Psql
-import Database.Redis as Redis
-import Data.Word (Word16)
+import           Data.Word                  (Word16)
+import           Database.PostgreSQL.Simple as Psql
+import           Database.Redis             as Redis
+import           RFC.Prelude
+import           System.Environment         (lookupEnv)
 
 -- TODO Create a Monad that only logs reading the env var once, and reads all the environment variables at once, and is pure.
 
@@ -102,7 +104,7 @@ readRedisPassword = do
   return $
     case result of
       "" -> Nothing
-      _ -> Just $ cs result
+      _  -> Just $ cs result
 
 readRedisDbNumber :: (MonadIO m) => m Integer
 readRedisDbNumber = read <$> readEnv "REDIS_DATABASE" (Just $ show $ Redis.connectDatabase Redis.defaultConnectInfo)

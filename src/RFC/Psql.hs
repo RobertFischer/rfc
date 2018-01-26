@@ -1,3 +1,8 @@
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+
 module RFC.Psql
   ( module Database.PostgreSQL.Simple
   , module Database.PostgreSQL.Simple.FromField
@@ -9,19 +14,24 @@ module RFC.Psql
   , module RFC.Psql
   ) where
 
-import RFC.Prelude
-import RFC.Env
-import Database.PostgreSQL.Simple (Connection, connectUser, connectPassword, connectDatabase, ConnectInfo, FromRow, Only(..), In(..), commit, Query)
-import qualified Database.PostgreSQL.Simple as Psql
-import Data.Pool
-import Database.PostgreSQL.Simple.FromField hiding (Binary)
-import Database.PostgreSQL.Simple.FromRow
-import Database.PostgreSQL.Simple.ToField
-import Database.PostgreSQL.Simple.ToRow
-import Database.PostgreSQL.Simple.SqlQQ
-import Database.PostgreSQL.Simple.Types
-import Control.Monad.Trans.Control
-import RFC.Log
+import           Control.Monad.Trans.Control
+import           Data.Pool
+import           Database.PostgreSQL.Simple           (ConnectInfo, Connection,
+                                                       FromRow, In (..),
+                                                       Only (..), Query, commit,
+                                                       connectDatabase,
+                                                       connectPassword,
+                                                       connectUser)
+import qualified Database.PostgreSQL.Simple           as Psql
+import           Database.PostgreSQL.Simple.FromField hiding (Binary)
+import           Database.PostgreSQL.Simple.FromRow
+import           Database.PostgreSQL.Simple.SqlQQ
+import           Database.PostgreSQL.Simple.ToField
+import           Database.PostgreSQL.Simple.ToRow
+import           Database.PostgreSQL.Simple.Types
+import           RFC.Env
+import           RFC.Log
+import           RFC.Prelude
 
 type ConnectionPool = Pool Connection
 
@@ -61,14 +71,14 @@ query1 :: (MonadIO m, FromRow r, ToRow q) => Connection -> Query -> q -> m (Mayb
 query1 conn qry q = do
   result <- query conn qry q
   return $ case result of
-    [] -> Nothing
+    []    -> Nothing
     (r:_) -> Just r
 
 query1_ :: (MonadIO m, FromRow r) => Connection -> Query -> m (Maybe r)
 query1_ conn qry = do
   result <- query_ conn qry
   return $ case result of
-    [] -> Nothing
+    []    -> Nothing
     (r:_) -> Just r
 
 query1Else :: (MonadIO m, FromRow r, ToRow q, Exception e) => Connection -> Query -> q -> e -> m (Maybe r)
@@ -76,14 +86,14 @@ query1Else conn qry q e = do
   result <- query1 conn qry q
   case result of
     (Just _) -> return result
-    Nothing -> liftIO $ throwIO e
+    Nothing  -> liftIO $ throwIO e
 
 query1Else_ :: (MonadIO m, FromRow r, Exception e) => Connection -> Query -> e -> m (Maybe r)
 query1Else_ conn qry e = do
   result <- query1_ conn qry
   case result of
     (Just _) -> return result
-    Nothing -> liftIO $ throwIO e
+    Nothing  -> liftIO $ throwIO e
 
 execute :: (MonadIO m, ToRow q) => Connection -> Query -> q -> m Int64
 execute conn qry q = liftIO $ Psql.execute conn qry q
