@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.5
+version:             0.0.0.7
 synopsis:            Robert Fischer's Common library
 description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
@@ -29,9 +29,8 @@ library
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-orphans -fno-warn-name-shadowing
   if flag(Development)
-    ghc-options:       -O0 -Werror
+    ghc-options:       -Werror
   else
-    ghc-options:       -O2
     if flag(Browser)
       ghc-options:     -dedupe
   build-depends:       base >= 4.7 && < 5

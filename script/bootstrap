@@ -5,8 +5,3 @@ HEREDIR=`pwd`
 cd ..
 ROOTDIR=`pwd`
 
-cd "$HEREDIR"
-./test
-cd "$ROOTDIR"
-cabal check
-stack upload .
