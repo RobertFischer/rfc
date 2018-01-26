@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -14,7 +15,9 @@ module RFC.Data.LatLng
 
 import           RFC.JSON    as JSON
 import           RFC.Prelude
+#ifndef GHCJS_BROWSER
 import           RFC.Psql    as Psql
+#endif
 
 type Latitude = Double
 type Longitude = Double
@@ -26,6 +29,7 @@ data LatLng = LatLng {
 } deriving (Eq, Ord, Show, Typeable, Generic)
 $(JSON.deriveJSON JSON.jsonOptions ''LatLng)
 
+#ifndef GHCJS_BROWSER
 noLat :: Maybe Latitude
 noLat = Nothing
 
@@ -50,7 +54,7 @@ instance FromRow (Maybe LatLng) where
     case parsed of
       (Just (Just lat, Just lng)) -> return $ Just $ latLng lat lng
       _                           -> return Nothing
-
+#endif
 
 latLng :: Latitude -> Longitude -> LatLng
 latLng lat lng = LatLng lat lng

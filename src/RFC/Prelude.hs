@@ -10,17 +10,18 @@ module RFC.Prelude
   , module Data.Typeable
   ) where
 
-import Prelude ()
-import ClassyPrelude hiding (Handler, unpack, Day)
-import Data.Char as Char
-import Data.String.Conversions (cs, LazyByteString, StrictByteString, LazyText, StrictText)
-import GHC.Generics (Generic)
-import qualified Data.List as List
-import Text.Read (Read, read)
-import Data.Time.Units
-import RFC.Data.UUID (UUID)
-import Data.Function ((&))
-import Data.Typeable (TypeRep, typeOf)
+import           ClassyPrelude           hiding (Day, Handler, unpack)
+import           Data.Char               as Char
+import           Data.Function           ((&))
+import qualified Data.List               as List
+import           Data.String.Conversions (LazyByteString, LazyText,
+                                          StrictByteString, StrictText, cs)
+import           Data.Time.Units
+import           Data.Typeable           (TypeRep, typeOf)
+import           GHC.Generics            (Generic)
+import           Prelude                 ()
+import           RFC.Data.UUID           (UUID)
+import           Text.Read               (Read, read)
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
@@ -38,7 +39,7 @@ mapSnd :: (b -> c) -> (a,b) -> (a,c)
 mapSnd f (a,b) = (a, f b)
 
 safeHead :: [a] -> Maybe a
-safeHead [] = Nothing
+safeHead []    = Nothing
 safeHead (x:_) = Just x
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....
