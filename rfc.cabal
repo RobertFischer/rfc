@@ -1,13 +1,13 @@
 name:                rfc
 version:             0.0.0.5
-synopsis:            Robert Fischer's Common library, for all Robert Fischer's common needs.
-description:         See README.md
+synopsis:            Robert Fischer's Common library
+description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
 license:             BSD3
 license-file:        LICENSE
 author:              Robert Fischer
 maintainer:          smokejumperit+rfc@gmail.com
-copyright:           (c)2017 Robert Fischer
+copyright:           (c)2018 Robert Fischer
 category:            Library
 build-type:          Simple
 extra-source-files:  README.md

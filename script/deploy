@@ -1,0 +1,13 @@
+#!/bin/bash -exu
+
+cd `dirname $0`
+HEREDIR=`pwd`
+cd ..
+ROOTDIR=`pwd`
+
+cd "$HEREDIR"
+./test
+cd "$ROOTDIR"
+stack clean
+stack build --flag rfc:-development
+stack upload .
