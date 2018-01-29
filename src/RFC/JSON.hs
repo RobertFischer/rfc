@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
+
 module RFC.JSON
 ( jsonOptions
 , deriveJSON
@@ -15,12 +16,15 @@ module RFC.JSON
 , Value(..)
 , encode
 , decode
+, module Data.Aeson.Types
 ) where
 
+import           ClassyPrelude
 import           Data.Aeson       as JSON
 import           Data.Aeson.TH    (deriveJSON)
 import           Data.Aeson.Types (Options (..), SumEncoding (..))
-import           RFC.Prelude
+import           Data.Char
+import           RFC.String
 
 jsonOptions :: Options
 jsonOptions = defaultOptions
@@ -32,7 +36,7 @@ jsonOptions = defaultOptions
   where
     ctm []     = []
     ctm (c:cs) = (charToLower c):cs
-    flm = flm' . span charIsLower
+    flm = flm' . span isLower
     flm' (cs, []) = cs
     flm' (_, cs)  = lowerFirst cs
     lowerFirst []     = []
