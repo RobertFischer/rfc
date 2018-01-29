@@ -7,14 +7,17 @@ module RFC.Data.UUID
   ( module Data.UUID.Types
   ) where
 
+import           ClassyPrelude
+import           RFC.String
+
 import           Data.UUID.Types
 import qualified Data.UUID.Types                    as UUID
+
 #ifndef GHCJS_BROWSER
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.ToRow
 import           Database.PostgreSQL.Simple.Types   (Only (..))
 #endif
-import           RFC.String
 
 #ifndef GHCJS_BROWSER
 instance FromRow UUID where
