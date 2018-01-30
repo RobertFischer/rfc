@@ -74,11 +74,11 @@ type FetchAllAPI a = Get '[JSON] (Map UUID (IdAnd a))
 type FetchImpl a = UUID -> ApiCtx (IdAnd a)
 type FetchAPI a = Capture "id" UUID :> Get '[JSON] (IdAnd a)
 type CreateImpl a = a -> ApiCtx (IdAnd a)
-type CreateAPI a = ReqBody '[JSON,FormUrlEncoded] a :> Post '[JSON] (IdAnd a)
+type CreateAPI a = ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
 type PatchImpl a = UUID -> JSON.Patch -> ApiCtx (IdAnd a)
 -- type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
 type ReplaceImpl a = UUID -> a -> ApiCtx (IdAnd a)
-type ReplaceAPI a = Capture "id" UUID :> ReqBody '[JSON,FormUrlEncoded] a :> Post '[JSON] (IdAnd a)
+type ReplaceAPI a = Capture "id" UUID :> ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
 
 type ServerImpl a =
   (FetchAllImpl a)

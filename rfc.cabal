@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.10
+version:             0.0.0.12
 synopsis:            Robert Fischer's Common library
 description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
@@ -31,9 +31,6 @@ library
   ghc-options:         -Wall -fno-warn-orphans -fno-warn-name-shadowing
   if flag(Development)
     ghc-options:       -Werror
-  else
-    if flag(Browser)
-      ghc-options:     -dedupe
   build-depends:       base >= 4.7 && < 5
                      , servant
                      , classy-prelude
@@ -59,6 +56,7 @@ library
                      , text
   if flag(Browser)
     build-depends:     aeson
+                     , attoparsec
   if !flag(Browser)
     build-depends:     servant-server
                      , wai
@@ -74,13 +72,16 @@ library
                      , wreq
                      , servant-swagger
                      , swagger2
+                     , binary
                      , markdown
+                     , servant-client
 
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent
                      , RFC.Throttle
                      , RFC.JSON
+                     , RFC.API
                      , RFC.HTTP.Types
                      , RFC.Data.LatLng
                      , RFC.Data.IdAnd
@@ -98,8 +99,9 @@ library
                      , RFC.HTTP.Client
                      , RFC.Servant
                      , RFC.Servant.ApiDoc
+                     , RFC.Client.Coinhive
   if flag(Browser)
-    cpp-options:       -DCLIENT -DGHCJS_BROWSER
+    cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
 
 
 source-repository head

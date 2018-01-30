@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
@@ -20,11 +21,23 @@ module RFC.JSON
 ) where
 
 import           ClassyPrelude
-import           Data.Aeson       as JSON
-import           Data.Aeson.TH    (deriveJSON)
-import           Data.Aeson.Types (Options (..), SumEncoding (..))
+import           Data.Aeson                 as JSON
+import           Data.Aeson.Parser          as JSONParser
+import           Data.Aeson.TH              (deriveJSON)
+import           Data.Aeson.Types           (Options (..), SumEncoding (..),
+                                             Value (..))
 import           Data.Char
 import           RFC.String
+import           Web.HttpApiData
+
+-- How we go about executing the parser
+#if MIN_VERSION_aeson(1,0,0)
+import           Data.Aeson.Text            as JSON
+import qualified Data.Aeson.Types           as JSONTypes
+#else
+import           Data.Attoparsec.ByteString as JSON
+import           Data.Either                (either)
+#endif
 
 jsonOptions :: Options
 jsonOptions = defaultOptions
@@ -56,3 +69,25 @@ decodeOrDie input =
   case decodeEither' input of
     Left err -> throwM $ DecodeError (input, err)
     Right a  -> return a
+
+instance FromHttpApiData JSON.Value where
+  parseUrlPiece text =
+      case parsed of
+        Nothing      -> Left $ (cs "Could not parse JSON: ") ++ text
+        (Just value) -> Right value
+    where
+      parser = JSONParser.value'
+      parsed =
+#if MIN_VERSION_aeson(1,0,0)
+        JSONParser.decodeStrictWith parser JSONTypes.Success (cs text)
+#else
+        either (const Nothing) Just $ JSON.parseOnly parser (cs text)
+#endif
+
+instance ToHttpApiData JSON.Value where
+  toUrlPiece =
+#if MIN_VERSION_aeson(1,0,0)
+    cs . JSON.encodeToLazyText
+#else
+    cs . JSON.encode
+#endif
