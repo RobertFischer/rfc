@@ -39,6 +39,10 @@ import           Data.Attoparsec.ByteString as JSON
 import           Data.Either                (either)
 #endif
 
+#ifndef GHCJS_BROWSER
+import qualified Data.Swagger               as Swag
+#endif
+
 jsonOptions :: Options
 jsonOptions = defaultOptions
     { sumEncoding = ObjectWithSingleField
@@ -90,4 +94,10 @@ instance ToHttpApiData JSON.Value where
     cs . JSON.encodeToLazyText
 #else
     cs . JSON.encode
+#endif
+
+#ifndef GHCJS_BROWSER
+instance Swag.ToSchema Value where
+  declareNamedSchema _ = do
+    return $ Swag.NamedSchema (Just $ cs "Value") $ mempty
 #endif

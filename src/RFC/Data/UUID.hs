@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -21,12 +22,18 @@ import           Data.Aeson.Types
 #endif
 
 #ifndef GHCJS_BROWSER
-
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.ToRow
 import           Database.PostgreSQL.Simple.Types   (Only (..))
+import           Servant.API.Capture
+import           Servant.Docs
 #endif
 
+#ifndef GHCJS_BROWSER
+instance ToCapture (Capture "id" UUID) where
+  toCapture _ = DocCapture "id" "UUID identifier"
+
+#endif
 
 #ifndef GHCJS_BROWSER
 instance FromRow UUID where
