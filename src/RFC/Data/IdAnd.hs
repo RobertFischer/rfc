@@ -1,12 +1,13 @@
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecordWildCards     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedLists            #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 
 
 module RFC.Data.IdAnd
@@ -16,19 +17,29 @@ module RFC.Data.IdAnd
   , idAndToTuple
   , tupleToIdAnd
   , idAndToPair
+  , RefMap(..)
   ) where
 
 import           RFC.Prelude
 
+
+import           Data.Aeson                           as JSON
 import qualified Data.List                            as List hiding ((++))
 import qualified Data.Map                             as Map
+import qualified Data.UUID.Types                      as UUID
+
+#if MIN_VERSION_aeson(1,0,0)
+  -- Don't need the backflips for maps
+#else
+import           Data.Aeson.Types                     (Parser, typeMismatch)
+import           Data.Bitraversable
+import qualified Data.HashMap.Lazy                    as HashMap
+#endif
 
 #ifndef GHCJS_BROWSER
 import           Control.Lens                         hiding ((.=))
-import           Data.Aeson                           as JSON
 import           Data.Proxy                           (Proxy (..))
 import           Data.Swagger
-import           Data.UUID.Types                      as UUID
 import           Database.PostgreSQL.Simple.FromField ()
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.ToField
@@ -39,6 +50,9 @@ import           Servant.Docs
 -- |Represents something which has an ID.
 newtype IdAnd a = IdAnd (UUID, a)
   deriving (Eq, Ord, Show, Generic, Typeable)
+
+newtype RefMap a = RefMap (Map.Map UUID (IdAnd a))
+  deriving (Eq, Ord, Show, Generic, Typeable, FromJSON, ToJSON)
 
 tupleToIdAnd :: (UUID, a) -> IdAnd a
 tupleToIdAnd = IdAnd
@@ -52,10 +66,9 @@ idAndToTuple (IdAnd it) = it
 idAndToPair :: IdAnd a -> (UUID, IdAnd a)
 idAndToPair idAnd@(IdAnd (id,_)) = (id, idAnd)
 
-idAndsToMap :: [IdAnd a] -> Map UUID a
-idAndsToMap list = Map.fromList $ List.map idAndToTuple list
+idAndsToMap :: [IdAnd a] -> RefMap a
+idAndsToMap list = RefMap $ Map.fromList $ List.map (\idAnd@(IdAnd(uuid,_)) -> (uuid,idAnd)) list
 
-#ifndef GHCJS_BROWSER
 instance (FromJSON a) => FromJSON (IdAnd a) where
   parseJSON = JSON.withObject "IdAnd" $ \o -> do
     id <- o .: "id"
@@ -65,6 +78,38 @@ instance (FromJSON a) => FromJSON (IdAnd a) where
 instance (ToJSON a) => ToJSON (IdAnd a) where
   toJSON (IdAnd (id,value)) = object [ "id".=id, "value".=value ]
 
+#if MIN_VERSION_aeson(1,0,0)
+  -- Have Mpa instances automatically created
+#else
+instance (FromJSON a) => FromJSON (Map UUID (IdAnd a)) where
+  parseJSON (Object obj) =
+      Map.fromList <$> listInParser
+    where
+      objList :: [(Text, Value)]
+      objList = HashMap.toList obj
+      die :: Text -> Parser UUID
+      die k = fail . cs $ "Could not parse UUID: " ++ k
+      mapMKey :: Text -> Parser UUID
+      mapMKey k = maybe (die k) return $ UUID.fromText k
+      mapMVal :: Value -> Parser (IdAnd a)
+      mapMVal = parseJSON
+      mapPair :: (Text,Value) -> Parser (UUID, IdAnd a)
+      mapPair = bimapM mapMKey mapMVal
+      parserList :: [Parser (UUID, IdAnd a)]
+      parserList = map mapPair objList
+      listInParser :: Parser [(UUID, IdAnd a)]
+      listInParser = sequence parserList
+
+  parseJSON invalid = typeMismatch "Map UUID (IdAnd a)" invalid
+
+
+instance (ToJSON a) => ToJSON (Map UUID (IdAnd a)) where
+  toJSON =
+    Object . HashMap.fromList . map (\(k,v) -> (UUID.toText k, toJSON v)) . Map.toList
+
+#endif
+
+#ifndef GHCJS_BROWSER
 instance (FromRow a) => FromRow (IdAnd a) where
   fromRow = valuesToIdAnd <$> field <*> fromRow
 
@@ -85,13 +130,13 @@ instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
         & required .~ ["id", "value"]
         & example .~ (toJSON . snd <$> maybeSample)
 
-instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (Map UUID (IdAnd a)) where
+instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (RefMap a) where
   declareNamedSchema _ = do
     NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
     let aMaybeName =  _namedSchemaName
     idAndASchema <- declareSchemaRef (Proxy :: Proxy (IdAnd a))
-    let maybeSample = safeHead $ toSamples (Proxy :: Proxy (Map UUID (IdAnd a)))
-    return $ NamedSchema (map (\name -> "Map of IdAnd " ++ name) aMaybeName) $
+    let maybeSample = safeHead $ toSamples (Proxy :: Proxy (RefMap a))
+    return $ NamedSchema (map (\name -> "RefMap " ++ name) aMaybeName) $
       mempty
         & type_ .~ SwaggerObject
         & additionalProperties .~ (Just idAndASchema)
@@ -207,9 +252,9 @@ instance (ToSample a) => ToSample (IdAnd a) where
     where
       idAndify (uuid, (desc, a)) = (desc, IdAnd (uuid,a))
 
-instance (ToSample a) => ToSample (Map UUID (IdAnd a)) where
+instance (ToSample a) => ToSample (RefMap a) where
   toSamples _ = singleSample $
-      Map.fromList $ map idAndify $ zip uuidList (toSamples Proxy)
+      RefMap $ Map.fromList $ map idAndify $ zip uuidList (toSamples Proxy)
     where
       idAndify (uuid, (_, a)) = (uuid, IdAnd (uuid,a))
 
