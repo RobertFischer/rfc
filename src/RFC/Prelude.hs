@@ -8,9 +8,17 @@ module RFC.Prelude
   , module Data.Time.Units
   , module Data.Function
   , module Data.Typeable
+  , module Control.Monad
+  , module Data.Bitraversable
+  , module Data.Bifunctor
+  , module Data.Bifoldable
   ) where
 
 import           ClassyPrelude           hiding (Day, Handler, unpack)
+import           Control.Monad           (forever, void, (<=<), (>=>))
+import           Data.Bifoldable
+import           Data.Bifunctor
+import           Data.Bitraversable
 import           Data.Char               as Char
 import           Data.Function           ((&))
 import qualified Data.List               as List
