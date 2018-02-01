@@ -71,17 +71,31 @@ instance (FromRow a) => FromRow (IdAnd a) where
 instance (ToRow a) => ToRow (IdAnd a) where
   toRow (IdAnd (id,a)) = toField id : toRow a
 
-instance (ToSchema a) => ToSchema (IdAnd a) where
+instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
   declareNamedSchema _ = do
     NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
     let aMaybeName =  _namedSchemaName
     aSchema <- declareSchemaRef (Proxy :: Proxy a)
     idSchema <- declareSchemaRef (Proxy :: Proxy UUID)
+    let maybeSample = safeHead $ toSamples (Proxy :: Proxy (IdAnd a))
     return $ NamedSchema (map (\name -> "IdAnd " ++ name) aMaybeName) $
       mempty
         & type_ .~ SwaggerObject
         & properties .~ [("id", idSchema), ("value", aSchema)]
         & required .~ ["id", "value"]
+        & example .~ (toJSON . snd <$> maybeSample)
+
+instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (Map UUID (IdAnd a)) where
+  declareNamedSchema _ = do
+    NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
+    let aMaybeName =  _namedSchemaName
+    idAndASchema <- declareSchemaRef (Proxy :: Proxy (IdAnd a))
+    let maybeSample = safeHead $ toSamples (Proxy :: Proxy (Map UUID (IdAnd a)))
+    return $ NamedSchema (map (\name -> "Map of IdAnd " ++ name) aMaybeName) $
+      mempty
+        & type_ .~ SwaggerObject
+        & additionalProperties .~ (Just idAndASchema)
+        & example .~ (toJSON . snd <$> maybeSample)
 
 uuidList :: [UUID]
 uuidList = List.cycle $ map (fromMaybe UUID.nil) $ map UUID.fromString
