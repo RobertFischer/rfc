@@ -21,14 +21,15 @@ module RFC.Servant
   , module Text.Blaze.Html
   , module Data.Swagger
   , module RFC.Data.IdAnd
+  , module RFC.API
   ) where
 
 import           Data.Aeson                 as JSON
 import qualified Data.Aeson.Diff            as JSON
-import qualified Data.Map.Strict            as Map
 import           Data.Swagger               (Swagger, ToSchema)
 import           Database.PostgreSQL.Simple (SqlError (..))
 import           Network.Wreq.Session       as Wreq
+import           RFC.API
 import           RFC.Data.IdAnd
 import           RFC.HTTP.Client
 import           RFC.JSON                   ()
@@ -69,16 +70,16 @@ apiCtxToHandler apiClient redisPool psqlPool = toHandler
         withRedis m = runReaderT m redisPool
         withPsql m = runReaderT m psqlPool
 
-type FetchAllImpl a = ApiCtx (Map UUID (IdAnd a))
-type FetchAllAPI a = Get '[JSON] (Map UUID (IdAnd a))
+type FetchAllImpl a = ApiCtx (RefMap a)
+type FetchAllAPI a = JGet (RefMap a)
 type FetchImpl a = UUID -> ApiCtx (IdAnd a)
-type FetchAPI a = Capture "id" UUID :> Get '[JSON] (IdAnd a)
+type FetchAPI a = Capture "id" UUID :> JGet (IdAnd a)
 type CreateImpl a = a -> ApiCtx (IdAnd a)
-type CreateAPI a = ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
+type CreateAPI a = JReqBody a :> JPost (IdAnd a)
 type PatchImpl a = UUID -> JSON.Patch -> ApiCtx (IdAnd a)
 -- type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
 type ReplaceImpl a = UUID -> a -> ApiCtx (IdAnd a)
-type ReplaceAPI a = Capture "id" UUID :> ReqBody '[JSON] a :> Post '[JSON] (IdAnd a)
+type ReplaceAPI a = Capture "id" UUID :> JReqBody a :> JPost (IdAnd a)
 
 type ServerImpl a =
   (FetchAllImpl a)
@@ -98,7 +99,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
   restFetchAll :: FetchAllImpl a
   restFetchAll = do
     resources <- fetchAllResources
-    return $ Map.fromList $ map idAndToPair resources
+    return $ idAndsToMap resources
 
   restFetch :: FetchImpl a
   restFetch uuid = do
