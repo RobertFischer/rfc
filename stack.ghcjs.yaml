@@ -8,6 +8,22 @@ extra-deps:
  - aeson-diff-1.1.0.4
  - time-units-1.0.0
  - edit-distance-vector-1.0.0.4
+ - classy-prelude-1.4.0
+ - basic-prelude-0.7.0
+ - unliftio-0.2.4.0
+ - async-2.1.1.1
+ - unliftio-core-0.1.1.0
+ - http-api-data-0.3.7.2
+ - attoparsec-iso8601-1.0.0.0
+ - cabal-doctest-1.0.6
+ - servant-0.12.1
+ - natural-transformation-0.4
+ - comonad-5.0.2
+ - free-4.12.4
+ - miso-0.12.0.0
+
+
+
 
 setup-info:
   ghcjs:

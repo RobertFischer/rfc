@@ -1,7 +1,5 @@
-{-# LANGUAGE CPP               #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-
+{-# LANGUAGE CPP           #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module RFC.JSON
 ( jsonOptions
@@ -21,6 +19,7 @@ module RFC.JSON
 ) where
 
 import           ClassyPrelude
+import           Control.Monad.Catch
 import           Data.Aeson                 as JSON
 import           Data.Aeson.Parser          as JSONParser
 import           Data.Aeson.TH              (deriveJSON)

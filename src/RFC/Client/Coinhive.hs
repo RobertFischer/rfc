@@ -2,6 +2,8 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MonoLocalBinds             #-}
+{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -14,6 +16,7 @@ import           RFC.Prelude
 
 import           Data.Aeson.Types as JSON
 import           RFC.API
+import           RFC.HTTP.Client  (HasHttpManager (..))
 import           RFC.JSON
 import           Servant
 
@@ -21,9 +24,13 @@ import           Servant
 import           Servant.Client
 #endif
 
-newtype SecretKey = SecretKey String deriving (FromJSON,ToJSON)
-newtype TokenId = TokenId String deriving (FromJSON,ToJSON)
+-- |The secret key given by CoinHive to the client, WHICH SHOULD NEVER BE SHARED.
+newtype SecretKey = SecretKey String deriving (FromJSON,ToJSON,ToHttpApiData,FromHttpApiData)
 
+-- |The token id that a user has, which we want to verify.
+newtype TokenId = TokenId String deriving (FromJSON,ToJSON,ToHttpApiData,FromHttpApiData)
+
+-- |Response from a token verification request.
 data TokenVerification = TokenVerification
   { tvSuccess :: Bool
   , tvHashes  :: Integer
@@ -32,6 +39,7 @@ data TokenVerification = TokenVerification
   }
 $(deriveJSON jsonOptions ''TokenVerification)
 
+-- |Arguments required to request verification of a token.
 data TokenVerifyRequest = TokenVerifyRequest
   { tvrSecret :: SecretKey
   , tvrToken  :: TokenId
@@ -39,126 +47,44 @@ data TokenVerifyRequest = TokenVerifyRequest
   }
 $(deriveJSON jsonOptions ''TokenVerifyRequest)
 
-data UserCurrentBalance = UserCurrentBalance
-  { ucbSuccess   :: Bool
-  , ucbName      :: String
-  , ucbTotal     :: Integer
-  , ucbWithdrawn :: Integer
-  , ucbBalance   :: Integer
-  , ucbError     :: Maybe String
-  }
-$(deriveJSON jsonOptions ''UserCurrentBalance)
-
-data UserWithdrawRequest = UserWithdrawRequest
-  { uwrSecret :: SecretKey
-  , uwrName   :: String
-  , uwrAmount :: Integer
-  }
-$(deriveJSON jsonOptions ''UserWithdrawRequest)
-
-data UserWithdrawl = UserWithdrawl
-  { uwSuccess :: Bool
-  , uwName    :: String
-  , uwAmount  :: Integer
-  , uwError   :: Maybe String
-  }
-$(deriveJSON jsonOptions ''UserWithdrawl)
-
-data UserOrdering =
-  TotalUserOrdering
-  | BalanceUserOrdering
-  | WithdrawnUserOrdering
-
-instance FromJSON UserOrdering where
-  parseJSON = withText "UserOrdering" $ \v ->
-    case cs $ toLower v of
-      "total"     -> return TotalUserOrdering
-      "balance"   -> return BalanceUserOrdering
-      "withdrawn" -> return WithdrawnUserOrdering
-      _           -> typeMismatch "UserOrdering" (JSON.String v)
-
-instance ToJSON UserOrdering where
-  toJSON TotalUserOrdering     = toJSON "total"
-  toJSON BalanceUserOrdering   = toJSON "balance"
-  toJSON WithdrawnUserOrdering = toJSON "withdrawn"
-
--- |Represents a single user in a 'UserTopReport' or 'UserListReport'
-data ReportUser = ReportUser
-  { ruName      :: String
-  , ruTotal     :: Integer
-  , ruWithdrawn :: Integer
-  , ruBalance   :: Integer
-  }
-$(deriveJSON jsonOptions ''ReportUser)
-
--- |Report of top users by 'UserOrdering'.
-data UserTopReport = UserTopReport
-  { utrSuccess :: Bool
-  , utrUsers   :: [ReportUser]
-  , utrError   :: Maybe String
-  }
-$(deriveJSON jsonOptions ''UserTopReport)
-
-data UserListReport = UserListReport
-  { ulrSuccess  :: Bool
-  , ulrUsers    :: [ReportUser]
-  , ulrNextPage :: Maybe String
-  , ulrError    :: Maybe String
-  }
-$(deriveJSON jsonOptions ''UserListReport)
-
-data UserResetRequest = UserResetRequest
-  { urreqSecret :: SecretKey
-  , urreqName   :: String
-  }
-$(deriveJSON jsonOptions ''UserResetRequest)
-
-data UserResetResult = UserResetResult
-  { urrSuccess :: Bool
-  , urrError   :: Maybe String
-  }
-$(deriveJSON jsonOptions ''UserResetResult)
-
-
+-- |The proxy so that you can refer to the API type.
 api :: Proxy API
 api = Proxy
 
 -- |The unification of the various endpoints.
 type API =
   TokenVerify
-  :<|> UserBalance
-  :<|> UserWithdraw
-  :<|> UserTop
-  :<|> UserList
-  :<|> UserReset
 
+-- |Endpoint to request verification of a token
 type TokenVerify =
   "token" :> "verify" :> JReqBody TokenVerifyRequest :> JPost TokenVerification
 
-type UserBalance =
-  "user" :> "balance" :> QueryParam "secret" SecretKey :> QueryParam "name" String :> JGet UserCurrentBalance
-
-type UserWithdraw =
-  "user" :> "withdraw" :> JReqBody UserWithdrawRequest :> JPost UserWithdrawl
-
-type UserTop =
-  "user" :> "top" :> QueryParam "secret" SecretKey :> QueryParam "count" Integer :> QueryParam "order" UserOrdering :> JGet UserTopReport
-
-type UserList =
-  "user" :> "list" :> QueryParam "secert" SecretKey :> QueryParam "count" Integer :> QueryParam "page" String :> JGet UserListReport
-
-type UserReset =
-  "user" :> "reset" :> JReqBody UserResetRequest :> JPost UserResetResult
-
 #ifndef GHCJS_BROWSER
 
--- |The URL prefix used for Coinhive's API
-baseUrl :: BaseUrl
-baseUrl = BaseUrl
+-- |Monad defining how to request a token verification. See 'tokenVerify' instead: that's probably what you want.
+tokenVerifyM :: TokenVerifyRequest -> ClientM TokenVerification
+tokenVerifyM
+  = client api
+
+-- |Base URL for CoinHive's API
+apiUrlBase :: BaseUrl
+apiUrlBase = BaseUrl
   { baseUrlScheme = Https
   , baseUrlHost = "api.coinhive.com"
   , baseUrlPort = 443
   , baseUrlPath = "/"
   }
+
+-- |Perform a verification of a token.
+tokenVerify :: (MonadThrow m, MonadIO m, HasHttpManager m) => TokenVerifyRequest -> m TokenVerification
+tokenVerify req = do
+  manager <- getHttpManager
+  let env = ClientEnv {..}
+  result <- liftIO $ runClientM (tokenVerifyM req) env
+  case result of
+    Left err       -> throw err
+    Right response -> return response
+  where
+    baseUrl = apiUrlBase
 
 #endif

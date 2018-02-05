@@ -60,7 +60,7 @@ paramsToUrl params =
   where
     fold = flip add_param
 
-query :: (MonadCatch m, HasAPIClient m) => Params -> m Results
+query :: (MonadIO m, MonadCatch m, HasAPIClient m) => Params -> m Results
 query params = apiGet (paramsToUrl params) onError
   where
     onError :: (MonadIO m) => SomeException -> m Results

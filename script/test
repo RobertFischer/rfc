@@ -3,7 +3,7 @@
 cd `dirname $0`/..
 
 stack build --stack-yaml=./stack.ghcjs.yaml --fast
-stack build --flag rfc:development --fast
+stack build --fast
 
 stack clean 
 stack clean --stack-yaml=./stack.ghcjs.yaml 

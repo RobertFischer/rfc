@@ -32,7 +32,7 @@ import qualified Data.UUID.Types                      as UUID
   -- Don't need the backflips for maps
 #else
 import           Data.Aeson.Types                     (Parser, typeMismatch)
-import           Data.Bitraversable
+-- import           Data.Bitraversable
 import qualified Data.HashMap.Lazy                    as HashMap
 #endif
 

@@ -80,7 +80,5 @@ paramsToUrl params =
 query :: (HasAPIClient m, MonadCatch m) => Params -> m Results
 query params = apiGet (paramsToUrl params) onError
   where
-    onError :: (MonadIO m) => SomeException -> m Results
-    onError err = do
-      logWarn . cs $ "Error performing Google Nearby Search: " ++ (show err)
-      return $ Results (show err, [])
+    onError :: (Exception e, Monad m) => e -> m Results
+    onError err = return $ Results (show err, [])

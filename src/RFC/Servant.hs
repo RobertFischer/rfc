@@ -24,6 +24,7 @@ module RFC.Servant
   , module RFC.API
   ) where
 
+import           Control.Monad.Catch        (handleJust)
 import           Data.Aeson                 as JSON
 import qualified Data.Aeson.Diff            as JSON
 import           Data.Swagger               (Swagger, ToSchema)
@@ -33,7 +34,7 @@ import           RFC.API
 import           RFC.Data.IdAnd
 import           RFC.HTTP.Client
 import           RFC.JSON                   ()
-import           RFC.Prelude
+import           RFC.Prelude                hiding (Handler, handleJust)
 import qualified RFC.Psql                   as Psql
 import qualified RFC.Redis                  as Redis
 import           Servant
@@ -161,7 +162,7 @@ handleDupes :: ApiCtx a -> ApiCtx a
 handleDupes =
     handleJust isDuplicate throwUp
   where
-    throwUp err = throwError $ err409
+    throwUp err = throw $ err409
       { errReasonPhrase = cs $ sqlErrorMsg err
       , errBody = cs $ sqlErrorDetail err
       }

@@ -9,7 +9,8 @@ module RFC.Concurrent
 
 import           Control.Concurrent.Async.Lifted (mapConcurrently,
                                                   mapConcurrently_)
-import           RFC.Prelude                     hiding (mapConcurrently)
+import           RFC.Prelude                     hiding (mapConcurrently,
+                                                  mapConcurrently_)
 
 -- |Executes all the IO actions simultaneously and returns the original data structure with the arguments replaced
 --  by the results of the execution.

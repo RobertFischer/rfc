@@ -35,7 +35,7 @@ import           RFC.Prelude
 
 type ConnectionPool = Pool Connection
 
-class (MonadIO m, MonadCatch m, MonadBaseControl IO m) => HasPsql m where
+class (MonadIO m, MonadBaseControl IO m) => HasPsql m where
   getPsqlPool :: m ConnectionPool
 
   withPsqlConnection :: (Connection -> m a) -> m a

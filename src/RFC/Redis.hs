@@ -21,7 +21,7 @@ type ConnectionPool = R.Connection
 newtype RedisException = RedisException R.Reply deriving (Typeable, Show)
 instance Exception RedisException
 
-class (MonadIO m, MonadThrow m) => HasRedis m where
+class (MonadThrow m, MonadIO m) => HasRedis m where
   getRedisPool :: m ConnectionPool
 
   runRedis :: R.Redis a -> m a

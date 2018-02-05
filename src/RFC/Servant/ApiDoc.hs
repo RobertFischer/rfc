@@ -45,13 +45,17 @@ apiApplication api request callback =
     _     -> failMethodNotAllowed
   where
     html = Blaze.renderHtml $ apiToHtml api
+    ascii :: LazyByteString
     ascii = apiToAscii api
+    swaggerToLbs :: Swagger -> LazyByteString
     swaggerToLbs = Builder.toLazyByteString . fromEncoding . toEncoding
     swagger = swaggerToLbs $ apiToSwagger api
+    reqMethod :: String
     reqMethod = map Char.toUpper $ cs $ requestMethod request
+    pathInfo :: String
     pathInfo = map Char.toLower $ cs $ rawPathInfo request
     checkPath =
-      case map Char.toLower (cs $ rawPathInfo request) of
+      case pathInfo of
         "swagger.json"  -> serveSwagger
         "/swagger.json" -> serveSwagger
         "api.html"      -> serveHtml
@@ -59,13 +63,18 @@ apiApplication api request callback =
         "api.txt"       -> serveTxt
         "/api.txt"      -> serveTxt
         _               -> failPathNotFound
+    response ::
+      (ConvertibleStrings contentType StrictByteString, ConvertibleStrings body LazyByteString) =>
+      contentType -> body -> IO ResponseReceived
     response contentType body = callback $
-      responseLBS status200 [(hContentType, cs contentType)] body
-    serveHtml = response "text/html" (cs html)
+      responseLBS status200 [(hContentType, cs contentType)] (cs body)
+    serveHtml = response "text/html" html
     serveTxt = response "text/plain" ascii
     serveSwagger = response "application/json" swagger
+    failMethodNotAllowed :: IO ResponseReceived
     failMethodNotAllowed = callback $
       responseLBS status405 [(hContentType, cs "text/plain")] (cs $ "Unsupported HTTP method: " ++ reqMethod)
+    failPathNotFound :: IO ResponseReceived
     failPathNotFound = callback $
       responseLBS status404 [(hContentType, cs "text/plain")] (cs $ "Path not found: " ++ pathInfo)
 

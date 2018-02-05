@@ -12,24 +12,36 @@ module RFC.Prelude
   , module Data.Bitraversable
   , module Data.Bifunctor
   , module Data.Bifoldable
+  , module Data.Default
+  , module Control.Monad.Trans.Control
+  , module Control.Monad.Catch
   ) where
 
-import           ClassyPrelude           hiding (Day, Handler, unpack)
-import           Control.Monad           (forever, void, (<=<), (>=>))
+import           ClassyPrelude               hiding (Day, Handler, bracket,
+                                              bracketOnError, bracket_, catch,
+                                              catchJust, catches, finally,
+                                              handle, handleJust, mask, mask_,
+                                              onException, try, tryJust,
+                                              uninterruptibleMask,
+                                              uninterruptibleMask_, unpack)
+import           Control.Monad               (forever, void, (<=<), (>=>))
+import           Control.Monad.Catch
+import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
 import           Data.Bitraversable
-import           Data.Char               as Char
-import           Data.Function           ((&))
-import qualified Data.List               as List
-import           Data.String.Conversions (LazyByteString, LazyText,
-                                          StrictByteString, StrictText, cs)
+import           Data.Char                   as Char
+import           Data.Default
+import           Data.Function               ((&))
+import qualified Data.List                   as List
+import           Data.String.Conversions     (LazyByteString, LazyText,
+                                              StrictByteString, StrictText, cs)
 import           Data.Time.Units
-import           Data.Typeable           (TypeRep, typeOf)
-import           GHC.Generics            (Generic)
-import           Prelude                 ()
-import           RFC.Data.UUID           (UUID)
-import           Text.Read               (Read, read)
+import           Data.Typeable               (TypeRep, typeOf)
+import           GHC.Generics                (Generic)
+import           Prelude                     ()
+import           RFC.Data.UUID               (UUID)
+import           Text.Read                   (Read, read)
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
@@ -49,5 +61,8 @@ mapSnd f (a,b) = (a, f b)
 safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
 safeHead (x:_) = Just x
+
+throw :: (MonadThrow m, Exception e) => e -> m a
+throw = throwM
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....
