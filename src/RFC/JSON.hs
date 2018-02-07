@@ -19,7 +19,6 @@ module RFC.JSON
 ) where
 
 import           ClassyPrelude
-import           Control.Monad.Catch
 import           Data.Aeson                 as JSON
 import           Data.Aeson.Parser          as JSONParser
 import           Data.Aeson.TH              (deriveJSON)

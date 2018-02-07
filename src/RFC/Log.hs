@@ -11,7 +11,7 @@ import           Control.Logger.Simple (logDebug, logError, logInfo, logWarn,
 import           Control.Logger.Simple as Log
 import           RFC.Env               as Env
 import           RFC.Prelude
-import           System.IO             (BufferMode (..), stderr)
+import           System.IO             (BufferMode (..), hSetBuffering, stderr)
 
 withLogging :: IO a -> IO a
 withLogging action = do

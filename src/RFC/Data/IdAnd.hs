@@ -13,11 +13,15 @@
 module RFC.Data.IdAnd
   ( idAndsToMap
   , IdAnd(..)
+  , idAndToId
+  , idAndToValue
   , valuesToIdAnd
   , idAndToTuple
   , tupleToIdAnd
   , idAndToPair
   , RefMap(..)
+  , refMapElems
+  , refMapToMap
   ) where
 
 import           RFC.Prelude
@@ -53,6 +57,18 @@ newtype IdAnd a = IdAnd (UUID, a)
 
 newtype RefMap a = RefMap (Map.Map UUID (IdAnd a))
   deriving (Eq, Ord, Show, Generic, Typeable, FromJSON, ToJSON)
+
+refMapElems :: RefMap a -> [IdAnd a]
+refMapElems = Map.elems . refMapToMap
+
+refMapToMap :: RefMap a -> Map.Map UUID (IdAnd a)
+refMapToMap (RefMap it) = it
+
+idAndToValue :: IdAnd a -> a
+idAndToValue (IdAnd(_,a)) = a
+
+idAndToId :: IdAnd a -> UUID
+idAndToId (IdAnd(id,_)) = id
 
 tupleToIdAnd :: (UUID, a) -> IdAnd a
 tupleToIdAnd = IdAnd

@@ -1,6 +1,5 @@
 module RFC.Prelude
-  ( module ClassyPrelude
-  , module RFC.Prelude
+  ( module RFC.Prelude
   , module RFC.Data.UUID
   , module Data.String.Conversions
   , module GHC.Generics
@@ -14,18 +13,13 @@ module RFC.Prelude
   , module Data.Bifoldable
   , module Data.Default
   , module Control.Monad.Trans.Control
-  , module Control.Monad.Catch
+  , module Control.Concurrent.Lifted
+  , module ClassyPrelude
   ) where
 
-import           ClassyPrelude               hiding (Day, Handler, bracket,
-                                              bracketOnError, bracket_, catch,
-                                              catchJust, catches, finally,
-                                              handle, handleJust, mask, mask_,
-                                              onException, try, tryJust,
-                                              uninterruptibleMask,
-                                              uninterruptibleMask_, unpack)
+import           ClassyPrelude               hiding (Day, unpack)
+import           Control.Concurrent.Lifted   hiding (throwTo)
 import           Control.Monad               (forever, void, (<=<), (>=>))
-import           Control.Monad.Catch
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
@@ -39,7 +33,6 @@ import           Data.String.Conversions     (LazyByteString, LazyText,
 import           Data.Time.Units
 import           Data.Typeable               (TypeRep, typeOf)
 import           GHC.Generics                (Generic)
-import           Prelude                     ()
 import           RFC.Data.UUID               (UUID)
 import           Text.Read                   (Read, read)
 
@@ -52,17 +45,8 @@ charIsLower = Char.isLower
 uniq :: (Eq a) => [a] -> [a]
 uniq = List.nub
 
-mapFst :: (a -> c) -> (a,b) -> (c,b)
-mapFst f (a,b) = (f a, b)
-
-mapSnd :: (b -> c) -> (a,b) -> (a,c)
-mapSnd f (a,b) = (a, f b)
-
 safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
 safeHead (x:_) = Just x
-
-throw :: (MonadThrow m, Exception e) => e -> m a
-throw = throwM
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....

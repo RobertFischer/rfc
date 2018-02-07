@@ -14,10 +14,11 @@ import           Data.Aeson.Types                (fromEncoding, toEncoding)
 import qualified Data.Binary.Builder             as Builder
 import           Data.Char                       as Char
 import           Data.Default                    (def)
+import           Data.Monoid                     ((<>))
 import           Network.HTTP.Types.Header       (hContentType)
 import           Network.HTTP.Types.Status
 import           Network.Wai
-import           RFC.Prelude
+import           RFC.Prelude                     hiding ((<>))
 import           RFC.Servant
 import           RFC.String
 import           Servant.Swagger
@@ -38,8 +39,8 @@ apiToAscii = cs . markdown . docs
 apiToSwagger :: (HasSwagger a) => Proxy a -> Swagger
 apiToSwagger = toSwagger
 
-apiApplication :: (HasDocs a, HasSwagger a) => Proxy a -> Application
-apiApplication api request callback =
+apiApplication :: (HasDocs a, HasSwagger a) => Proxy a -> Swagger -> Application
+apiApplication api addlSwagger request callback =
   case reqMethod of
     "GET" -> checkPath
     _     -> failMethodNotAllowed
@@ -49,7 +50,7 @@ apiApplication api request callback =
     ascii = apiToAscii api
     swaggerToLbs :: Swagger -> LazyByteString
     swaggerToLbs = Builder.toLazyByteString . fromEncoding . toEncoding
-    swagger = swaggerToLbs $ apiToSwagger api
+    swagger = swaggerToLbs $ apiToSwagger api <> addlSwagger
     reqMethod :: String
     reqMethod = map Char.toUpper $ cs $ requestMethod request
     pathInfo :: String

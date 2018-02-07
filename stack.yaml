@@ -5,7 +5,6 @@ packages:
 extra-deps:
 - simple-logger-0.0.4
 - time-units-1.0.0
-- classy-prelude-1.4.0
 compiler-check: newer-minor
 resolver: nightly-2018-01-29
 require-stack-version: ! '>=1.6'
