@@ -9,10 +9,14 @@ module RFC.Miso.String
   ( module RFC.Miso.String
   ) where
 
-import           Data.Function           (id)
+import           Data.Function           (id, (.))
 import           Data.String             (String)
 import           Data.String.Conversions
 import           Miso.String             (MisoString, ToMisoString (..))
+import           RFC.Data.UUID           as UUID
+
+instance {-# OVERLAPPING #-} ConvertibleStrings UUID.UUID MisoString where
+  convertString = toMisoString . UUID.toString
 
 instance {-# OVERLAPPING #-} ConvertibleStrings MisoString MisoString where
   convertString = id
