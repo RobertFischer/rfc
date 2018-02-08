@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.19
+version:             0.0.0.20
 synopsis:            Robert Fischer's Common library
 description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
