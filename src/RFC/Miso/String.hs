@@ -7,6 +7,7 @@
 
 module RFC.Miso.String
   ( module RFC.Miso.String
+  , module Miso.String
   ) where
 
 import           Data.Function           (id, (.))
