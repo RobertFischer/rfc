@@ -6,6 +6,16 @@ extra-deps:
 - simple-logger-0.0.4
 - time-units-1.0.0
 - hedis-0.10.0
+- classy-prelude-1.4.0
+- http-types-0.12.1
+- servant-0.13
+- servant-blaze-0.8
+- servant-client-0.13
+- servant-client-core-0.13
+- servant-docs-0.11.2
+- servant-server-0.13
+- servant-swagger-1.1.5
+
 compiler-check: newer-minor
-resolver: nightly-2018-02-08
+resolver: nightly-2018-02-09
 require-stack-version: ! '>=1.6'

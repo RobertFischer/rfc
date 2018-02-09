@@ -76,15 +76,16 @@ apiUrlBase = BaseUrl
   }
 
 -- |Perform a verification of a token.
-tokenVerify :: (MonadThrow m, MonadIO m, HasHttpManager m) => TokenVerifyRequest -> m TokenVerification
+tokenVerify :: (MonadUnliftIO m, HasHttpManager m) => TokenVerifyRequest -> m TokenVerification
 tokenVerify req = do
   manager <- getHttpManager
   let env = ClientEnv {..}
   result <- liftIO $ runClientM (tokenVerifyM req) env
   case result of
-    Left err       -> throw err
+    Left err       -> throwIO err
     Right response -> return response
   where
     baseUrl = apiUrlBase
+    cookieJar = Nothing
 
 #endif

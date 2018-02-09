@@ -31,17 +31,17 @@ import           RFC.String
 rfcManagerSettings :: ManagerSettings
 rfcManagerSettings = tlsManagerSettings
 
-createRfcManager :: IO Manager
-createRfcManager = newManager rfcManagerSettings
+createRfcManager :: (MonadIO m) => m Manager
+createRfcManager = liftIO $ newManager rfcManagerSettings
 
-withAPISession :: (Session -> IO a) -> IO a
-withAPISession = (>>=) $ newSessionControl Nothing rfcManagerSettings
+withAPISession :: (MonadIO m) => (Session -> m a) -> m a
+withAPISession = (>>=) $ (liftIO $ newSessionControl Nothing rfcManagerSettings)
 
 newtype BadStatusException = BadStatusException (Status,URL)
   deriving (Show,Eq,Ord,Generic,Typeable)
 instance Exception BadStatusException
 
-apiExecute :: (MonadThrow m, HasAPIClient m, MonadIO m, ConvertibleString LazyByteString s)  =>
+apiExecute :: (HasAPIClient m, MonadUnliftIO m, ConvertibleString LazyByteString s)  =>
   URL -> (Session -> String -> IO (Response LazyByteString)) -> (s -> m a) -> m a
 apiExecute rawUrl action converter = do
     session <- getAPIClient
@@ -49,14 +49,14 @@ apiExecute rawUrl action converter = do
     let status = response ^. responseStatus
     case status ^. statusCode of
       200 -> converter . cs $ response ^. responseBody
-      _   -> throwM $ badResponseStatus status
+      _   -> throwIO $ badResponseStatus status
   where
     url = exportURL rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)
 
-apiGet :: (HasAPIClient m, FromJSON a, MonadIO m, MonadCatch m, Exception e) => URL -> (e -> m a) -> m a
+apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URL -> (e -> m a) -> m a
 apiGet url onError =
-    handle onError $ apiExecute url get decodeOrDie
+      handle onError $ apiExecute url get decodeOrDie
 
 class HasAPIClient m where
   getAPIClient :: m Session

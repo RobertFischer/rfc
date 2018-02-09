@@ -12,14 +12,15 @@ module RFC.Prelude
   , module Data.Bifunctor
   , module Data.Bifoldable
   , module Data.Default
-  , module Control.Monad.Trans.Control
-  , module Control.Concurrent.Lifted
   , module ClassyPrelude
+  , module Control.Monad.Trans.Control
+  , module UnliftIO.Exception
+  , module Control.Monad.IO.Unlift
   ) where
 
 import           ClassyPrelude               hiding (Day, unpack)
-import           Control.Concurrent.Lifted   hiding (throwTo)
 import           Control.Monad               (forever, void, (<=<), (>=>))
+import           Control.Monad.IO.Unlift
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
@@ -35,6 +36,7 @@ import           Data.Typeable               (TypeRep, typeOf)
 import           GHC.Generics                (Generic)
 import           RFC.Data.UUID               (UUID)
 import           Text.Read                   (Read, read)
+import           UnliftIO.Exception
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper

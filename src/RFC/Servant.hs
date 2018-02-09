@@ -24,7 +24,6 @@ module RFC.Servant
   , module RFC.API
   ) where
 
-import           Control.Monad.Catch        (handleJust)
 import           Data.Aeson                 as JSON
 import qualified Data.Aeson.Diff            as JSON
 import           Data.Swagger               (Swagger, ToSchema)
@@ -34,12 +33,13 @@ import           RFC.API
 import           RFC.Data.IdAnd
 import           RFC.HTTP.Client
 import           RFC.JSON                   ()
-import           RFC.Prelude                hiding (Handler, handleJust)
+import           RFC.Prelude                hiding (Handler)
 import qualified RFC.Psql                   as Psql
 import qualified RFC.Redis                  as Redis
 import           Servant
 import           Servant.Docs               hiding (API)
 import           Servant.HTML.Blaze         (HTML)
+import           Servant.Server             (Handler, runHandler)
 import           Text.Blaze.Html
 
 type ApiCtx =
@@ -49,6 +49,14 @@ type ApiCtx =
         Handler
       )
     )
+
+instance {-# OVERLAPPABLE #-} MonadUnliftIO Handler where
+  askUnliftIO = return $ UnliftIO $ \handler -> do
+    either <- runHandler handler
+    case either of
+      Left err -> throwIO err
+      Right v  -> return v
+
 
 instance HasAPIClient ApiCtx where
   getAPIClient = ask
@@ -162,7 +170,7 @@ handleDupes :: ApiCtx a -> ApiCtx a
 handleDupes =
     handleJust isDuplicate throwUp
   where
-    throwUp err = throw $ err409
+    throwUp err = throwIO $ err409
       { errReasonPhrase = cs $ sqlErrorMsg err
       , errBody = cs $ sqlErrorDetail err
       }

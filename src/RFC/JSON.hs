@@ -66,10 +66,10 @@ decodeEither' = eitherDecode'
 newtype DecodeError = DecodeError (LazyByteString, String) deriving (Show,Eq,Ord,Generic,Typeable)
 instance Exception DecodeError
 
-decodeOrDie :: (FromJSON a, MonadThrow m) => LazyByteString -> m a
+decodeOrDie :: (FromJSON a, MonadIO  m) => LazyByteString -> m a
 decodeOrDie input =
   case decodeEither' input of
-    Left err -> throwM $ DecodeError (input, err)
+    Left err -> throwIO $ DecodeError (input, err)
     Right a  -> return a
 
 instance FromHttpApiData JSON.Value where

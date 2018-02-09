@@ -21,7 +21,7 @@ type ConnectionPool = R.Connection
 newtype RedisException = RedisException R.Reply deriving (Typeable, Show)
 instance Exception RedisException
 
-class (MonadThrow m, MonadIO m) => HasRedis m where
+class (MonadUnliftIO m) => HasRedis m where
   getRedisPool :: m ConnectionPool
 
   runRedis :: R.Redis a -> m a
@@ -29,7 +29,7 @@ class (MonadThrow m, MonadIO m) => HasRedis m where
     conn <- getRedisPool
     liftIO $ R.runRedis conn r
 
-createConnectionPool :: (MonadIO m) => m ConnectionPool
+createConnectionPool :: (MonadUnliftIO m) => m ConnectionPool
 createConnectionPool = do
   connInfo <- Env.readRedisConnectInfo
   liftIO $ R.connect connInfo
@@ -40,8 +40,8 @@ get key = do
   maybeResult <- unpack result
   return $ cs <$> maybeResult
 
-unpack :: (MonadThrow m) => Either R.Reply a -> m a
-unpack (Left reply) = throw $ RedisException reply
+unpack :: (MonadUnliftIO m) => Either R.Reply a -> m a
+unpack (Left reply) = throwIO $ RedisException reply
 unpack (Right it)   = return it
 
 setex :: (HasRedis m, ConvertibleToSBS key, ConvertibleToSBS value, TimeUnit expiry) => key -> value -> expiry -> m ()

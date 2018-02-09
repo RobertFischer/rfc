@@ -11,18 +11,19 @@ import           Control.Logger.Simple (logDebug, logError, logInfo, logWarn,
 import           Control.Logger.Simple as Log
 import           RFC.Env               as Env
 import           RFC.Prelude
-import           System.IO             (BufferMode (..), hSetBuffering, stderr)
+import           System.IO             (BufferMode (..), stderr)
 
-withLogging :: IO a -> IO a
+withLogging :: (MonadUnliftIO m) => m a -> m a
 withLogging action = do
   isDev <- Env.isDevelopment
   hSetBuffering stderr LineBuffering
-  Log.withGlobalLogging (logConfig isDev) action
+  ioAction <- toIO action
+  liftIO $ Log.withGlobalLogging (logConfig isDev) ioAction
   where
     logConfig isDev =
       if isDev then
           Log.LogConfig { Log.lc_file = Nothing, Log.lc_stderr = True }
       else
-          Log.LogConfig { Log.lc_file = Just "./log/api-server.log", Log.lc_stderr = False }
+          Log.LogConfig { Log.lc_file = Just "./log/server.log", Log.lc_stderr = False }
 
 
