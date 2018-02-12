@@ -33,6 +33,14 @@ import           Servant.Docs
 instance ToCapture (Capture "id" UUID) where
   toCapture _ = DocCapture "id" "UUID identifier"
 
+instance ToSample UUID where
+  toSamples _ = samples $ catMaybes $ map UUID.fromString $
+    [ "cf41ac06-3f70-479c-a2ed-d618a5e6dee2"
+    , "26998bb3-d6c6-4f63-8a36-6b81eb6e6de9"
+    , "6176b857-e461-4f34-a6a6-aeb8cbf7ffdf"
+    , "26009820-d2d1-4360-87e0-aa73db3c0433"
+    ]
+
 #endif
 
 #ifndef GHCJS_BROWSER
@@ -76,3 +84,4 @@ instance ConvertibleStrings UUID StrictByteString where
 
 instance ConvertibleStrings UUID LazyByteString where
   convertString = UUID.toLazyASCIIBytes
+

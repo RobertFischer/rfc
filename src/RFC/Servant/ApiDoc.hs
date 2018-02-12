@@ -1,23 +1,36 @@
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DefaultSignatures     #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module RFC.Servant.ApiDoc
   ( apiToHtml
   , apiToAscii
   , apiToSwagger
   , apiApplication
+  , swaggerSchemaOptions
+  , ToSchemaRFC
   ) where
 
+import qualified Data.Aeson                      as Aeson
 import           Data.Aeson.Types                (fromEncoding, toEncoding)
 import qualified Data.Binary.Builder             as Builder
 import           Data.Char                       as Char
 import           Data.Default                    (def)
 import           Data.Monoid                     ((<>))
+import           Data.Swagger
+import           Data.Swagger.Declare
+import           Data.Swagger.Internal.Schema    (GToSchema)
+import           Data.Swagger.Internal.TypeShape (TypeHasSimpleShape)
+import           GHC.Generics                    (Rep)
 import           Network.HTTP.Types.Header       (hContentType)
 import           Network.HTTP.Types.Status
 import           Network.Wai
+import           RFC.JSON                        (jsonOptions)
 import           RFC.Prelude                     hiding ((<>))
 import           RFC.Servant
 import           RFC.String                      ()
@@ -79,3 +92,27 @@ apiApplication api addlSwagger request callback =
     failPathNotFound = callback $
       responseLBS status404 [(hContentType, cs "text/plain")] (cs $ "Path not found: " ++ pathInfo)
 
+
+instance ToSample () where
+  toSamples _ = [(cs "No value", ())]
+
+swaggerSchemaOptions :: SchemaOptions
+swaggerSchemaOptions = SchemaOptions
+  { fieldLabelModifier = Aeson.fieldLabelModifier jsonOptions
+  , constructorTagModifier = Aeson.constructorTagModifier jsonOptions
+  , unwrapUnaryRecords = Aeson.unwrapUnaryRecords jsonOptions
+  , datatypeNameModifier = id
+  , allNullaryToStringTag = True
+  }
+
+class ToSchemaRFC a where
+  declareNamedSchemaRFC :: proxy a -> Declare (Definitions Schema) NamedSchema
+  default declareNamedSchemaRFC ::
+    (Generic a
+    , GToSchema (Rep a)
+    , TypeHasSimpleShape a "genericDeclareNamedSchemaUnrestricted"
+    ) => proxy a -> Declare (Definitions Schema) NamedSchema
+  declareNamedSchemaRFC = genericDeclareNamedSchema swaggerSchemaOptions
+
+instance {-# OVERLAPPABLE #-} ToSchemaRFC a => ToSchema a where
+  declareNamedSchema = declareNamedSchemaRFC

@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.20
+version:             0.0.0.21
 synopsis:            Robert Fischer's Common library
 description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
@@ -56,6 +56,7 @@ library
                      , monad-control >= 1.0.2.2
                      , freer-simple >= 1.0.1.1
                      , natural-transformation >= 0.4
+                     , servant-docs >= 0.11.2
   if flag(Browser)
     build-depends:     aeson
                      , attoparsec
@@ -71,7 +72,6 @@ library
                      , postgresql-simple >= 0.5.3.0
                      , hedis >= 0.10.0
                      , simple-logger
-                     , servant-docs >= 0.11.2
                      , temporary
                      , http-client
                      , http-client-tls
