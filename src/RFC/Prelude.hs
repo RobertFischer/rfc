@@ -16,6 +16,7 @@ module RFC.Prelude
   , module Control.Monad.Trans.Control
   , module UnliftIO.Exception
   , module Control.Monad.IO.Unlift
+  , module RFC.String
   ) where
 
 import           ClassyPrelude               hiding (Day, unpack)
@@ -35,6 +36,7 @@ import           Data.Time.Units
 import           Data.Typeable               (TypeRep, typeOf)
 import           GHC.Generics                (Generic)
 import           RFC.Data.UUID               (UUID)
+import           RFC.String
 import           Text.Read                   (Read, read)
 import           UnliftIO.Exception
 
@@ -50,5 +52,6 @@ uniq = List.nub
 safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
 safeHead (x:_) = Just x
+
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....

@@ -20,7 +20,7 @@ import           Network.HTTP.Types.Status
 import           Network.Wai
 import           RFC.Prelude                     hiding ((<>))
 import           RFC.Servant
-import           RFC.String
+import           RFC.String                      ()
 import           Servant.Swagger
 import qualified Text.Blaze.Html.Renderer.String as Blaze
 import qualified Text.Markdown                   as MD

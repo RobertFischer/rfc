@@ -26,7 +26,7 @@ import           Network.Wreq.Lens
 import           Network.Wreq.Session      hiding (withAPISession)
 import           RFC.JSON                  (FromJSON, decodeOrDie)
 import           RFC.Prelude
-import           RFC.String
+import           RFC.String                ()
 
 rfcManagerSettings :: ManagerSettings
 rfcManagerSettings = tlsManagerSettings

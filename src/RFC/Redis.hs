@@ -14,7 +14,7 @@ module RFC.Redis
 import qualified Database.Redis as R
 import           RFC.Env        as Env
 import           RFC.Prelude
-import           RFC.String
+import           RFC.String     ()
 
 type ConnectionPool = R.Connection
 
