@@ -55,6 +55,7 @@ library
                      , unliftio-core >= 0.1.1.0
                      , monad-control >= 1.0.2.2
                      , freer-simple >= 1.0.1.1
+                     , natural-transformation >= 0.4
   if flag(Browser)
     build-depends:     aeson
                      , attoparsec
