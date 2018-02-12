@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE CPP #-}
 
 module RFC.Env
   ( readGoogleMapsAPIKey
@@ -6,6 +6,8 @@ module RFC.Env
   , readEnvironment
   , readPsqlConnectInfo
   , readRedisConnectInfo
+  , readHost
+  , readPort
   ) where
 
 import           Data.Word                  (Word16)
@@ -102,12 +104,23 @@ readRedisPassword :: (MonadIO m) => m (Maybe ByteString)
 readRedisPassword = do
   result <- readEnv "REDIS_PASSWORD" $ Just ""
   return $
-    case result of
-      "" -> Nothing
-      _  -> Just $ cs result
+    case null result of
+      True  -> Nothing
+      False -> Just $ cs result
 
 readRedisDbNumber :: (MonadIO m) => m Integer
 readRedisDbNumber = read <$> readEnv "REDIS_DATABASE" (Just $ show $ Redis.connectDatabase Redis.defaultConnectInfo)
 
 readAppSlug :: (MonadIO m) => m String
 readAppSlug = readEnv "APP_SLUG" Nothing
+
+readHost :: (MonadIO m) => m String
+readHost =
+  forDevOnly "localhost" >>= readEnv "HOST"
+
+readPort :: (MonadIO m) => Word16 -> m Word16
+readPort devPort = do
+  defaultPort <- forDevOnly $ show devPort
+  result <- readEnv "PORT" defaultPort
+  return $ (read result :: Word16)
+
