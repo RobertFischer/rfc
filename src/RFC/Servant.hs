@@ -24,6 +24,7 @@ module RFC.Servant
   , module RFC.API
   ) where
 
+import           Control.Natural            (type (~>))
 import           Data.Aeson                 as JSON
 import qualified Data.Aeson.Diff            as JSON
 import           Data.Swagger               (Swagger, ToSchema)
@@ -67,12 +68,10 @@ instance Psql.HasPsql ApiCtx where
 instance Redis.HasRedis ApiCtx where
   getRedisPool = lift $ lift ask
 
-type (:~>) a b = forall x. a x -> b x
-
-apiCtxToHandler :: Wreq.Session -> Redis.ConnectionPool -> Psql.ConnectionPool -> ApiCtx :~> Handler
+apiCtxToHandler :: Wreq.Session -> Redis.ConnectionPool -> Psql.ConnectionPool -> ApiCtx ~> Handler
 apiCtxToHandler apiClient redisPool psqlPool = toHandler
   where
-    toHandler :: ApiCtx :~> Handler
+    toHandler :: ApiCtx ~> Handler
     toHandler = withRedis . withPsql . withAPIClient
       where
         withAPIClient m = runReaderT m apiClient
