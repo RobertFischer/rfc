@@ -17,6 +17,7 @@ module RFC.Prelude
   , module UnliftIO.Exception
   , module Control.Monad.IO.Unlift
   , module RFC.String
+  , module Data.Word
   ) where
 
 import           ClassyPrelude               hiding (Day, unpack)
@@ -34,6 +35,7 @@ import           Data.String.Conversions     (LazyByteString, LazyText,
                                               StrictByteString, StrictText, cs)
 import           Data.Time.Units
 import           Data.Typeable               (TypeRep, typeOf)
+import           Data.Word                   (Word16)
 import           GHC.Generics                (Generic)
 import           RFC.Data.UUID               (UUID)
 import           RFC.String
