@@ -9,4 +9,4 @@ cd "$HEREDIR"
 ./test
 cd "$ROOTDIR"
 cabal check
-stack upload .
+stack upload . -j 16

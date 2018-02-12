@@ -2,13 +2,13 @@
 
 cd `dirname $0`/..
 
-stack build --flag rfc:browser --stack-yaml=./stack.ghcjs.yaml --fast
-stack build --flag rfc:-browser --fast
+stack build -j 16 --flag rfc:browser --stack-yaml=./stack.ghcjs.yaml --fast
+stack build -j 16 --flag rfc:-browser --fast
 
 stack clean 
-stack clean --stack-yaml=./stack.ghcjs.yaml 
-stack build --flag rfc:browser --flag rfc:development --stack-yaml=./stack.ghcjs.yaml --fast
+stack clean -j 16 --stack-yaml=./stack.ghcjs.yaml 
+stack build -j 16 --flag rfc:browser --flag rfc:development --stack-yaml=./stack.ghcjs.yaml --fast
 
-stack clean 
-stack clean --stack-yaml=./stack.ghcjs.yaml 
-stack build --flag rfc:development --flag rfc:-browser --fast
+stack clean -j 16
+stack clean -j 16 --stack-yaml=./stack.ghcjs.yaml 
+stack build -j 16 --flag rfc:development --flag rfc:-browser --fast
