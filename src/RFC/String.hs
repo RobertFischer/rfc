@@ -9,12 +9,12 @@ module RFC.String
   , module Data.String.Conversions.Monomorphic
   ) where
 
-import           Data.Function                       (($))
 import           Data.String                         (String)
 import           Data.String.Conversions             hiding ((<>))
 import           Data.String.Conversions.Monomorphic hiding (fromString,
                                                       toString)
 #ifndef GHCJS_BROWSER
+import           Data.Function                       (($))
 import           Servant.Docs
 #endif
 
