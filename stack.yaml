@@ -12,10 +12,10 @@ extra-deps:
 - servant-blaze-0.8
 - servant-client-0.13
 - servant-client-core-0.13
-- servant-docs-0.11.2
 - servant-server-0.13
 - servant-swagger-1.1.5
+- servant-docs-0.11.2
 
 compiler-check: newer-minor
-resolver: nightly-2018-02-09
+resolver: nightly-2018-02-11
 require-stack-version: ! '>=1.6'
