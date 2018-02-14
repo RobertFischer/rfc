@@ -5,6 +5,7 @@ module RFC.Wai
   , module Network.Wai
   ) where
 
+import           Control.Logger.Simple
 import           Network.HTTP.Types.Header
 import           Network.HTTP.Types.Method
 import           Network.Wai
@@ -38,7 +39,7 @@ defaultMiddleware = do
     (if isDev then logStdoutDev else logStdout)
   where
     handleError msg e = do
-      putStrLn . cs $ "Error while: " ++ msg
+      logError . cs $ "Error while: " ++ msg
       print e
       throwIO e
     getTmpDir = catchAnyDeep getCanonicalTemporaryDirectory (handleError "getting temp dir")
