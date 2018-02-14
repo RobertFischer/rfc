@@ -11,7 +11,7 @@ module RFC.Servant.ApiDoc
   ( apiToHtml
   , apiToAscii
   , apiToSwagger
-  , apiApplication
+  , apiMiddleware
   , swaggerSchemaOptions
   , ToSchemaRFC
   ) where
@@ -52,11 +52,11 @@ apiToAscii = cs . markdown . docs
 apiToSwagger :: (HasSwagger a) => Proxy a -> Swagger
 apiToSwagger = toSwagger
 
-apiApplication :: (HasDocs a, HasSwagger a) => Proxy a -> Swagger -> Application
-apiApplication api addlSwagger request callback =
-  case reqMethod of
-    "GET" -> checkPath
-    _     -> failMethodNotAllowed
+apiMiddleware :: (HasDocs a, HasSwagger a) => Proxy a -> Swagger -> Application -> Application
+apiMiddleware api addlSwagger application request callback =
+  case (reqMethod, reqPath) of
+    ("GET", Just doIt) -> doIt
+    _                  -> application request callback
   where
     html = Blaze.renderHtml $ apiToHtml api
     ascii :: LazyByteString
@@ -68,15 +68,15 @@ apiApplication api addlSwagger request callback =
     reqMethod = map Char.toUpper $ cs $ requestMethod request
     pathInfo :: String
     pathInfo = map Char.toLower $ cs $ rawPathInfo request
-    checkPath =
+    reqPath =
       case pathInfo of
-        "swagger.json"  -> serveSwagger
-        "/swagger.json" -> serveSwagger
-        "api.html"      -> serveHtml
-        "/api.html"     -> serveHtml
-        "api.txt"       -> serveTxt
-        "/api.txt"      -> serveTxt
-        _               -> failPathNotFound
+        "swagger.json"  -> Just serveSwagger
+        "/swagger.json" -> Just serveSwagger
+        "api.html"      -> Just serveHtml
+        "/api.html"     -> Just serveHtml
+        "api.txt"       -> Just serveTxt
+        "/api.txt"      -> Just serveTxt
+        _               -> Nothing
     response ::
       (ConvertibleStrings contentType StrictByteString, ConvertibleStrings body LazyByteString) =>
       contentType -> body -> IO ResponseReceived
@@ -85,12 +85,6 @@ apiApplication api addlSwagger request callback =
     serveHtml = response "text/html" html
     serveTxt = response "text/plain" ascii
     serveSwagger = response "application/json" swagger
-    failMethodNotAllowed :: IO ResponseReceived
-    failMethodNotAllowed = callback $
-      responseLBS status405 [(hContentType, cs "text/plain")] (cs $ "Unsupported HTTP method: " ++ reqMethod)
-    failPathNotFound :: IO ResponseReceived
-    failPathNotFound = callback $
-      responseLBS status404 [(hContentType, cs "text/plain")] (cs $ "Path not found: " ++ pathInfo)
 
 
 instance ToSample () where
