@@ -9,24 +9,24 @@ import           Network.HTTP.Types.Header
 import           Network.HTTP.Types.Method
 import           Network.Wai
 import           Network.Wai.Middleware.AcceptOverride
-import           Network.Wai.Middleware.Approot            ( envFallback )
+import           Network.Wai.Middleware.Approot            (envFallback)
 import           Network.Wai.Middleware.Autohead
 import           Network.Wai.Middleware.Cors
 import           Network.Wai.Middleware.Gzip
 import           Network.Wai.Middleware.Jsonp
 import           Network.Wai.Middleware.MethodOverridePost
-import           Network.Wai.Middleware.RequestLogger      ( logStdout, logStdoutDev )
-import           RFC.Env                                   ( isDevelopment )
+import           Network.Wai.Middleware.RequestLogger      (logStdout,
+                                                            logStdoutDev)
+import           RFC.Env                                   (isDevelopment)
 import           RFC.Prelude
-import           System.IO.Temp
-  ( createTempDirectory, getCanonicalTemporaryDirectory )
+import           System.IO.Temp                            (createTempDirectory, getCanonicalTemporaryDirectory)
 
 defaultMiddleware :: IO Middleware
 defaultMiddleware = do
   isDev <- isDevelopment
   approot <- envFallback
-  tmpDir <- getCanonicalTemporaryDirectory
-  gzipDir <- createTempDirectory tmpDir "wai-gzip-middleware"
+  tmpDir <- getTmpDir
+  gzipDir <- mkGzipDir tmpDir
   return $
     methodOverridePost .
     acceptOverride .
@@ -37,6 +37,12 @@ defaultMiddleware = do
     gzip (gzipConfig gzipDir) .
     (if isDev then logStdoutDev else logStdout)
   where
+    handleError msg e = do
+      putStrLn . cs $ "Error while: " ++ msg
+      print e
+      throwIO e
+    getTmpDir = catchAnyDeep getCanonicalTemporaryDirectory (handleError "getting temp dir")
+    mkGzipDir tmpDir = catchAnyDeep (createTempDirectory tmpDir "wai-gzip-middleware") (handleError "making temp dir")
     corsConfig = simpleCorsResourcePolicy
       { corsRequireOrigin = False
       , corsVaryOrigin = False
