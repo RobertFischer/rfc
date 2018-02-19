@@ -55,5 +55,7 @@ safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
 safeHead (x:_) = Just x
 
+foldl :: MonoFoldable mono => (a -> Element mono -> a) -> a -> mono -> a
+foldl = foldl'
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....
