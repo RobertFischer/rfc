@@ -12,7 +12,6 @@ module RFC.HTTP.Client
   , BadStatusException
   , apiGet
   , module Network.Wreq.Session
-  , module Network.URL
   , module Network.HTTP.Types.Status
   ) where
 
@@ -21,7 +20,7 @@ import           Network.HTTP.Client       (Manager, ManagerSettings,
                                             newManager)
 import           Network.HTTP.Client.TLS   (tlsManagerSettings)
 import           Network.HTTP.Types.Status hiding (statusCode, statusMessage)
-import           Network.URL
+import           Network.URI
 import           Network.Wreq.Lens
 import           Network.Wreq.Session      hiding (withAPISession)
 import           RFC.JSON                  (FromJSON, decodeOrDie)
@@ -37,12 +36,12 @@ createRfcManager = liftIO $ newManager rfcManagerSettings
 withAPISession :: (MonadIO m) => (Session -> m a) -> m a
 withAPISession = (>>=) $ (liftIO $ newSessionControl Nothing rfcManagerSettings)
 
-newtype BadStatusException = BadStatusException (Status,URL)
+newtype BadStatusException = BadStatusException (Status,URI)
   deriving (Show,Eq,Ord,Generic,Typeable)
 instance Exception BadStatusException
 
 apiExecute :: (HasAPIClient m, MonadUnliftIO m, ConvertibleString LazyByteString s)  =>
-  URL -> (Session -> String -> IO (Response LazyByteString)) -> (s -> m a) -> m a
+  URI -> (Session -> String -> IO (Response LazyByteString)) -> (s -> m a) -> m a
 apiExecute rawUrl action converter = do
     session <- getAPIClient
     response <- liftIO $ action session url
@@ -51,10 +50,10 @@ apiExecute rawUrl action converter = do
       200 -> converter . cs $ response ^. responseBody
       _   -> throwIO $ badResponseStatus status
   where
-    url = exportURL rawUrl
+    url = show rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)
 
-apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URL -> (e -> m a) -> m a
+apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URI -> (e -> m a) -> m a
 apiGet url onError =
       handle onError $ apiExecute url get decodeOrDie
 

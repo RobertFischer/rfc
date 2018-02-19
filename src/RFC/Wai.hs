@@ -40,7 +40,7 @@ defaultMiddleware = do
   where
     handleError msg e = do
       logError . cs $ "Error while: " ++ msg
-      print e
+      logError . cs . show $ e
       throwIO e
     getTmpDir = catchAnyDeep getCanonicalTemporaryDirectory (handleError "getting temp dir")
     mkGzipDir tmpDir = catchAnyDeep (createTempDirectory tmpDir "wai-gzip-middleware") (handleError "making temp dir")

@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.21
+version:             0.0.0.23
 synopsis:            Robert Fischer's Common library
 description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
@@ -20,8 +20,8 @@ Flag Browser
 
 Flag Development
   Description: Turn on errors for warnings
-  Default: False
-  Manual: True
+  Default:     False
+  Manual:      True
 
 library
   hs-source-dirs:      src
@@ -39,9 +39,6 @@ library
                      , string-conversions
                      , resource-pool
                      , data-default
-                     , servant-blaze >= 0.8
-                     , blaze-html
-                     , url
                      , lens
                      , http-types
                      , http-api-data >= 0.3.7.1
@@ -56,6 +53,8 @@ library
                      , monad-control >= 1.0.2.2
                      , freer-simple >= 1.0.1.1
                      , natural-transformation >= 0.4
+                     , url
+                     , network-uri
   if flag(Browser)
     build-depends:     aeson
                      , attoparsec
@@ -65,6 +64,8 @@ library
     build-depends:     servant-server >= 0.13
                      , servant >= 0.13
                      , servant-docs >= 0.11.2
+                     , servant-blaze >= 0.8
+                     , blaze-html
                      , wai >= 3.2.1.1
                      , aeson >= 1.2.3.0
                      , wai-extra
@@ -98,6 +99,7 @@ library
                      , RFC.Miso.String
                      , RFC.Miso.XHR
                      , RFC.Miso.Inject
+                     , RFC.Miso.Routing
   if !flag(Browser)
     exposed-modules:   RFC.Psql
                      , RFC.Redis
