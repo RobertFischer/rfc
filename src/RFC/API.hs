@@ -3,7 +3,12 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 module RFC.API
-  ( module RFC.API
+  ( JDelete
+  , JGet
+  , JPatch
+  , JPost
+  , JPut
+  , JReqBody
   ) where
 
 import           RFC.Prelude ()

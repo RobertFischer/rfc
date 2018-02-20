@@ -2,7 +2,7 @@
 
 module RFC.Log
   ( module Control.Logger.Simple
-  , module RFC.Log
+  , withLogging
   ) where
 
 import           Control.Logger.Simple (logDebug, logError, logInfo, logWarn,
