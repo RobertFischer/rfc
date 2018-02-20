@@ -28,7 +28,9 @@ library
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
   default-extensions:  NoImplicitPrelude
-  ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-name-shadowing -fno-warn-tabs
+  ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
+  ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wall-missed-specialisations -Wnoncanonical-monad-instances
+  ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures
   if flag(Development)
     ghc-options:       -Werror
   build-depends:       base >= 4.7 && < 5
