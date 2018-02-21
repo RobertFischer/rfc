@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns              #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
@@ -48,7 +49,7 @@ parseCurrentURI = parseURI <$> getCurrentURI
 data ViewSpec parentModel parentAction = ViewSpec (parentModel -> View parentAction, RoutingURI)
 
 instance Eq (ViewSpec model action) where
-  (==) (ViewSpec(_,left)) (ViewSpec(_,right)) = left == right
+  (==) (ViewSpec(_,!left)) (ViewSpec(_,!right)) = left == right
 
 class RouteConfig model action
       | model -> action, action -> model
@@ -118,7 +119,7 @@ newRoutingTable = RoutingTable []
 
 addRoute :: (RouteConvert parentModel parentAction model action) =>
   Proxy model -> RoutingTable parentModel parentAction -> RoutingTable parentModel parentAction
-addRoute pxy (RoutingTable table) =
+addRoute pxy (RoutingTable !table) =
   RoutingTable $ (wrappedRunRoute pxy, wrappedRouteUpdate pxy):table
 
 runTable :: (ViewSpecContainer parentModel parentAction) =>
@@ -127,7 +128,7 @@ runTable :: (ViewSpecContainer parentModel parentAction) =>
   RoutingURI ->
   parentModel ->
   Effect parentAction parentModel
-runTable (RoutingTable routes) notFoundView routingURI parentModel =
+runTable (RoutingTable !routes) notFoundView !routingURI !parentModel =
     case safeHead $ catMaybes routeRunResults of
       Nothing -> (noEff $ setViewSpec parentModel (ViewSpec (notFoundView, routingURI)))
       Just results -> results
@@ -139,13 +140,13 @@ updateTable ::
   parentModel ->
   parentAction ->
   Effect parentAction parentModel
-updateTable (RoutingTable tbl) initialParentModel parentAction =
+updateTable (RoutingTable !tbl) !initialParentModel !parentAction =
     foldr doMerge initialEffect updateCalls
   where
     initialEffect = Effect initialParentModel []
     updateCalls = map snd tbl
-    doMerge call (Effect parentModel ios) =
-      let (Effect newParentModel moreIOs) = call parentModel parentAction in
+    doMerge !call (Effect !parentModel !ios) =
+      let (Effect !newParentModel !moreIOs) = call parentModel parentAction in
       Effect newParentModel (ios++moreIOs)
 
 
