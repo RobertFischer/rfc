@@ -13,10 +13,6 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-Flag Browser
-  Description: Build assuming GHCJS for the browser.
-  Default:     False
-  Manual:      False
 
 Flag Development
   Description: Turn on errors for warnings
@@ -48,21 +44,20 @@ library
                      , aeson-diff
                      , vector
                      , text
-                     , bifunctors
                      , lifted-async >= 0.9.3.3
                      , unliftio >= 0.2.4.0
                      , unliftio-core >= 0.1.1.0
                      , monad-control >= 1.0.2.2
-                     , freer-simple >= 1.0.1.1
                      , natural-transformation >= 0.4
-                     , url
                      , network-uri
-  if flag(Browser)
+  if impl(ghcjs)
     build-depends:     aeson
                      , attoparsec
-                     , miso >= 0.12.0.0
+                     , bifunctors
+                     , miso >= 0.13.0.0
                      , servant >= 0.12.1 && < 0.13
-  if !flag(Browser)
+                     , url
+  else
     build-depends:     servant-server >= 0.13
                      , servant >= 0.13
                      , servant-docs >= 0.11.2
@@ -96,13 +91,14 @@ library
                      , RFC.Data.IdAnd
                      , RFC.Data.ListMoveDirection
                      , RFC.Data.UUID
-  if flag(Browser)
+  if impl(ghcjs)
+    cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.Miso
                      , RFC.Miso.String
                      , RFC.Miso.XHR
                      , RFC.Miso.Inject
                      , RFC.Miso.Routing
-  if !flag(Browser)
+  else
     exposed-modules:   RFC.Psql
                      , RFC.Redis
                      , RFC.Log
@@ -112,8 +108,6 @@ library
                      , RFC.Servant
                      , RFC.Servant.ApiDoc
                      , RFC.Client.Coinhive
-  if flag(Browser)
-    cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
 
 
 source-repository head

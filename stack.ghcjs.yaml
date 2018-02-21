@@ -5,7 +5,7 @@ compiler-check: match-exact # Be sure you also have this line in ~/.stack/config
 packages:
 - '.'
 extra-deps: 
-- miso-0.12.0.0
+- miso-0.13.0.0
 - aeson-diff-1.1.0.4
 - classy-prelude-1.4.0
 - freer-simple-1.0.1.1
@@ -38,8 +38,5 @@ setup-info:
            url: http://ghcjs.tolysz.org/ghc-8.0-2017-02-05-lts-7.19-9007019.tar.gz
            sha1: d2cfc25f9cda32a25a87d9af68891b2186ee52f9
 
-flags:
-    rfc:
-        browser: true
 
 require-stack-version: ! '>=1.6'
