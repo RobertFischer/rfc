@@ -7,6 +7,7 @@ module RFC.Miso.Inject
   , injectCSS
   , injectPreconnectHint
   , injectPreconnectHintURI
+  , writeDocumentTitle
   ) where
 
 import           Network.URI
@@ -41,6 +42,10 @@ injectPreconnectHint' ""          = return ()
 injectPreconnectHint' "localhost" = return ()
 injectPreconnectHint' "127.0.0.1" = return ()
 injectPreconnectHint' str         = injectPreconnectHint'' . cs $ str
+
+foreign import javascript safe
+	"if(document.title !== $1) { document.title = $1 };"
+	writeDocumentTitle :: MisoString -> IO ()
 
 foreign import javascript safe
   "var script=document.createElement('link');script.rel='preconnect';script.crossorigin=true;script.href='https://' + $1;document.getElementsByTagName('head')[0].appendChild(script);"

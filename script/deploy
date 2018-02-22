@@ -8,5 +8,6 @@ ROOTDIR=`pwd`
 cd "$HEREDIR"
 ./test
 cd "$ROOTDIR"
+stack build -j 16 --flag rfc:-development
 cabal check
 stack upload . -j 16

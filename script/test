@@ -5,5 +5,3 @@ cd `dirname $0`/..
 stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --fast
 stack build -j 16 --fast
 
-stack build -j 16 --flag rfc:development --stack-yaml=./stack.ghcjs.yaml --fast
-stack build -j 16 --flag rfc:development --fast
