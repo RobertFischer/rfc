@@ -98,6 +98,7 @@ library
                      , RFC.Miso.XHR
                      , RFC.Miso.Inject
                      , RFC.Miso.Routing
+                     , RFC.Miso.Component
   else
     exposed-modules:   RFC.Psql
                      , RFC.Redis

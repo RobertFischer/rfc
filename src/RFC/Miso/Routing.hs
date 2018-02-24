@@ -1,13 +1,23 @@
-{-# LANGUAGE BangPatterns              #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FunctionalDependencies    #-}
-{-# LANGUAGE MultiParamTypeClasses     #-}
-{-# LANGUAGE NamedFieldPuns            #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module RFC.Miso.Routing
-  ( module RFC.Miso.Routing
+  ( RoutingURI
   , URI(..)
+  , parseURI
+  , parseCurrentURI
+  , ViewSpec(..)
+  , ViewSpecContainer(..)
+  , renderViewSpec
+  , RouteConfig(..)
+  , RouteEmbed(..)
+  , RoutingTable
+  , newRoutingTable
+  , addRoute
+  , updateTable
+  , runTable
   ) where
 
 import           Data.Map                  (Map)
@@ -17,6 +27,7 @@ import           Miso.Effect
 import           Miso.Html                 (View (..))
 import           Miso.Subscription.History (URI (..), getCurrentURI)
 import qualified Network.URL               as URL
+import           RFC.Miso.Component
 import           RFC.Prelude
 
 newtype URIHash = URIHash String deriving (Eq)
@@ -46,89 +57,63 @@ parseURI URI{uriFragment,uriQuery} =
 parseCurrentURI :: IO RoutingURI
 parseCurrentURI = parseURI <$> getCurrentURI
 
-data ViewSpec parentModel parentAction = ViewSpec (parentModel -> View parentAction, RoutingURI)
+data ViewSpec parentModel = ViewSpec (parentModel -> View (Action parentModel), RoutingURI)
 
-instance Eq (ViewSpec model action) where
+instance Eq (ViewSpec model) where
   (==) (ViewSpec(_,!left)) (ViewSpec(_,!right)) = left == right
 
-class RouteConfig model action
-      | model -> action, action -> model
-  where
-    routeUpdate   :: model -> action -> Effect action model
-    routeView     :: model -> View action
-    runRoute      :: model -> RoutingURI -> Maybe (Effect action model)
+class (Component model) => RouteConfig model where
+  runRoute :: model -> RoutingURI -> Maybe (Effect (Action model) model)
 
-class (RouteConfig model action, ViewSpecContainer parentModel parentAction)
-      => RouteConvert parentModel parentAction model action
-      | parentAction -> parentModel, parentModel -> parentAction
-  where
-    wrapAction    :: action -> model -> parentAction
-    unwrapAction  :: parentAction -> model -> Maybe action
-    wrapModel     :: parentModel -> model -> parentModel
-    unwrapModel   :: parentModel -> model
+class (ComponentEmbed parentModel model, RouteConfig model, ViewSpecContainer parentModel) => RouteEmbed parentModel model where
+  wrappedRunRoute :: Proxy model -> WrappedRun parentModel
+  wrappedRunRoute pxy uriPair currentParentModel = do
+      childEffect <- runRoute childSeed uriPair
+      return $ effectWrapper childEffect (ViewSpec (view, uriPair))
+    where
+      childSeed :: model
+      childSeed = unwrapModel pxy currentParentModel
+      view :: parentModel -> View (Action parentModel)
+      view = wrappedView pxy
+      effectWrapper :: Effect (Action model) model -> ViewSpec parentModel -> Effect (Action parentModel) parentModel
+      effectWrapper childEffect viewSpec = wrapEffect childEffect newParentModel
+        where
+          newParentModel :: parentModel
+          newParentModel = setViewSpec currentParentModel viewSpec
 
-    wrapEffect    :: parentModel -> Effect action model -> Effect parentAction parentModel
-    wrapEffect parentModel (Effect model childIOs) =
-      Effect
-          (wrapModel parentModel model)
-          (map (fmap (\act -> wrapAction act model)) childIOs)
+class (Component model) => ViewSpecContainer model where
+  setViewSpec :: model -> ViewSpec model -> model
+  getViewSpec :: model -> ViewSpec model
 
-    wrappedRunRoute :: Proxy model -> WrappedRun parentModel parentAction
-    wrappedRunRoute _ uriPair currentParentModel = do
-        childEffect <- runRoute childSeed uriPair
-        return $ effectWrapper childEffect (ViewSpec (view, uriPair))
-      where
-        childSeed :: model
-        childSeed = unwrapModel currentParentModel
-        effectWrapper :: Effect action model -> ViewSpec parentModel parentAction -> Effect parentAction parentModel
-        effectWrapper childEffect viewSpec = wrapEffect (setViewSpec currentParentModel viewSpec) childEffect
-        view :: parentModel -> View parentAction
-        view parentModel = fmap (\action -> wrapAction action childModel) $ routeView childModel
-          where
-            childModel :: model
-            childModel = unwrapModel parentModel
-
-    wrappedRouteUpdate :: Proxy model -> WrappedUpdate parentModel parentAction
-    wrappedRouteUpdate _ parentModel parentAction =
-      case unwrapAction parentAction model of
-        Nothing     -> noEff parentModel
-        Just action -> wrapEffect parentModel $ routeUpdate model action
-      where
-        model :: model
-        model = unwrapModel parentModel
-
-class ViewSpecContainer parentModel parentAction where
-  setViewSpec :: parentModel -> ViewSpec parentModel parentAction -> parentModel
-  getViewSpec :: parentModel -> ViewSpec parentModel parentAction
-
-renderViewSpec :: (ViewSpecContainer parentModel parentAction) => parentModel -> View parentAction
+renderViewSpec :: (ViewSpecContainer parentModel) => parentModel -> View (Action parentModel)
 renderViewSpec container =  renderFunc container
   where
     (ViewSpec (renderFunc,_)) = getViewSpec container
 
-type WrappedRun parentModel parentAction =
-  RoutingURI -> parentModel -> Maybe (Effect parentAction parentModel)
+type WrappedRun parentModel =
+  RoutingURI -> parentModel -> Maybe (Effect (Action parentModel) parentModel)
 
-type WrappedUpdate parentModel parentAction = parentModel -> parentAction -> Effect parentAction parentModel
+type WrappedUpdate parentModel =
+  parentModel -> Action parentModel -> Effect (Action parentModel) parentModel
 
-data RoutingTable parentModel parentAction =
-  RoutingTable [(WrappedRun parentModel parentAction, WrappedUpdate parentModel parentAction)]
+data RoutingTable parentModel =
+  RoutingTable [(WrappedRun parentModel, WrappedUpdate parentModel)]
 
-newRoutingTable :: RoutingTable parentModel parentAction
+newRoutingTable :: RoutingTable parentModel
 newRoutingTable = RoutingTable []
 
-addRoute :: (RouteConvert parentModel parentAction model action) =>
-  Proxy model -> RoutingTable parentModel parentAction -> RoutingTable parentModel parentAction
-addRoute pxy (RoutingTable !table) =
-  RoutingTable $ (wrappedRunRoute pxy, wrappedRouteUpdate pxy):table
+addRoute :: (RouteEmbed parentModel model) =>
+  Proxy model -> RoutingTable parentModel -> RoutingTable parentModel
+addRoute !pxy (RoutingTable !table) =
+  RoutingTable $ (wrappedRunRoute pxy, wrappedUpdate pxy):table
 
-runTable :: (ViewSpecContainer parentModel parentAction) =>
-  RoutingTable parentModel parentAction ->
-  (parentModel -> View parentAction) ->
+runTable :: (ViewSpecContainer parentModel) =>
+  RoutingTable parentModel ->
+  (parentModel -> View (Action parentModel)) ->
   RoutingURI ->
   parentModel ->
-  Effect parentAction parentModel
-runTable (RoutingTable !routes) notFoundView !routingURI !parentModel =
+  Effect (Action parentModel) parentModel
+runTable (RoutingTable !routes) !notFoundView !routingURI !parentModel =
     case safeHead $ catMaybes routeRunResults of
       Nothing -> (noEff $ setViewSpec parentModel (ViewSpec (notFoundView, routingURI)))
       Just results -> results
@@ -136,15 +121,15 @@ runTable (RoutingTable !routes) notFoundView !routingURI !parentModel =
     routeRunResults = map (\run -> run routingURI parentModel) $ map fst routes
 
 updateTable ::
-  RoutingTable parentModel parentAction ->
+  RoutingTable parentModel ->
   parentModel ->
-  parentAction ->
-  Effect parentAction parentModel
+  Action parentModel->
+  Effect (Action parentModel) parentModel
 updateTable (RoutingTable !tbl) !initialParentModel !parentAction =
     foldr doMerge initialEffect updateCalls
   where
-    initialEffect = Effect initialParentModel []
-    updateCalls = map snd tbl
+    !initialEffect = Effect initialParentModel []
+    !updateCalls = map snd tbl
     doMerge !call (Effect !parentModel !ios) =
       let (Effect !newParentModel !moreIOs) = call parentModel parentAction in
       Effect newParentModel (ios++moreIOs)
