@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 
-module RFC.Miso.Inject
+module RFC.GHCJS.Inject
   ( injectJS
   , injectCSS
   , injectPreconnectHint

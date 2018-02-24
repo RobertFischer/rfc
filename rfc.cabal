@@ -57,6 +57,7 @@ library
                      , miso >= 0.13.0.0
                      , servant >= 0.12.1 && < 0.13
                      , url
+                     , mono-traversable >= 1.0.1.1
   else
     build-depends:     servant-server >= 0.13
                      , servant >= 0.13
@@ -95,10 +96,12 @@ library
     cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.Miso
                      , RFC.Miso.String
-                     , RFC.Miso.XHR
-                     , RFC.Miso.Inject
                      , RFC.Miso.Routing
                      , RFC.Miso.Component
+                     , RFC.GHCJS
+                     , RFC.GHCJS.XHR
+                     , RFC.GHCJS.Inject
+                     , RFC.GHCJS.Cookie
   else
     exposed-modules:   RFC.Psql
                      , RFC.Redis

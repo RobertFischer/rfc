@@ -13,7 +13,7 @@ import           Miso.Html   (View (..))
 import           RFC.Prelude
 
 
-class Component model where
+class (Eq model) => Component model where
   data Action model :: *
   type InitArgs model :: *
   initModel :: InitArgs model -> Effect (Action model) model
