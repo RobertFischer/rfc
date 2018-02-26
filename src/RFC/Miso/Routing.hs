@@ -16,7 +16,6 @@ module RFC.Miso.Routing
   , RoutingTable
   , newRoutingTable
   , addRoute
-  , updateTable
   , runTable
   ) where
 
@@ -53,9 +52,11 @@ parseURI URI{uriFragment,uriQuery} =
     listify :: String -> [String]
     listify ""  = []
     listify val = [val]
+{-# INLINABLE parseURI #-}
 
 parseCurrentURI :: IO RoutingURI
 parseCurrentURI = parseURI <$> getCurrentURI
+{-# INLINE parseCurrentURI #-}
 
 data ViewSpec parentModel = ViewSpec (parentModel -> View (Action parentModel), RoutingURI)
 
@@ -68,13 +69,12 @@ class (Component model) => RouteConfig model where
 class (ComponentEmbed parentModel model, RouteConfig model, ViewSpecContainer parentModel) => RouteEmbed parentModel model where
   wrappedRunRoute :: Proxy model -> WrappedRun parentModel
   wrappedRunRoute pxy uriPair currentParentModel = do
+      childSeed <- unwrapModel pxy currentParentModel
       childEffect <- runRoute childSeed uriPair
       return $ effectWrapper childEffect (ViewSpec (view, uriPair))
     where
-      childSeed :: model
-      childSeed = unwrapModel pxy currentParentModel
       view :: parentModel -> View (Action parentModel)
-      view = wrappedView pxy
+      view = (flip wrappedView) pxy
       effectWrapper :: Effect (Action model) model -> ViewSpec parentModel -> Effect (Action parentModel) parentModel
       effectWrapper childEffect viewSpec = wrapEffect childEffect newParentModel
         where
@@ -89,23 +89,23 @@ renderViewSpec :: (ViewSpecContainer parentModel) => parentModel -> View (Action
 renderViewSpec container =  renderFunc container
   where
     (ViewSpec (renderFunc,_)) = getViewSpec container
+{-# INLINE renderViewSpec #-}
 
 type WrappedRun parentModel =
   RoutingURI -> parentModel -> Maybe (Effect (Action parentModel) parentModel)
 
-type WrappedUpdate parentModel =
-  parentModel -> Action parentModel -> Effect (Action parentModel) parentModel
-
 data RoutingTable parentModel =
-  RoutingTable [(WrappedRun parentModel, WrappedUpdate parentModel)]
+  RoutingTable [WrappedRun parentModel]
 
 newRoutingTable :: RoutingTable parentModel
 newRoutingTable = RoutingTable []
+{-# INLINE newRoutingTable #-}
 
 addRoute :: (RouteEmbed parentModel model) =>
   Proxy model -> RoutingTable parentModel -> RoutingTable parentModel
-addRoute !pxy (RoutingTable !table) =
-  RoutingTable $ (wrappedRunRoute pxy, wrappedUpdate pxy):table
+addRoute pxy (RoutingTable table) =
+  RoutingTable $ (wrappedRunRoute pxy):table
+{-# INLINE addRoute #-}
 
 runTable :: (ViewSpecContainer parentModel) =>
   RoutingTable parentModel ->
@@ -118,20 +118,7 @@ runTable (RoutingTable !routes) !notFoundView !routingURI !parentModel =
       Nothing -> (noEff $ setViewSpec parentModel (ViewSpec (notFoundView, routingURI)))
       Just results -> results
   where
-    routeRunResults = map (\run -> run routingURI parentModel) $ map fst routes
-
-updateTable ::
-  RoutingTable parentModel ->
-  parentModel ->
-  Action parentModel->
-  Effect (Action parentModel) parentModel
-updateTable (RoutingTable !tbl) !initialParentModel !parentAction =
-    foldr doMerge initialEffect updateCalls
-  where
-    !initialEffect = Effect initialParentModel []
-    !updateCalls = map snd tbl
-    doMerge !call (Effect !parentModel !ios) =
-      let (Effect !newParentModel !moreIOs) = call parentModel parentAction in
-      Effect newParentModel (ios++moreIOs)
+    routeRunResults = map (\run -> run routingURI parentModel) routes
+{-# INLINABLE runTable #-}
 
 

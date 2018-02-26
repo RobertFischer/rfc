@@ -1,52 +1,111 @@
-{-# LANGUAGE BangPatterns          #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE AllowAmbiguousTypes       #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 module RFC.Miso.Component
   ( Component(..)
   , ComponentEmbed(..)
+  , ComponentContainer(..)
+  , ComponentProxy(..)
+  , viewComponent
+  , updateComponents
+  , wrappedView
+  , wrappedUpdate
+  , wrapEffect
+  , EmbeddedComponent
+  , embedComponent
   ) where
 
 import           Data.Proxy
 import           Miso.Effect
-import           Miso.Html   (View (..))
+import           Miso.Html       (View (..))
+import qualified Miso.Html       as Html
+import           Miso.Types      (Transition, fromTransition, toTransition)
+import           RFC.Miso.String ()
 import           RFC.Prelude
 
 
 class (Eq model) => Component model where
-  data Action model :: *
-  type InitArgs model :: *
-  initModel :: InitArgs model -> Effect (Action model) model
-  update    :: model -> Action model -> Effect (Action model) model
-  view      :: model -> View (Action model)
+  {-# MINIMAL initModel, view, (update|transition) #-}
+  data Action model   :: *
+  data InitArgs model :: *
+
+  initModel   :: InitArgs model -> IO model
+  view        :: model -> View (Action model)
+
+  update     :: Action model -> model -> Effect (Action model) model
+  update action = fromTransition $ transition action
+  {-# INLINE update #-} -- Only inlines if instance uses default method
+
+  transition :: Action model -> Transition (Action model) model ()
+  transition action = toTransition $ update action
+  {-# INLINE transition #-} -- Only inlines if instance uses default method
 
 class (Component model, Component parentModel) => ComponentEmbed parentModel model where
-  wrapAction   :: model -> Action model -> Action parentModel
-  unwrapAction :: model -> Action parentModel -> Maybe (Action model)
-  wrapModel    :: model -> parentModel -> parentModel
-  unwrapModel  :: Proxy model -> parentModel -> model
+  unwrapInitArgs :: Proxy model -> InitArgs parentModel -> InitArgs model
+  wrapAction     :: model -> Action model -> Action parentModel
+  unwrapAction   :: model -> Action parentModel -> Maybe (Action model)
+  wrapModel      :: model -> parentModel -> parentModel
+  wrapModelPxy   :: Proxy model -> model -> parentModel -> parentModel  -- ^ For cases when we need to help type inference
+  wrapModelPxy _ = wrapModel
+  unwrapModel    :: Proxy model -> parentModel -> Maybe model
 
-  wrapIOActions :: model -> [IO (Action model)] -> [IO (Action parentModel)]
-  wrapIOActions !childModel = map (fmap $ wrapAction childModel)
+data EmbeddedComponent parentModel = forall model. (ComponentEmbed parentModel model) => MkEmbeddedComponent model
+embedComponent :: (ComponentEmbed parentModel model) => model -> EmbeddedComponent parentModel
+embedComponent = MkEmbeddedComponent
+{-# INLINE embedComponent #-}
 
-  wrapEffect  :: Effect (Action model) model -> parentModel -> Effect (Action parentModel) parentModel
-  wrapEffect (Effect !childModel !childIOs) !parentModel =
-    Effect
-      (wrapModel childModel parentModel)
-      (wrapIOActions childModel childIOs)
+wrapIOActions :: (ComponentEmbed parentModel model) => model -> [IO (Action model)] -> [IO (Action parentModel)]
+wrapIOActions childModel = map (fmap $ wrapAction childModel)
+{-# INLINE wrapIOActions #-}
 
-  wrappedUpdate :: Proxy model -> parentModel -> Action parentModel -> Effect (Action parentModel) parentModel
-  wrappedUpdate !pxy !parentModel !parentAction =
-    case unwrapAction model parentAction of
-      Nothing ->
-        noEff parentModel
-      Just action ->
-        wrapEffect (update model action) parentModel
-    where
-      !model = unwrapModel pxy parentModel
+wrapEffect :: (ComponentEmbed parentModel model) => Effect (Action model) model -> parentModel -> Effect (Action parentModel) parentModel
+wrapEffect (Effect childModel childIOs) parentModel =
+  Effect
+    (wrapModel childModel parentModel)
+    (wrapIOActions childModel childIOs)
+{-# INLINE wrapEffect #-}
 
-  wrappedView :: Proxy model -> parentModel -> View (Action parentModel)
-  wrappedView !pxy !parentModel = fmap (wrapAction model) $ view model
-    where
-      !model = unwrapModel pxy parentModel
+wrappedUpdate :: (ComponentEmbed parentModel model) =>
+  Proxy model -> Action parentModel -> parentModel -> Effect (Action parentModel) parentModel
+wrappedUpdate pxy parentAction parentModel = fromMaybe (noEff parentModel) $ do
+  model  <- unwrapModel pxy parentModel
+  action <- unwrapAction model parentAction
+  return $ wrapEffect (update action model) parentModel
+{-# INLINABLE wrappedUpdate #-}
 
+wrappedView :: (ComponentEmbed parentModel model) => parentModel -> Proxy model -> View (Action parentModel)
+wrappedView parentModel pxy =
+  maybe
+    (Html.text $ cs "")
+    (\model -> fmap (wrapAction model) $ view model)
+    (unwrapModel pxy parentModel)
+{-# INLINABLE wrappedView #-}
+
+-- | Wrapper for a 'Proxy' of an embedded component.
+data ComponentProxy parentModel = forall model. (ComponentEmbed parentModel model) => ComponentProxy (Proxy model)
+
+class ComponentContainer parentModel where
+  components :: Proxy parentModel -> [ComponentProxy parentModel]
+
+viewComponent :: (ComponentEmbed parentModel model) => parentModel -> Proxy model -> View (Action parentModel)
+viewComponent = wrappedView
+{-# INLINE viewComponent #-}
+
+updateComponents ::
+  forall parentModel model. (ComponentEmbed parentModel model, ComponentContainer parentModel) =>
+  Action parentModel -> parentModel -> Effect (Action parentModel) parentModel
+updateComponents action startingParentModel = foldr foldImpl initialEffect comps
+  where
+    parentPxy = Proxy :: Proxy parentModel
+    comps = components parentPxy :: [ComponentProxy parentModel]
+    initialEffect = noEff startingParentModel
+    foldImpl (ComponentProxy pxy) (Effect parentModel ios) =
+      let Effect newParentModel newIos = wrappedUpdate pxy action parentModel
+      in Effect newParentModel (ios ++ newIos)
+{-# INLINABLE updateComponents #-}

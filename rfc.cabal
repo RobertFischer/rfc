@@ -25,8 +25,9 @@ library
   default-language:    Haskell2010
   default-extensions:  NoImplicitPrelude
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
+  ghc-options:         -fno-max-relevant-binds
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wall-missed-specialisations -Wnoncanonical-monad-instances
-  ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures
+  ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures -Widentities
   if flag(Development)
     ghc-options:       -Werror
   build-depends:       base >= 4.7 && < 5
@@ -98,6 +99,7 @@ library
                      , RFC.Miso.String
                      , RFC.Miso.Routing
                      , RFC.Miso.Component
+                     , RFC.Miso.MisoApp
                      , RFC.GHCJS
                      , RFC.GHCJS.XHR
                      , RFC.GHCJS.Inject
