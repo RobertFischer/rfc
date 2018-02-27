@@ -12,13 +12,12 @@ module RFC.Miso.Component
   , ComponentEmbed(..)
   , ComponentContainer(..)
   , ComponentProxy(..)
+  , EmbeddedComponent(..)
   , viewComponent
   , updateComponents
   , wrappedView
   , wrappedUpdate
   , wrapEffect
-  , EmbeddedComponent
-  , embedComponent
   ) where
 
 import           Data.Proxy
@@ -55,10 +54,7 @@ class (Component model, Component parentModel) => ComponentEmbed parentModel mod
   wrapModelPxy _ = wrapModel
   unwrapModel    :: Proxy model -> parentModel -> Maybe model
 
-data EmbeddedComponent parentModel = forall model. (ComponentEmbed parentModel model) => MkEmbeddedComponent model
-embedComponent :: (ComponentEmbed parentModel model) => model -> EmbeddedComponent parentModel
-embedComponent = MkEmbeddedComponent
-{-# INLINE embedComponent #-}
+data EmbeddedComponent parentModel = forall model. (ComponentEmbed parentModel model) => EmbeddedComponent model
 
 wrapIOActions :: (ComponentEmbed parentModel model) => model -> [IO (Action model)] -> [IO (Action parentModel)]
 wrapIOActions childModel = map (fmap $ wrapAction childModel)
