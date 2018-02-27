@@ -1,33 +1,51 @@
+{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module RFC.Concurrent
   ( module RFC.Concurrent
   , module Control.Monad.IO.Unlift
   , module UnliftIO.Concurrent
-  , module Control.Concurrent.Async.Lifted
+  , module UnliftIO.Async
   , module Control.Monad.Trans.Control
   ) where
 
-import           Control.Concurrent.Async.Lifted hiding (mapConcurrently,
-                                                  mapConcurrently_)
 import           Control.Monad.IO.Unlift
 import           Control.Monad.Trans.Control
+import           Data.Foldable               (foldrM)
 import           RFC.Prelude
+import           UnliftIO.Async
 import           UnliftIO.Concurrent
 
 -- |Executes all the IO actions simultaneously and returns the original data structure with the arguments replaced
 --  by the results of the execution.
 doConcurrently :: (Traversable t, MonadUnliftIO m) => t (m a) -> m (t a)
 doConcurrently = mapConcurrently id
+{-# SPECIALIZE INLINE doConcurrently :: (MonadUnliftIO m) => [m a] -> m [a] #-}
+{-# SPECIALIZE INLINE doConcurrently :: [IO a] -> IO [a]                    #-}
+{-# INLINE doConcurrently #-}
 
 -- |Executes all the IO actions simulataneously and discards the results.
 doConcurrently_ :: (Foldable f, MonadUnliftIO m) => f (m a) -> m ()
 doConcurrently_ = mapConcurrently_ id
+{-# SPECIALIZE INLINE doConcurrently_ :: (MonadUnliftIO m) => [m a] -> m () #-}
+{-# SPECIALIZE INLINE doConcurrently_ :: [IO a] -> IO ()                    #-}
+{-# INLINE doConcurrently_ #-}
 
--- |Executes all the IO actions simultaneously, feeds them into the filter function, and then
--- filters the results.
-filterConcurrently :: (MonadUnliftIO m) => (a -> Bool) -> [m a] -> m [a] -- TODO Seems like we should be able to do this with Foldable/Traversable
-filterConcurrently filterFunc actions =
-    filter filterFunc <$> doConcurrently actions
+-- |Executes all the IO actions simultaneously and then filters the results based on the filter function.
+filterConcurrently :: (Traversable t, Applicative t, Monoid (t a), MonadUnliftIO m) => (a -> Bool) -> t (m a) -> m (t a)
+filterConcurrently test actions = do
+    !asyncActions <- mapM async actions
+    foldrM foldImpl mempty asyncActions
+  where
+    foldImpl !promise results = do
+      result <- wait promise
+      return $ if test result then
+        (pure result) `mappend` results
+      else
+        results
+{-# INLINABLE filterConcurrently #-}
+{-# SPECIALIZE INLINE filterConcurrently :: (MonadUnliftIO m) => (a -> Bool) -> [m a] -> m [a] #-}
+{-# SPECIALIZE INLINE filterConcurrently :: (a -> Bool) -> [IO a] -> IO [a]                    #-}
