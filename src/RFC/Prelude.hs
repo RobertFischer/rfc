@@ -18,6 +18,7 @@ module RFC.Prelude
   , module Control.Monad.IO.Unlift
   , module RFC.String
   , module Data.Word
+  , module Data.Semigroup
   ) where
 
 import           ClassyPrelude               hiding (Day, unpack)
@@ -31,6 +32,7 @@ import           Data.Char                   as Char
 import           Data.Default
 import           Data.Function               ((&))
 import qualified Data.List                   as List
+import           Data.Semigroup
 import           Data.String.Conversions     (LazyByteString, LazyText,
                                               StrictByteString, StrictText, cs)
 import           Data.Time.Units
