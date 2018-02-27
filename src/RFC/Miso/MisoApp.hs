@@ -1,5 +1,8 @@
-{-# LANGUAGE ExplicitForAll        #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE AllowAmbiguousTypes       #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExplicitForAll            #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 
 module RFC.Miso.MisoApp
   ( MisoApp(..)
@@ -7,22 +10,34 @@ module RFC.Miso.MisoApp
   , runIso
   , initAndRun
   , initAndRunIso
+  , runRoutingTable
   ) where
 
-import qualified Miso               as Miso (miso, startApp)
-import qualified Miso.Event.Types   as Miso
-import qualified Miso.Types         as Miso
+import           Data.Proxy
+import qualified Miso                      as Miso (Effect (..), miso, startApp)
+import qualified Miso.Event.Types          as Miso
+import qualified Miso.Html                 as Miso (Sub)
+import           Miso.Router               (HasURI)
+import           Miso.Subscription.History (uriSub)
+import qualified Miso.Types                as Miso
+import           RFC.Concurrent
 import           RFC.Miso.Component
 import           RFC.Miso.Routing
 import           RFC.Miso.String
 import           RFC.Prelude
+import           UnliftIO.Async
+import           UnliftIO.Concurrent
 
 -- | Typeclass wrapper around 'Miso.App' functionality.
-class (Component model, ComponentContainer model) => MisoApp model where
+class (Component model, ComponentContainer model, ViewSpecContainer model) => MisoApp model where
   initialAction :: model -> Action model
+  routingAction :: model -> RoutingURI -> Action model
+  multipleActions :: [Action model] -> Action model
 
-  subs :: model -> [Sub (Action model) model]
-  subs _ = []
+  subs :: model -> [Miso.Sub (Action model) model]
+  subs app =
+    [ uriSub (routingAction app . parseURI)
+    ]
   {-# INLINE subs #-}
 
   events :: model -> Map MisoString Bool
@@ -33,8 +48,18 @@ class (Component model, ComponentContainer model) => MisoApp model where
   mountPoint _ = Nothing
   {-# INLINE mountPoint #-}
 
+  setRoutingTable :: RoutingTable model -> model -> model
+  getRoutingTable :: model -> RoutingTable model
 
-createApp :: model -> Miso.App model action
+
+runRoutingTable :: (MisoApp app) =>
+  Miso.Effect (Action app) app -> RoutingURI -> app -> Miso.Effect (Action app) app
+runRoutingTable notFoundEffect routingURI app =
+    runTable (getRoutingTable app) notFoundEffect app routingURI
+{-# INLINE runRoutingTable #-}
+
+
+createApp :: (MisoApp model) => model -> Miso.App model (Action model)
 createApp model = Miso.App
   { Miso.model = model
   , Miso.update = update
@@ -47,39 +72,46 @@ createApp model = Miso.App
 {-# INLINE createApp #-}
 
 -- | Executes the application. If the mountpoint is 'Nothing', then it we will clear the body of the document first.
-run :: model -> IO ()
+run :: (MisoApp model) => model -> IO ()
 run = doRun Miso.startApp
 {-# INLINE run #-}
 
 -- | Executes the application isomorphically. This assumes we already have the pre-rendered DOM in place.
-runIso :: (HasURI model) => model -> IO ()
+runIso :: (MisoApp model, HasURI model) => model -> IO ()
 runIso = doRun Miso.miso
 {-# INLINE runIso #-}
 
-doRun :: (App model (Action model) -> IO ()) -> model -> IO ()
+doRun :: (MisoApp model) => (Miso.App model (Action model) -> IO ()) -> model -> IO ()
 doRun f = f . createApp
 {-# INLINE doRun #-}
 
-initAndRun :: forall app route. (MisoApp app, RouteEmbed app route) => InitArgs app -> [Proxy route] -> IO ()
+initAndRun :: (MisoApp app) => InitArgs app -> RoutingTable app -> IO ()
 initAndRun = doInitAndRun Miso.startApp
 {-# INLINE initAndRun #-}
 
-initAndRunIso :: forall app route. (MisoApp app, RouteEmbed app route) => InitArgs app -> [Proxy route] -> IO ()
+initAndRunIso :: (MisoApp app, HasURI app) => InitArgs app -> RoutingTable app -> IO ()
 initAndRunIso = doInitAndRun Miso.miso
 {-# INLINE initAndRunIso #-}
 
 doInitAndRun ::
-  forall app route. (MisoApp app, RouteEmbed app route) =>
-  (App model (Action model) -> IO ()) -> InitArgs app -> [Proxy route] -> IO ()
-doInitAndRun f initArgs routeProxies = do
-    compUpdates <- parallel compModelIOs
+  (MisoApp app, ComponentContainer app) =>
+  (Miso.App app (Action app) -> IO ()) -> InitArgs app -> RoutingTable app -> IO ()
+doInitAndRun f initArgs routingTable = do
+    compUpdates <- mapConcurrently toModelIO $ components (Proxy :: Proxy app)
     initialModel <- initModel initArgs
-    let app = createApp $ foldr ($) initialModel compUpdateIOs
-    f app
+    let modelWithComps = foldr ($) initialModel compUpdates
+    let finalModel = setRoutingTable routingTable modelWithComps
+    routingURI <- parseCurrentURI
+    let app = createApp finalModel
+    f $ app {
+      Miso.initialAction = multipleActions
+        [ initialAction finalModel
+        , routingAction finalModel routingURI
+        ]
+    }
   where
-    routingTable = foldr addRoute newRoutingTable routeProxies
-    compUpdateIOs = map (\pxy -> wrapModel <$> toModelIO pxy) components
-    toModelIO (ComponentProxy pxy) = initModel $ unwrapInitArgs pxy initArgs
-    comps = components appProxy
-    appProxy = Proxy :: Proxy app
+    toModelIO (ComponentProxy pxy) = do
+      let modelInitArgs = unwrapInitArgs pxy initArgs
+      model <- initModel modelInitArgs
+      return $ wrapModel model
 {-# INLINABLE doInitAndRun #-}
