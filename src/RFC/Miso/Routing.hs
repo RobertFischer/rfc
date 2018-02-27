@@ -1,7 +1,7 @@
-{-# LANGUAGE BangPatterns          #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NamedFieldPuns            #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 module RFC.Miso.Routing
   ( RoutingURI
@@ -12,7 +12,7 @@ module RFC.Miso.Routing
   , ViewSpecContainer(..)
   , renderViewSpec
   , RouteConfig(..)
-  , RouteEmbed(..)
+  , RouteProxy(..)
   , RoutingTable
   , newRoutingTable
   , addRoute
@@ -58,67 +58,55 @@ parseCurrentURI :: IO RoutingURI
 parseCurrentURI = parseURI <$> getCurrentURI
 {-# INLINE parseCurrentURI #-}
 
-data ViewSpec parentModel = ViewSpec (parentModel -> View (Action parentModel), RoutingURI)
+
+data ViewSpec parentModel = ViewSpec (RouteProxy parentModel, RoutingURI)
 
 instance Eq (ViewSpec model) where
-  (==) (ViewSpec(_,!left)) (ViewSpec(_,!right)) = left == right
+  (==) (ViewSpec(_,left)) (ViewSpec(_,right)) = left == right
 
 class (Component model) => RouteConfig model where
   runRoute :: model -> RoutingURI -> Maybe (Effect (Action model) model)
-
-class (ComponentEmbed parentModel model, RouteConfig model, ViewSpecContainer parentModel) => RouteEmbed parentModel model where
-  wrappedRunRoute :: Proxy model -> WrappedRun parentModel
-  wrappedRunRoute pxy uriPair currentParentModel = do
-      childSeed <- unwrapModel pxy currentParentModel
-      childEffect <- runRoute childSeed uriPair
-      return $ effectWrapper childEffect (ViewSpec (view, uriPair))
-    where
-      view :: parentModel -> View (Action parentModel)
-      view = (flip wrappedView) pxy
-      effectWrapper :: Effect (Action model) model -> ViewSpec parentModel -> Effect (Action parentModel) parentModel
-      effectWrapper childEffect viewSpec = wrapEffect childEffect newParentModel
-        where
-          newParentModel :: parentModel
-          newParentModel = setViewSpec currentParentModel viewSpec
 
 class (Component model) => ViewSpecContainer model where
   setViewSpec :: model -> ViewSpec model -> model
   getViewSpec :: model -> ViewSpec model
 
 renderViewSpec :: (ViewSpecContainer parentModel) => parentModel -> View (Action parentModel)
-renderViewSpec container =  renderFunc container
-  where
-    (ViewSpec (renderFunc,_)) = getViewSpec container
+renderViewSpec container =
+    case getViewSpec container of
+      ViewSpec viewSpec ->
+        case viewSpec of
+          ( RouteProxy routeModel, _ ) -> viewComponent container routeModel
 {-# INLINE renderViewSpec #-}
 
-type WrappedRun parentModel =
-  RoutingURI -> parentModel -> Maybe (Effect (Action parentModel) parentModel)
-
-data RoutingTable parentModel =
-  RoutingTable [WrappedRun parentModel]
+data RouteProxy parentModel = forall model. (ComponentEmbed parentModel model, RouteConfig model) => RouteProxy (Proxy model)
+newtype RoutingTable parentModel = RoutingTable [RouteProxy parentModel]
 
 newRoutingTable :: RoutingTable parentModel
 newRoutingTable = RoutingTable []
 {-# INLINE newRoutingTable #-}
 
-addRoute :: (RouteEmbed parentModel model) =>
+addRoute :: (ComponentEmbed parentModel model, RouteConfig model) =>
   Proxy model -> RoutingTable parentModel -> RoutingTable parentModel
 addRoute pxy (RoutingTable table) =
-  RoutingTable $ (wrappedRunRoute pxy):table
+  RoutingTable $ (RouteProxy pxy):table
 {-# INLINE addRoute #-}
 
-runTable :: (ViewSpecContainer parentModel) =>
+runTable ::
   RoutingTable parentModel ->
-  (parentModel -> View (Action parentModel)) ->
-  RoutingURI ->
+  (Effect (Action parentModel) parentModel) ->
   parentModel ->
+  RoutingURI ->
   Effect (Action parentModel) parentModel
-runTable (RoutingTable !routes) !notFoundView !routingURI !parentModel =
-    case safeHead $ catMaybes routeRunResults of
-      Nothing -> (noEff $ setViewSpec parentModel (ViewSpec (notFoundView, routingURI)))
-      Just results -> results
+runTable (RoutingTable routes) notFoundEffect parentModel routingURI =
+    fromMaybe notFoundEffect $ safeHead routeRunResults
   where
-    routeRunResults = map (\run -> run routingURI parentModel) routes
+    routeRunResults =
+      mapMaybe (\(RouteProxy routePxy) -> do
+        model <- unwrapModel routePxy parentModel
+        routeEffect <- runRoute model routingURI
+        return $ wrapEffect routeEffect parentModel
+      ) routes
 {-# INLINABLE runTable #-}
 
 
