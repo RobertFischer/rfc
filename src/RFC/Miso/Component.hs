@@ -1,7 +1,10 @@
 {-# LANGUAGE AllowAmbiguousTypes       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeFamilies              #-}
 
@@ -13,6 +16,7 @@ module RFC.Miso.Component
   , ComponentContainer(..)
   , ComponentProxy(..)
   , EmbeddedComponent(..)
+  , embeddedComponentToProxy
   , viewComponent
   , updateComponents
   , wrappedView
@@ -45,16 +49,26 @@ class (Eq model) => Component model where
   transition action = toTransition $ update action
   {-# INLINE transition #-} -- Only inlines if instance uses default method
 
-class (Component model, Component parentModel) => ComponentEmbed parentModel model where
+class (Component model, Component parentModel) => ComponentLens parentModel model where
+  --initArgsLens :: Lens' (InitArgs parentModel) (InitArgs model)
   unwrapInitArgs :: Proxy model -> InitArgs parentModel -> InitArgs model
   wrapAction     :: model -> Action model -> Action parentModel
   unwrapAction   :: model -> Action parentModel -> Maybe (Action model)
   wrapModel      :: model -> parentModel -> parentModel
   wrapModelPxy   :: Proxy model -> model -> parentModel -> parentModel  -- ^ For cases when we need to help type inference
   wrapModelPxy _ = wrapModel
-  unwrapModel    :: Proxy model -> parentModel -> Maybe model
+  unwrapModel    :: Proxy model -> parentModel -> model
 
-data EmbeddedComponent parentModel = forall model. (ComponentEmbed parentModel model) => EmbeddedComponent model
+data EmbeddedComponent parentModel where
+  EmbeddedComponentProxy :: (ComponentEmbed parentModel model) => Proxy model -> EmbeddedComponent parentModel
+
+embeddedComponentToProxy :: EmbeddedComponent parentModel -> (ComponentEmbed parentModel model) => Proxy model
+embeddedComponentToProxy (EmbeddedComponentProxy pxy) = pxy
+{-# INLINE embeddedComponentToProxy #-}
+
+embeddedComponentToModel :: (ComponentEmbed parentModel model) => EmbeddedComponent parentModel -> parentModel -> model
+embeddedComponentToModel = unwrapModel . embeddedComponentToProxy
+{-# INLINE embeddedComponentToModel #-}
 
 wrapIOActions :: (ComponentEmbed parentModel model) => model -> [IO (Action model)] -> [IO (Action parentModel)]
 wrapIOActions childModel = map (fmap $ wrapAction childModel)
@@ -70,7 +84,7 @@ wrapEffect (Effect childModel childIOs) parentModel =
 wrappedUpdate :: (ComponentEmbed parentModel model) =>
   Proxy model -> Action parentModel -> parentModel -> Effect (Action parentModel) parentModel
 wrappedUpdate pxy parentAction parentModel = fromMaybe (noEff parentModel) $ do
-  model  <- unwrapModel pxy parentModel
+  let model = unwrapModel pxy parentModel
   action <- unwrapAction model parentAction
   return $ wrapEffect (update action model) parentModel
 {-# INLINABLE wrappedUpdate #-}
@@ -83,25 +97,25 @@ wrappedView parentModel pxy =
     (unwrapModel pxy parentModel)
 {-# INLINABLE wrappedView #-}
 
--- | Wrapper for a 'Proxy' of an embedded component.
-data ComponentProxy parentModel = forall model. (ComponentEmbed parentModel model) => ComponentProxy (Proxy model)
-
 class ComponentContainer parentModel where
-  components :: Proxy parentModel -> [ComponentProxy parentModel]
+  components :: Proxy parentModel -> [EmbeddedComponent parentModel]
 
 viewComponent :: (ComponentEmbed parentModel model) => parentModel -> Proxy model -> View (Action parentModel)
 viewComponent = wrappedView
 {-# INLINE viewComponent #-}
 
 updateComponents ::
-  forall parentModel model. (ComponentEmbed parentModel model, ComponentContainer parentModel) =>
+  (ComponentContainer parentModel, Component parentModel) =>
   Action parentModel -> parentModel -> Effect (Action parentModel) parentModel
 updateComponents action startingParentModel = foldr foldImpl initialEffect comps
   where
     parentPxy = Proxy :: Proxy parentModel
-    comps = components parentPxy :: [ComponentProxy parentModel]
+    comps = components parentPxy
     initialEffect = noEff startingParentModel
-    foldImpl (ComponentProxy pxy) (Effect parentModel ios) =
-      let Effect newParentModel newIos = wrappedUpdate pxy action parentModel
-      in Effect newParentModel (ios ++ newIos)
+    foldImpl component (Effect parentModel ios) =
+      Effect newParentModel (ios ++ newIos)
+        where
+          pxy = embeddedComponentToProxy component
+          Effect newParentModel newIos = wrappedUpdate pxy action parentModel
+
 {-# INLINABLE updateComponents #-}

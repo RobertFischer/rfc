@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes       #-}
+ {-# LANGUAGE AllowAmbiguousTypes       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE ExplicitForAll            #-}
 {-# LANGUAGE FlexibleContexts          #-}
@@ -34,6 +34,9 @@ class (Component model, ComponentContainer model, ViewSpecContainer model) => Mi
   routingAction :: model -> RoutingURI -> Action model
   multipleActions :: [Action model] -> Action model
 
+  setRoutingTable :: RoutingTable model -> model -> model
+  getRoutingTable :: model -> RoutingTable model
+
   subs :: model -> [Miso.Sub (Action model) model]
   subs app =
     [ uriSub (routingAction app . parseURI)
@@ -48,8 +51,6 @@ class (Component model, ComponentContainer model, ViewSpecContainer model) => Mi
   mountPoint _ = Nothing
   {-# INLINE mountPoint #-}
 
-  setRoutingTable :: RoutingTable model -> model -> model
-  getRoutingTable :: model -> RoutingTable model
 
 
 runRoutingTable :: (MisoApp app) =>
@@ -114,4 +115,4 @@ doInitAndRun f initArgs routingTable = do
       let modelInitArgs = unwrapInitArgs pxy initArgs
       model <- initModel modelInitArgs
       return $ wrapModel model
-{-# INLINABLE doInitAndRun #-}
+
