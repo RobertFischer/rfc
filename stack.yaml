@@ -14,9 +14,10 @@ extra-deps:
 - servant-server-0.13
 - servant-swagger-1.1.5
 - servant-docs-0.11.2
+- lens-4.16
 
 compiler-check: newer-minor
-resolver: nightly-2018-02-24
+resolver: nightly-2018-02-28
 require-stack-version: ! '>=1.6'
 
 flags:

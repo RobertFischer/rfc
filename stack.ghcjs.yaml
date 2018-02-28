@@ -25,6 +25,9 @@ extra-deps:
 - cabal-doctest-1.0.6
 - edit-distance-vector-1.0.0.4
 - blaze-markup-0.8.2.0
+- lens-4.16
+- profunctors-5.2.2
+- th-abstraction-0.2.6.0
 
 
 

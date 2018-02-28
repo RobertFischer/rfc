@@ -38,7 +38,7 @@ library
                      , string-conversions
                      , resource-pool
                      , data-default
-                     , lens
+                     , lens >= 4.16
                      , http-types
                      , http-api-data >= 0.3.7.1
                      , time-units
@@ -69,6 +69,8 @@ library
                      , aeson >= 1.2.3.0
                      , wai-extra
                      , wai-cors
+                     , wai-cli >= 0.1.1
+                     , envy >= 1.5.0.0
                      , postgresql-simple >= 0.5.3.0
                      , hedis >= 0.10.0
                      , simple-logger
@@ -97,23 +99,23 @@ library
     cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.Miso
                      , RFC.Miso.String
-                     , RFC.Miso.Routing
+                     -- , RFC.Miso.Routing
                      , RFC.Miso.Component
-                     , RFC.Miso.MisoApp
+                     -- , RFC.Miso.MisoApp
                      , RFC.GHCJS
                      , RFC.GHCJS.XHR
                      , RFC.GHCJS.Inject
                      , RFC.GHCJS.Cookie
   else
-    exposed-modules:   RFC.Psql
-                     , RFC.Redis
-                     , RFC.Log
+    exposed-modules: RFC.Log
+                     -- RFC.Psql
+                     -- , RFC.Redis
                      , RFC.Wai
                      , RFC.Env
                      , RFC.HTTP.Client
                      , RFC.Servant
                      , RFC.Servant.ApiDoc
-                     , RFC.Client.Coinhive
+                     -- , RFC.Client.Coinhive
 
 
 source-repository head
