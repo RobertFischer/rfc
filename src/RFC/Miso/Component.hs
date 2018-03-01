@@ -18,12 +18,8 @@ module RFC.Miso.Component
   ) where
 
 import           Control.Lens    hiding (view)
-import qualified Control.Lens    as Lens
-import           Data.Dynamic
-import           Data.Proxy
 import           Miso.Effect
 import           Miso.Html       (View (..))
-import qualified Miso.Html       as Html
 import           Miso.Types      (Transition, fromTransition, toTransition)
 import           RFC.Miso.String ()
 import           RFC.Prelude
@@ -57,7 +53,7 @@ data ComponentWrapping parentModel model = ComponentWrapping
 
 wrapComponent :: (Component parentModel, Component model) =>
   ComponentWrapping parentModel model -> WrappedComponent parentModel
-wrapComponent (wrapping@ComponentWrapping{childModel,parentAction,childAction}) =
+wrapComponent ComponentWrapping{childModel,parentAction,childAction} =
     WrappedComponent { wrappedView, wrappedUpdate }
   where
     wrappedView parentModel = parentModel^.childModel.view & fmap parentAction
