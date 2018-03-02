@@ -19,10 +19,12 @@ module RFC.Miso.Component
   , ComponentTransition
   , ComponentView
   , Subcomponents
+  , oneComponent
   , addComponent
   , viewComponent
   , updateComponents
   , mapComponent
+  , foldrComponents
   ) where
 
 import           Control.Lens    hiding (view)
@@ -64,6 +66,10 @@ class (Component parent) => ComponentContainer parent where
 
 newtype Subcomponents parent = Subcomponents [StashedComponent parent] deriving (Eq,Monoid,Semigroup,MonoFoldable,MonoFunctor,MonoPointed)
 type instance Element (Subcomponents parent) = StashedComponent parent
+
+oneComponent :: (ComponentMapping parent child) => child -> Subcomponents parent
+oneComponent = Subcomponents . (:[]) . StashedComponent
+{-# INLINE oneComponent #-}
 
 addComponent :: (ComponentMapping parent child) => child -> Subcomponents parent -> Subcomponents parent
 addComponent child (Subcomponents scs) = Subcomponents $ (StashedComponent child):scs
@@ -153,3 +159,11 @@ mapComponent f parent =
         Nothing        -> StashedComponent maybeChild
         Just castChild -> StashedComponent (f castChild)
 {-# INLINABLE mapComponent #-}
+
+foldrComponents :: (Component parent, ComponentContainer parent) =>
+  (forall child. ComponentMapping parent child => child -> Subcomponents parent -> Subcomponents parent) -> parent -> parent
+foldrComponents f parent =
+    parent & subcomponents .~ (ofoldr foldImpl mempty $ parent^.subcomponents)
+  where
+    foldImpl (StashedComponent child) subs = f child subs
+{-# INLINE foldrComponents #-}
