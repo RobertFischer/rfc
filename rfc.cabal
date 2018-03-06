@@ -99,7 +99,7 @@ library
     cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.Miso
                      , RFC.Miso.String
-                     -- , RFC.Miso.Routing
+                     , RFC.Miso.Routing
                      , RFC.Miso.Component
                      -- , RFC.Miso.MisoApp
                      , RFC.GHCJS
@@ -108,8 +108,8 @@ library
                      , RFC.GHCJS.Cookie
   else
     exposed-modules: RFC.Log
-                     -- RFC.Psql
-                     -- , RFC.Redis
+                     , RFC.Psql
+                     , RFC.Redis
                      , RFC.Wai
                      , RFC.Env
                      , RFC.HTTP.Client
