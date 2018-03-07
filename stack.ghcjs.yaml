@@ -5,29 +5,26 @@ compiler-check: match-exact # Be sure you also have this line in ~/.stack/config
 packages:
 - '.'
 extra-deps: 
-- miso-0.13.0.0
-- aeson-diff-1.1.0.4
+- miso-0.14.0.0
 - classy-prelude-1.4.0
-- freer-simple-1.0.1.1
-- http-api-data-0.3.7.2
-- lifted-async-0.10.0
-- monad-control-1.0.2.2
-- natural-transformation-0.4
 - servant-0.12.1
-- servant-blaze-0.8
+- aeson-diff-1.1.0.4
+- basic-prelude-0.7.0
+- cabal-doctest-1.0.6
+- http-api-data-0.3.7.2
+- lens-4.16
+- lifted-async-0.10.0
+- monad-control-1.0.2.3
+- natural-transformation-0.4
 - time-units-1.0.0
 - unliftio-0.2.4.0
 - unliftio-core-0.1.1.0
 - async-2.2.1
 - attoparsec-iso8601-1.0.0.0
-- basic-prelude-0.7.0
-- blaze-html-0.9.0.1
-- cabal-doctest-1.0.6
 - edit-distance-vector-1.0.0.4
-- blaze-markup-0.8.2.0
-- lens-4.16
 - profunctors-5.2.2
 - th-abstraction-0.2.6.0
+
 
 
 
