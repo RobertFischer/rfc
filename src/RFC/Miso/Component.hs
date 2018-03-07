@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NamedFieldPuns             #-}
@@ -14,18 +15,17 @@
 
 module RFC.Miso.Component
   ( Component(..)
-  , ComponentMapping(..)
   , ComponentContainer(..)
   , ComponentEffect
   , ComponentTransition
   , ComponentView
   , Subcomponents
-  , oneComponent
-  , addComponent
+  , liftComponent
+  , consComponent
   , viewComponent
   , viewComponents
   , updateComponents
-  , mapComponent
+  , mapComponents
   , foldrComponents
   ) where
 
@@ -43,11 +43,9 @@ type ComponentTransition model = Transition (Action model) model
 type ComponentView model = View (Action model)
 
 class (Typeable model, Eq model) => Component model where
-  {-# MINIMAL initModel, view, (update|transition) #-}
+  {-# MINIMAL view, (update|transition) #-}
   data Action model   :: *
-  data InitArgs model :: *
 
-  initModel   :: Getter (InitArgs model) (IO model)
   view        :: Getter (model) (ComponentView model)
 
   update     :: Action model -> model -> ComponentEffect model
@@ -58,26 +56,29 @@ class (Typeable model, Eq model) => Component model where
   transition = to $ \action -> toTransition $ update action
   {-# INLINE transition #-} -- Only inlines if instance uses default method
 
-class (Component parent, Component child) => ComponentMapping parent child where
-  childInitArgs :: Getter (InitArgs parent) (InitArgs child)
-  childAction   :: Prism' (Action parent) (Action child)
-
-parentAction :: (ComponentMapping parent child) => Getter (Action child) (Action parent)
-parentAction = re childAction
-
 class (Component parent) => ComponentContainer parent where
   subcomponents :: Lens' parent (Subcomponents parent)
+  childAction   :: forall child. Component child => Prism' (Action parent) (Action child)
+
+parentAction :: (ComponentContainer parent, Component child) => Getter (Action child) (Action parent)
+parentAction = re childAction
+
+data StashedComponent parent = forall model. Component model => StashedComponent model
+
+instance Eq (StashedComponent parent) where
+  (==) (StashedComponent left) (StashedComponent right) = cast right & maybe False ((==) left)
+  {-# INLINE (==) #-}
 
 newtype Subcomponents parent = Subcomponents [StashedComponent parent] deriving (Eq,Monoid,Semigroup,MonoFoldable,MonoFunctor,MonoPointed)
 type instance Element (Subcomponents parent) = StashedComponent parent
 
-oneComponent :: (ComponentMapping parent child) => child -> Subcomponents parent
-oneComponent = Subcomponents . (:[]) . StashedComponent
-{-# INLINE oneComponent #-}
+liftComponent :: (Component model) => model -> Subcomponents parent
+liftComponent = Subcomponents . (:[]) . StashedComponent
+{-# INLINE liftComponent #-}
 
-addComponent :: (ComponentMapping parent child) => child -> Subcomponents parent -> Subcomponents parent
-addComponent child (Subcomponents scs) = Subcomponents $ (StashedComponent child):scs
-{-# INLINE addComponent #-}
+consComponent :: (Component model) => model -> Subcomponents parent -> Subcomponents parent
+consComponent child (Subcomponents scs) = Subcomponents $ (StashedComponent child):scs
+{-# INLINE consComponent #-}
 
 removeStashedComponent :: StashedComponent parent -> Subcomponents parent -> Subcomponents parent
 removeStashedComponent stashed =
@@ -86,38 +87,31 @@ removeStashedComponent stashed =
       if stashed == sc then
         memo
       else
-        addComponent child memo
+        consComponent child memo
     ) mempty
 {-# INLINABLE removeStashedComponent #-}
 
 replaceSubcomponent ::
-  (ComponentContainer parent, ComponentMapping parent child) =>
+  (ComponentContainer parent, Component child) =>
   StashedComponent parent -> child -> parent -> parent
 replaceSubcomponent stashed child parent =
     parent & subcomponents .~ newSubs
   where
-    oldSubs = parent^.subcomponents
-    newSubs = oldSubs & removeStashedComponent stashed . addComponent child
+    newSubs = parent ^. subcomponents & removeStashedComponent stashed . consComponent child
 {-# INLINABLE replaceSubcomponent #-}
 
-data StashedComponent parent = forall child. ComponentMapping parent child => StashedComponent child
+newtype SCWrap result = SCWrap (forall child. Component child => child -> result)
 
-instance Eq (StashedComponent parent) where
-  (==) (StashedComponent left) (StashedComponent right) = cast right & maybe False ((==) left)
-  {-# INLINE (==) #-}
-
-newtype SCWrap parent result = SCWrap (forall child. ComponentMapping parent child => child -> result)
-
-applyComponent :: StashedComponent parent -> SCWrap parent result -> result
+applyComponent :: StashedComponent parent -> SCWrap result -> result
 applyComponent (StashedComponent child) (SCWrap f) = f child
 {-# INLINE applyComponent #-}
 
-wrappedView :: (Component parent) => StashedComponent parent -> ComponentView parent
+wrappedView :: (ComponentContainer parent) => StashedComponent parent -> ComponentView parent
 wrappedView (StashedComponent child) =
   child^.view & fmap (\it -> it^.parentAction)
 {-# INLINE wrappedView #-}
 
-wrappedUpdate :: (Component parent, ComponentContainer parent) =>
+wrappedUpdate :: (ComponentContainer parent) =>
   Action parent -> parent -> StashedComponent parent -> ComponentEffect parent
 wrappedUpdate action parent sc =
     applyComponent sc doUpdate
@@ -133,7 +127,7 @@ wrappedUpdate action parent sc =
             (map (fmap $ \it -> it^.parentAction) childIOs)
 {-# INLINABLE wrappedUpdate #-}
 
-updateComponents :: (Component parent, ComponentContainer parent) =>
+updateComponents :: (ComponentContainer parent) =>
   Action parent -> parent -> ComponentEffect parent
 updateComponents action initialParent =
     foldr foldImpl (noEff initialParent) subs
@@ -144,29 +138,30 @@ updateComponents action initialParent =
           Effect newParent (newActs ++ prevActs)
 {-# INLINABLE updateComponents #-}
 
-viewComponent :: (ComponentMapping parent child) => parent -> child -> ComponentView parent
-viewComponent _ = wrappedView . StashedComponent
+viewComponent :: (ComponentContainer parent, Component child) => child -> ComponentView parent
+viewComponent = wrappedView . StashedComponent
+{-# INLINE viewComponent #-}
 
-viewComponents :: (Component parent, ComponentContainer parent, ComponentMapping parent child) =>
+viewComponents :: (ComponentContainer parent, Component child) =>
   parent -> Proxy child -> ([ComponentView parent] -> ComponentView parent) -> ComponentView parent
-viewComponents parent pxy concatF =
-    concatF $ map wrappedView matchingScs
+viewComponents parent pxy concatViewsF =
+    concatViewsF $ map wrappedView matchingScs
   where
     childRep = typeRep pxy
     matchingScs = subs & filter (\(StashedComponent child) -> childRep == typeOf child)
     Subcomponents subs = parent^.subcomponents
-{-# INLINABLE viewComponent #-}
+{-# INLINABLE viewComponents #-}
 
-mapComponent :: (Component parent, ComponentContainer parent) =>
-  (forall child. ComponentMapping parent child => child -> child) -> parent -> parent
-mapComponent f parent =
+mapComponents :: (ComponentContainer parent) =>
+  (forall child. Component child => child -> child) -> parent -> parent
+mapComponents f parent =
     parent & subcomponents .~ (omap mapImpl $ parent^.subcomponents)
   where
     mapImpl (StashedComponent child) = StashedComponent $ f child
-{-# INLINABLE mapComponent #-}
+{-# INLINABLE mapComponents #-}
 
-foldrComponents :: (Component parent, ComponentContainer parent) =>
-  parent -> (forall child. ComponentMapping parent child => child -> a -> a) -> a -> a
+foldrComponents :: (ComponentContainer parent) =>
+  parent -> (forall child. Component child => child -> a -> a) -> a -> a
 foldrComponents parent f init =
     foldr foldImpl init subs
   where
