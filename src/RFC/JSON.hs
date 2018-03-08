@@ -33,6 +33,7 @@ import           Web.HttpApiData
 import           Data.Aeson.Text            as JSON
 import qualified Data.Aeson.Types           as JSONTypes
 #else
+import qualified Data.Aeson.Encode          as JSON
 import           Data.Attoparsec.ByteString as JSON
 import           Data.Either                (either)
 #endif
@@ -83,7 +84,7 @@ instance FromHttpApiData JSON.Value where
 #if MIN_VERSION_aeson(1,0,0)
         JSONParser.decodeStrictWith parser JSONTypes.Success (cs text)
 #else
-        either (const Nothing) Just $ JSON.parseOnly parser (cs text)
+        either (const Nothing) Just $ JSON.parseOnly parser (unUTF8 $ fromText text)
 #endif
 
 instance ToHttpApiData JSON.Value where
@@ -91,7 +92,7 @@ instance ToHttpApiData JSON.Value where
 #if MIN_VERSION_aeson(1,0,0)
     cs . JSON.encodeToLazyText
 #else
-    cs . JSON.encode
+    cs . JSON.encodeToTextBuilder
 #endif
 
 #ifndef GHCJS_BROWSER

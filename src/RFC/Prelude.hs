@@ -1,7 +1,6 @@
 module RFC.Prelude
   ( module RFC.Prelude
   , module RFC.Data.UUID
-  , module Data.String.Conversions
   , module GHC.Generics
   , module Text.Read
   , module Data.Time.Units
@@ -19,10 +18,12 @@ module RFC.Prelude
   , module RFC.String
   , module Data.Word
   , module Data.Semigroup
+  , module Control.Monad.Fail
   ) where
 
-import           ClassyPrelude               hiding (Day, unpack)
+import           ClassyPrelude               hiding (Day, fail, unpack)
 import           Control.Monad               (forever, void, (<=<), (>=>))
+import           Control.Monad.Fail          (MonadFail, fail)
 import           Control.Monad.IO.Unlift
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
@@ -33,8 +34,6 @@ import           Data.Default
 import           Data.Function               ((&))
 import qualified Data.List                   as List
 import           Data.Semigroup
-import           Data.String.Conversions     (LazyByteString, LazyText,
-                                              StrictByteString, StrictText, cs)
 import           Data.Time.Units
 import           Data.Typeable               (TypeRep, typeOf)
 import           Data.Word                   (Word16)

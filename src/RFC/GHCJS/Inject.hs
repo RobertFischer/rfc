@@ -17,7 +17,7 @@ import           RFC.Prelude
 
 -- | Injects a String of CSS declarations as an inline <style type="text/css"> element.
 injectStylesheet :: String -> IO ()
-injectStylesheet styling = injectStylesheet' . cs
+injectStylesheet = injectStylesheet' . cs
 {-# INLINE injectStylesheet #-}
 
 -- | Injects a reference to a JS file as a <script type="text/javascript"> element.

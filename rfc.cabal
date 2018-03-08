@@ -31,19 +31,17 @@ library
   if flag(Development)
     ghc-options:       -Werror
   build-depends:       base >= 4.7 && < 5
+                     , bytestring >= 0.10.8.1
                      , classy-prelude >= 1.4
                      , uuid-types
                      , containers
                      , unordered-containers
-                     , string-conversions
-                     , resource-pool
+                     , text-conversions >= 0.3.0
                      , data-default
                      , lens >= 4.16
                      , http-types
                      , http-api-data >= 0.3.7.1
                      , time-units
-                     , aeson-diff
-                     , vector
                      , text
                      , lifted-async >= 0.9.3.3
                      , unliftio >= 0.2.4.0
@@ -51,11 +49,13 @@ library
                      , monad-control >= 1.0.2.2
                      , natural-transformation >= 0.4
                      , network-uri
+                     , attoparsec
+                     , resource-pool
   if impl(ghcjs)
     build-depends:     aeson
-                     , attoparsec
                      , bifunctors
-                     , miso >= 0.13.0.0
+                     , miso >= 0.14.0.0
+                       -- Servant 0.13 publishes non-GHCJS-compatible Aeson version requirement.
                      , servant >= 0.12.1 && < 0.13
                      , url
                      , mono-traversable >= 1.0.1.1

@@ -30,6 +30,8 @@ createThrottle maxSimultaneous = do
     log2 x
       | (toInteger x) <= 2 = 1
       | otherwise = 1 + log2 (x `quot` 2)
+{-# INLINABLE createThrottle #-}
 
 withThrottle :: (MonadBaseControl IO m) => Throttle -> m b -> m b
 withThrottle (Throttle pool) action = withResource pool (const action)
+{-# INLINE withThrottle #-}

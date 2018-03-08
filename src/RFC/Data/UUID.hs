@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE InstanceSigs          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
@@ -9,7 +10,8 @@ module RFC.Data.UUID
   ( module Data.UUID.Types
   ) where
 
-import           ClassyPrelude
+import           ClassyPrelude                      hiding (fail)
+import           Control.Monad.Fail                 (MonadFail, fail)
 import           RFC.String
 
 import           Data.UUID.Types
@@ -18,7 +20,10 @@ import qualified Data.UUID.Types                    as UUID
 #if MIN_VERSION_aeson(1,1,0)
 -- UUID has ToJSON and FromJSON
 #else
-import           Data.Aeson.Types
+import           Data.Aeson.Types                   (FromJSON (..), ToJSON (..),
+                                                     Value (String),
+                                                     typeMismatch)
+import qualified Data.Text                          as T
 #endif
 
 #ifndef GHCJS_BROWSER
@@ -58,30 +63,47 @@ instance ToRow UUID where
 #else
 
 instance ToJSON UUID where
-  toJSON = toJSON . UUID.toText
+  toJSON = String . T.pack . show
+  {-# INLINE toJSON #-}
 
 instance FromJSON UUID where
-  parseJSON (String txt) =
-    case UUID.fromText txt of
-      Nothing   -> fail $ "Invalid UUID: " ++ cs txt
-      Just uuid -> return uuid
-
-  parseJSON invalid = typeMismatch "UUID" invalid
+  parseJSON json@(String t) =
+    case UUID.fromText t of
+         Just uuid -> pure uuid
+         Nothing   -> typeMismatch "UUID" json
+  parseJSON unknown = typeMismatch "UUID" unknown
+  {-# INLINE parseJSON #-}
 
 #endif
 
-instance ConvertibleStrings UUID String where
-  convertString = UUID.toString
+instance {-# OVERLAPPING #-} ToText UUID where
+  toText = UUID.toText
+  {-# INLINE toText #-}
 
-instance ConvertibleStrings UUID StrictText where
-  convertString = UUID.toText
+instance {-# OVERLAPS #-} (MonadFail m) => FromText (m UUID) where
+  {-# SPECIALISE instance FromText (Maybe UUID) #-}
+  {-# SPECIALISE instance FromText ([UUID])     #-}
+  {-# SPECIALISE instance FromText (IO UUID)    #-}
+  fromText :: Text -> m UUID
+  fromText text =
+    case UUID.fromText text of
+      Nothing -> fail $ "Could not parse UUID: " ++ (cs text)
+      Just x  -> return x
+  {-# INLINE fromText #-}
 
-instance ConvertibleStrings UUID LazyText where
-  convertString = toLazyText
+instance {-# OVERLAPPING #-} ConvertibleStrings UUID String where
+  cs = UUID.toString
+  {-# INLINE cs #-}
 
-instance ConvertibleStrings UUID StrictByteString where
-  convertString = UUID.toASCIIBytes
+instance {-# OVERLAPPING #-} ConvertibleStrings UUID StrictText where
+  cs = UUID.toText
+  {-# INLINE cs #-}
 
-instance ConvertibleStrings UUID LazyByteString where
-  convertString = UUID.toLazyASCIIBytes
+instance {-# OVERLAPPING #-} ConvertibleStrings UUID (UTF8 StrictByteString) where
+  cs = UTF8 . UUID.toASCIIBytes
+  {-# INLINE cs #-}
+
+instance {-# OVERLAPPING #-} ConvertibleStrings UUID (UTF8 LazyByteString) where
+  cs = UTF8 . UUID.toLazyASCIIBytes
+  {-# INLINE cs #-}
 

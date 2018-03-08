@@ -14,15 +14,12 @@ module RFC.Miso.String
   ) where
 
 import           Data.MonoTraversable
-import           Data.String                         (String)
-import           Data.String.Conversions
-import           Data.String.Conversions.Monomorphic (toLazyText, toString)
-import qualified Data.Text.Lazy                      as TL
-import           Miso.String                         (MisoString,
-                                                      ToMisoString (..))
-import           Miso.Subscription.History           (URI (..))
-import qualified RFC.Data.UUID                       as UUID
+import           Data.String          ()
+import qualified Data.Text.Lazy       as TL
+import           Miso.String          (MisoString, ToMisoString (..))
+import           RFC.Data.UUID        ()
 import           RFC.Prelude
+import           RFC.String           ()
 
 type instance Element MisoString = Char
 
@@ -43,7 +40,7 @@ instance MonoFoldable MisoString where
   ofoldl' f init str = TL.foldl' f init $ toLazyText str
   {-# INLINE ofoldl' #-}
 
-  otoList = toString
+  otoList = cs
   {-# INLINE otoList #-}
 
   oall f str = TL.all f $ toLazyText str
@@ -73,46 +70,13 @@ instance MonoFoldable MisoString where
   lastEx = TL.last . toLazyText
   {-# INLINE lastEx #-}
 
-instance {-# OVERLAPPING #-} ConvertibleStrings URI MisoString where
-  convertString = toMisoString . show
-  {-# INLINE convertString #-}
+instance {-# OVERLAPPING #-} FromText MisoString where
+  fromText :: Text -> MisoString
+  fromText = toMisoString
+  {-# INLINE fromText #-}
 
-instance {-# OVERLAPPING #-} ConvertibleStrings URI URI where
-  convertString = id
-  {-# INLINE convertString #-}
-
-instance {-# OVERLAPPABLE #-} (ConvertibleStrings String a) => ConvertibleStrings URI a where
-  {-# SPECIALIZE instance ConvertibleStrings URI String           #-}
-  {-# SPECIALIZE instance ConvertibleStrings URI LazyText         #-}
-  {-# SPECIALIZE instance ConvertibleStrings URI StrictText       #-}
-  {-# SPECIALIZE instance ConvertibleStrings URI LazyByteString   #-}
-  {-# SPECIALIZE instance ConvertibleStrings URI StrictByteString #-}
-  convertString = convertString . show
-  {-# INLINE convertString #-}
-
-instance {-# OVERLAPPING #-} ConvertibleStrings UUID.UUID MisoString where
-  convertString = toMisoString . UUID.toString
-  {-# INLINE convertString #-}
-
-instance {-# OVERLAPPING #-} ConvertibleStrings MisoString MisoString where
-  convertString = id
-  {-# INLINE convertString #-}
-
-instance {-# OVERLAPPABLE #-} (ToMisoString str) => ConvertibleStrings MisoString str where
-  {-# SPECIALIZE instance ConvertibleStrings MisoString String           #-}
-  {-# SPECIALIZE instance ConvertibleStrings MisoString LazyText         #-}
-  {-# SPECIALIZE instance ConvertibleStrings MisoString StrictText       #-}
-  {-# SPECIALIZE instance ConvertibleStrings MisoString LazyByteString   #-}
-  {-# SPECIALIZE instance ConvertibleStrings MisoString StrictByteString #-}
-  convertString = fromMisoString
-  {-# INLINE convertString #-}
-
-instance {-# OVERLAPPABLE #-} (ToMisoString str) => ConvertibleStrings str MisoString where
-  {-# SPECIALIZE instance ConvertibleStrings String MisoString           #-}
-  {-# SPECIALIZE instance ConvertibleStrings LazyText MisoString         #-}
-  {-# SPECIALIZE instance ConvertibleStrings StrictText MisoString       #-}
-  {-# SPECIALIZE instance ConvertibleStrings LazyByteString MisoString   #-}
-  {-# SPECIALIZE instance ConvertibleStrings StrictByteString MisoString #-}
-  convertString = toMisoString
-  {-# INLINE convertString #-}
+instance {-# OVERLAPPING #-} ToText MisoString where
+  toText :: MisoString -> Text
+  toText = fromMisoString
+  {-# INLINE toText #-}
 
