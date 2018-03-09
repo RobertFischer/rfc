@@ -10,26 +10,22 @@ module RFC.Data.UUID
   ( module Data.UUID.Types
   ) where
 
-import           ClassyPrelude                      hiding (fail)
-import           Control.Monad.Fail                 (MonadFail, fail)
+import           ClassyPrelude       hiding (fail)
+import           Control.Monad.Fail  (MonadFail, fail)
 import           RFC.String
 
 import           Data.UUID.Types
-import qualified Data.UUID.Types                    as UUID
+import qualified Data.UUID.Types     as UUID
 
 #if MIN_VERSION_aeson(1,1,0)
 -- UUID has ToJSON and FromJSON
 #else
-import           Data.Aeson.Types                   (FromJSON (..), ToJSON (..),
-                                                     Value (String),
-                                                     typeMismatch)
-import qualified Data.Text                          as T
+import           Data.Aeson.Types    (FromJSON (..), ToJSON (..),
+                                      Value (String), typeMismatch)
+import qualified Data.Text           as T
 #endif
 
 #ifndef GHCJS_BROWSER
-import           Database.PostgreSQL.Simple.FromRow
-import           Database.PostgreSQL.Simple.ToRow
-import           Database.PostgreSQL.Simple.Types   (Only (..))
 import           Servant.API.Capture
 import           Servant.Docs
 #endif
@@ -46,16 +42,6 @@ instance ToSample UUID where
     , "26009820-d2d1-4360-87e0-aa73db3c0433"
     ]
 
-#endif
-
-#ifndef GHCJS_BROWSER
-instance FromRow UUID where
-  fromRow = do
-    (Only id) <- fromRow
-    return id
-
-instance ToRow UUID where
-  toRow id = toRow $ Only id
 #endif
 
 #if MIN_VERSION_aeson(1,1,0)

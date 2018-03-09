@@ -27,27 +27,23 @@ module RFC.Data.IdAnd
 import           RFC.Prelude
 
 
-import           Data.Aeson                           as JSON
-import qualified Data.List                            as List hiding ((++))
-import qualified Data.Map                             as Map
-import qualified Data.UUID.Types                      as UUID
+import           Data.Aeson        as JSON
+import qualified Data.List         as List hiding ((++))
+import qualified Data.Map          as Map
+import qualified Data.UUID.Types   as UUID
 
 #if MIN_VERSION_aeson(1,0,0)
   -- Don't need the backflips for maps
 #else
-import           Data.Aeson.Types                     (Parser, typeMismatch)
+import           Data.Aeson.Types  (Parser, typeMismatch)
 -- import           Data.Bitraversable
-import qualified Data.HashMap.Lazy                    as HashMap
+import qualified Data.HashMap.Lazy as HashMap
 #endif
 
 #ifndef GHCJS_BROWSER
-import           Control.Lens                         hiding ((.=))
-import           Data.Proxy                           (Proxy (..))
+import           Control.Lens      hiding ((.=))
+import           Data.Proxy        (Proxy (..))
 import           Data.Swagger
-import           Database.PostgreSQL.Simple.FromField ()
-import           Database.PostgreSQL.Simple.FromRow
-import           Database.PostgreSQL.Simple.ToField
-import           Database.PostgreSQL.Simple.ToRow
 import           Servant.Docs
 #endif
 
@@ -126,12 +122,6 @@ instance (ToJSON a) => ToJSON (Map UUID (IdAnd a)) where
 #endif
 
 #ifndef GHCJS_BROWSER
-instance (FromRow a) => FromRow (IdAnd a) where
-  fromRow = valuesToIdAnd <$> field <*> fromRow
-
-instance (ToRow a) => ToRow (IdAnd a) where
-  toRow (IdAnd (id,a)) = toField id : toRow a
-
 instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
   declareNamedSchema _ = do
     NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)

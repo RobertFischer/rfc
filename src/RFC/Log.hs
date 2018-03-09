@@ -13,17 +13,17 @@ import           RFC.Env               as Env
 import           RFC.Prelude
 import           System.IO             (BufferMode (..), stderr)
 
-withLogging :: (MonadUnliftIO m) => m a -> m a
+withLogging :: (MonadFail m, MonadUnliftIO m) => m a -> m a
 withLogging action = do
-  isDev <- Env.isDevelopment
+  appSlug <- Env.readAppSlug
   hSetBuffering stderr LineBuffering
   ioAction <- toIO action
-  liftIO $ Log.withGlobalLogging (logConfig isDev) ioAction
+  liftIO $ Log.withGlobalLogging (logConfig appSlug) ioAction
   where
-    logConfig isDev =
-      if isDev then
+    logConfig appSlug =
+      if Env.isDevelopment then
           Log.LogConfig { Log.lc_file = Nothing, Log.lc_stderr = True }
       else
-          Log.LogConfig { Log.lc_file = Just "./log/server.log", Log.lc_stderr = False }
+          Log.LogConfig { Log.lc_file = Just ("./log/" ++ appSlug ++ ".log"), Log.lc_stderr = False }
 
 

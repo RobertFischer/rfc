@@ -11,10 +11,11 @@ module RFC.Redis
   , setex
   ) where
 
-import qualified Database.Redis as R
-import           RFC.Env        as Env
+import           Data.Time.Clock (nominalDay)
+import qualified Database.Redis  as R
+import           RFC.Env         as Env
 import           RFC.Prelude
-import           RFC.String     ()
+import           RFC.String      ()
 
 type ConnectionPool = R.Connection
 
@@ -28,11 +29,30 @@ class (MonadUnliftIO m) => HasRedis m where
   runRedis r = do
     conn <- getRedisPool
     liftIO $ R.runRedis conn r
+  {-# INLINE runRedis #-}
 
-createConnectionPool :: (MonadUnliftIO m) => m ConnectionPool
+
+instance DefConfig R.ConnectInfo where
+  defConfig = R.defaultConnectInfo
+  {-# INLINE defConfig #-}
+
+instance FromEnv R.ConnectInfo where
+  fromEnv = R.ConnInfo
+    <$> (envWithDevDefault "REDIS_HOST" $ R.connectHost defConfig)
+    <*> (envWithDefault "REDIS_PORT" $ R.connectPort defConfig)
+    <*> (envWithDefault "REDIS_AUTH" $ R.connectAuth defConfig)
+    <*> (envWithDefault "REDIS_DB" $ R.connectDatabase defConfig)
+    <*> (envWithDefault "REDIS_MAX_CONNS" $ R.connectMaxConnections defConfig)
+    <*> (envWithDefault "REDIS_IDLE_TIMEOUT" $ R.connectMaxIdleTime defConfig)
+    <*> (envWithDefault "REDIS_CONN_TIMEOUT" $ Just (nominalDay/24)) -- No timeout by default!
+  {-# INLINABLE fromEnv #-}
+
+createConnectionPool :: (MonadUnliftIO m, MonadFail m) => m ConnectionPool
 createConnectionPool = do
-  connInfo <- Env.readRedisConnectInfo
-  liftIO $ R.connect connInfo
+  connInfoResult <- liftIO decodeEnv
+  case connInfoResult of
+    Left err       -> fail $ "Could not configure Redis connection: " ++ err
+    Right connInfo -> liftIO $ R.connect connInfo
 
 get :: (HasRedis m, ConvertibleToSBS tIn, ConvertibleFromSBS tOut) => tIn -> m (Maybe tOut)
 get key = do

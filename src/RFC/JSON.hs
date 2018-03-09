@@ -82,9 +82,10 @@ instance FromHttpApiData JSON.Value where
       parser = JSONParser.value'
       parsed =
 #if MIN_VERSION_aeson(1,0,0)
-        JSONParser.decodeStrictWith parser JSONTypes.Success (cs text)
+          let (UTF8 textBs) = (cs text :: (UTF8 ByteString)) in
+          JSONParser.decodeStrictWith parser JSONTypes.Success textBs
 #else
-        either (const Nothing) Just $ JSON.parseOnly parser (unUTF8 $ fromText text)
+          either (const Nothing) Just $ JSON.parseOnly parser (unUTF8 $ fromText text)
 #endif
 
 instance ToHttpApiData JSON.Value where

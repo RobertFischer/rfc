@@ -51,6 +51,8 @@ library
                      , network-uri
                      , attoparsec
                      , resource-pool
+                     , time
+                     , aeson-diff >= 1.1.0.4
   if impl(ghcjs)
     build-depends:     aeson
                      , bifunctors
@@ -71,7 +73,7 @@ library
                      , wai-cors
                      , wai-cli >= 0.1.1
                      , envy >= 1.5.0.0
-                     , postgresql-simple >= 0.5.3.0
+                     , postgresql-typed >= 0.5.2
                      , hedis >= 0.10.0
                      , simple-logger
                      , temporary
@@ -83,7 +85,7 @@ library
                      , markdown
                      , servant-client >= 0.13
                      , binary
-
+                     , network
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent

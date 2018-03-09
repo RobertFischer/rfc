@@ -1,53 +1,120 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP          #-}
+{-# LANGUAGE InstanceSigs #-}
 
 module RFC.Env
   ( isDevelopment
   , readEnvironment
   , readHost
   , readPort
+  , readAppSlug
+  , forDevOnly
+  , envWithDefault
+  , envWithDevDefault
+  , module System.Envy
   ) where
 
 import           Control.Applicative
-import           Control.Exception
-import           Control.Monad
-import           Data.Either
+import           Data.Time.Clock
 import           Data.Word
-import           Database.PostgreSQL.Simple as Psql
-import           Database.Redis             as Redis
-import           GHC.TypeLits               (Symbol)
+import           Network             (PortID (..))
 import           RFC.Prelude
 import           System.Environment
+import           System.Envy
+import           Text.Read           (readMaybe)
 
--- TODO Create a Monad that only logs reading the env var once, and reads all the environment variables at once, and is pure.
+envWithDefault :: Var a => String -> a -> Parser a
+envWithDefault name defaultValue = fmap (fromMaybe defaultValue) $ envMaybe name
+{-# INLINE envWithDefault #-}
 
-isDevelopment :: (MonadIO m) => m Bool
-isDevelopment = fmap ((==) "development") readEnvironment
+envWithDevDefault :: Var a => String -> a -> Parser a
+envWithDevDefault name defaultValue =
+  if isDevelopment then
+    envWithDefault name defaultValue
+  else
+    env name
+{-# INLINE envWithDevDefault #-}
 
-forDevOnly :: (MonadIO m) => a -> m (Maybe a)
+isDevelopment :: Bool
+isDevelopment =
 #ifdef DEVELOPMENT
-forDevOnly defaultValue = Just defaultValue
+  True
 #else
-forDevOnly defaultValue = do
-  isDev <- isDevelopment
-  return $ isDev <|> Just defaultValue
+  False
 #endif
+{-# INLINE isDevelopment #-}
+
+forDevOnly :: a -> Maybe a
+forDevOnly defaultValue =
+  if isDevelopment then
+    Just defaultValue
+  else
+    Nothing
+{-# INLINE forDevOnly #-}
 
 readEnvironment :: (MonadIO m) => m String
-readEnvironment = readEnv "ENV" "development"
+readEnvironment =
+  readEnvWithDefault "ENV" "development"
+{-# INLINE readEnvironment #-}
 
-readAppSlug :: (MonadIO m) => m String
-readAppSlug = readEnv "APP_SLUG" Nothing
+readAppSlug :: (MonadIO m, MonadFail m) => m String
+readAppSlug = readEnvWithDevDefault "APP_SLUG" "dev"
+{-# INLINE readAppSlug #-}
 
-readHost :: (MonadIO m) => m String
+readHost :: (MonadIO m, MonadFail m) => m String
 readHost =
-  forDevOnly "localhost" >>= readEnv "HOST"
+  readEnvWithDevDefault "HOST" "localhost"
+{-# INLINE readHost #-}
 
-readPort :: (MonadIO m) => Word16 -> m Word16
-readPort devPort = do
-  defaultPort <- forDevOnly $ show devPort
-  result <- readEnv "PORT" defaultPort
-  return $ (read result :: Word16)
+readPort :: (MonadIO m, MonadFail m) => Word16 -> m Word16
+readPort devPort = readEnvWithDevDefault "PORT" devPort
+{-# INLINE readPort #-}
 
-readEnv name defaultValue = liftIO $ do
+readEnvWithDefault :: (MonadIO m, Read a) => String -> a -> m a
+readEnvWithDefault name defaultValue =
+  either (const defaultValue) id <$> readEnv name
+{-# INLINE readEnvWithDefault #-}
+
+readEnvWithDevDefault :: (MonadIO m, MonadFail m, Read a) => String -> a -> m a
+readEnvWithDevDefault =
+  if isDevelopment then
+    readEnvWithDefault
+  else
+    (\name _ -> readEnvOrDie name)
+{-# INLINE readEnvWithDevDefault #-}
+
+readEnv :: (MonadIO m, Read a) => String -> m (Either String a)
+readEnv name = liftIO $ do
   result <- lookupEnv name
-  return $ result <|> defaultValue
+  return $ case result >>= readMaybe of
+    Nothing        -> Left (show result)
+    Just goodValue -> Right goodValue
+{-# INLINE readEnv #-}
+
+readEnvOrDie :: (MonadIO m, MonadFail m, Read a) => String -> m a
+readEnvOrDie name = do
+  maybeResult <- readEnv name
+  case maybeResult of
+    Left err ->
+      if err == (show (Nothing::Maybe String)) then
+        fail $ "No value set for mandatory environment variable: " ++ name
+      else
+        fail $ "Cannot use value set for mandatory environment variable: " ++ name  ++ " => " ++ err
+    Right result -> return result
+{-# INLINE readEnvOrDie #-}
+
+instance Var NominalDiffTime where
+  toVar :: NominalDiffTime -> String
+  toVar = show
+  {-# INLINE toVar #-}
+
+  fromVar :: String -> Maybe NominalDiffTime
+  fromVar var = fromInteger <$> readMaybe var
+  {-# INLINE fromVar #-}
+
+instance Var PortID where
+  toVar (PortNumber portNum) = toVar $ toInteger portNum
+  toVar _                    = error "Can only write port numbers to var"
+  {-# INLINE toVar #-}
+
+  fromVar = (fmap $ PortNumber . fromInteger) . fromVar
+  {-# INLINE fromVar #-}

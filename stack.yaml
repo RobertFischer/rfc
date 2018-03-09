@@ -23,3 +23,7 @@ require-stack-version: ! '>=1.6'
 flags:
   rfc:
     development: true
+  wai-cli:
+    tls: false
+  postgresql-typed:
+    hdbc: false

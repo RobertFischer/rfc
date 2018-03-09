@@ -13,12 +13,13 @@ module RFC.Prelude
   , module Data.Default
   , module ClassyPrelude
   , module Control.Monad.Trans.Control
-  , module UnliftIO.Exception
   , module Control.Monad.IO.Unlift
   , module RFC.String
   , module Data.Word
   , module Data.Semigroup
   , module Control.Monad.Fail
+  , module Data.Time.Clock
+  , module UnliftIO
   ) where
 
 import           ClassyPrelude               hiding (Day, fail, unpack)
@@ -34,6 +35,7 @@ import           Data.Default
 import           Data.Function               ((&))
 import qualified Data.List                   as List
 import           Data.Semigroup
+import           Data.Time.Clock
 import           Data.Time.Units
 import           Data.Typeable               (TypeRep, typeOf)
 import           Data.Word                   (Word16)
@@ -41,7 +43,7 @@ import           GHC.Generics                (Generic)
 import           RFC.Data.UUID               (UUID)
 import           RFC.String
 import           Text.Read                   (Read, read)
-import           UnliftIO.Exception
+import           UnliftIO
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
