@@ -121,7 +121,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     case maybeResource of
       Nothing -> throwError $ err404
         { errReasonPhrase = "No resource found for id"
-        , errBody = unUTF8 $ cs $ "Could not find a resource with UUID: " ++ show uuid
+        , errBody = asUTF8 $ "Could not find a resource with UUID: " ++ show uuid
         }
       Just value -> return $ IdAnd (uuid, value)
   {-# INLINE restFetch #-}
@@ -133,7 +133,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
         (Just id) -> restFetch id
         Nothing -> throwIO $ err400
           { errReasonPhrase = "Could not create resource"
-          , errBody = unUTF8 . cs . show $ a
+          , errBody = asUTF8 $ show a
           }
   {-# INLINE restCreate #-}
 
@@ -143,13 +143,13 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     case JSON.patch patch $ toJSON original of
       Error str -> throwError $ err400
         { errReasonPhrase = "Error applying patch"
-        , errBody = unUTF8 . cs $ str
+        , errBody = asUTF8 str
         }
       Success jsonValue ->
         case JSON.eitherDecode' $ JSON.encode jsonValue of
           Left err -> throwError $ err400
             { errReasonPhrase = "Error rebuilding object after patch"
-            , errBody = unUTF8 $ cs err
+            , errBody = asUTF8 err
             }
           Right value -> restReplace id value
   {-# INLINE restPatch #-}

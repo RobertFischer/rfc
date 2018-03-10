@@ -40,7 +40,7 @@ instance MonoFoldable MisoString where
   ofoldl' f init str = TL.foldl' f init $ toLazyText str
   {-# INLINE ofoldl' #-}
 
-  otoList = cs
+  otoList = ofoldr (:) []
   {-# INLINE otoList #-}
 
   oall f str = TL.all f $ toLazyText str
