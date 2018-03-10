@@ -25,7 +25,7 @@ library
   default-language:    Haskell2010
   default-extensions:  NoImplicitPrelude
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
-  ghc-options:         -fno-max-relevant-binds
+  ghc-options:         -fno-max-relevant-binds -fprint-potential-instances
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wall-missed-specialisations -Wnoncanonical-monad-instances
   ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures -Widentities
   if flag(Development)
