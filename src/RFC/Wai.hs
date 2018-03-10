@@ -7,13 +7,14 @@ module RFC.Wai
   ) where
 
 import           Control.Logger.Simple
+import           Control.Monad.State.Lazy                  hiding (fail, mapM_)
+import           Network
 import           Network.HTTP.Types.Header
 import           Network.HTTP.Types.Method
+import           Network.Socket
 import           Network.Wai
-import           Network.Wai.Cli
-import           Network.Wai.Handler.Warp                  (Settings,
-                                                            defaultSettings,
-                                                            runSettings)
+import           Network.Wai.Cli                           hiding (socket)
+import           Network.Wai.Handler.Warp
 import           Network.Wai.Middleware.AcceptOverride
 import           Network.Wai.Middleware.Approot            (envFallback)
 import           Network.Wai.Middleware.Autohead
@@ -23,47 +24,56 @@ import           Network.Wai.Middleware.Jsonp
 import           Network.Wai.Middleware.MethodOverridePost
 import           Network.Wai.Middleware.RequestLogger      (logStdout,
                                                             logStdoutDev)
-import           RFC.Env                                   (isDevelopment)
+import           RFC.Env                                   (FromEnv (..),
+                                                            decodeEnv, envMaybe,
+                                                            isDevelopment,
+                                                            showEnv, (.!=))
 import           RFC.Prelude
 import           System.IO.Temp                            (createTempDirectory, getCanonicalTemporaryDirectory)
 
 runApplication :: Application -> IO ()
-runApplication app = do
+runApplication app = withSocketsDo $ do
   showEnv
   middlewares <- defaultMiddleware
-  warpSettings <- decodeEnv
-  reuseSocket <- bindSocketReusePort $ getPort warpSettings
-  runGraceful
-    ServeNormally
-    (flip runSettingsSocket $ reuseSocket)
-    warpSettings
-    app
+  warpSettingsResult <- decodeEnv
+  case warpSettingsResult of
+    Left err -> fail err
+    Right warpSettings -> do
+      reuseSocket <- bindSocketReusePort $ getPort warpSettings
+      runGraceful
+        ServeNormally
+        (flip runSettingsSocket $ reuseSocket)
+        warpSettings
+        (middlewares app)
 {-# INLINE runApplication #-}
 
-bindSocketReusePort :: PortNumber -> IO Socket
+bindSocketReusePort :: Port -> IO Socket
 bindSocketReusePort p =
   bracketOnError (socket AF_INET Stream defaultProtocol) close $ \sock -> do
-    mapM_ (uncurry $ setSocketOption sock)
+    mapM_ (uncurry $ setSocketOption sock) $ filter (isSupportedSocketOption . fst)
           [ (NoDelay  , 1)
+          , (KeepAlive, 1)
           , (ReuseAddr, 1)
           , (ReusePort, 1) -- <-- Here we add the SO_REUSEPORT flag.
           ]
-    bind sock $ SockAddrInet p $ tupleToHostAddress (127, 0, 0, 1)
+    bind sock $ SockAddrInet (fromIntegral p) iNADDR_ANY
     listen sock (max 2048 maxListenQueue)
     return sock
 
 instance FromEnv Settings where
-  fromEnv = snd $ (flip runStateT) defaultSettings $ do
-    portNumber <- lift $ envWithDefault 3000
-    modify $ setPort portNumber
-    modify $ setOnExceptionResponse $
-      if isDevelopment then
-        exceptionResponseForDebug
-      else
-        -- TODO Render a JSON error response
-        defaultOnExceptionResponse
-    modify $ setServerName mempty
-    return ()
+  fromEnv = do
+    portNumber <- envMaybe "PORT" .!= 3000
+    return
+      $ setPort portNumber
+      $ setOnExceptionResponse
+        (if isDevelopment then
+          exceptionResponseForDebug
+        else
+          -- TODO Render a JSON error response
+          defaultOnExceptionResponse
+        )
+      $ setServerName emptyUTF8
+      $ defaultSettings
 
 
 defaultMiddleware :: IO Middleware

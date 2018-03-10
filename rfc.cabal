@@ -53,6 +53,7 @@ library
                      , resource-pool
                      , time
                      , aeson-diff >= 1.1.0.4
+                     , mtl
   if impl(ghcjs)
     build-depends:     aeson
                      , bifunctors
@@ -86,6 +87,8 @@ library
                      , servant-client >= 0.13
                      , binary
                      , network
+                     , warp >= 3.2.18
+                     , mtl >= 2.2.2
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent

@@ -28,7 +28,6 @@ extra-deps:
 
 
 
-
 setup-info:
   ghcjs:
     source:

@@ -8,5 +8,7 @@ stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --fast
 stack clean -j 16 --stack-yaml=./stack.ghcjs.yaml 
 stack clean -j 16 
 
-stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --haddock --haddock-deps --fast
+stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --haddock-deps --fast
+stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --haddock --haddock --fast
+stack build -j 16 --haddock-deps --fast
 stack build -j 16 --haddock --haddock-deps --fast

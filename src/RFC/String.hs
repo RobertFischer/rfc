@@ -45,6 +45,20 @@ toLazyText = cs
 {-# SPECIALIZE INLINE toLazyText :: String -> LazyText #-}
 {-# SPECIALIZE INLINE toLazyText :: StrictText -> LazyText #-}
 
+emptyString :: (ConvertibleStrings String a) => a
+emptyString = cs ""
+{-# INLINE emptyString #-}
+{-# SPECIALIZE INLINE emptyString :: String #-}
+{-# SPECIALIZE INLINE emptyString :: LazyText #-}
+{-# SPECIALIZE INLINE emptyString :: StrictText #-}
+
+emptyUTF8 :: (ConvertibleStrings String (UTF8 a)) => a
+emptyUTF8 = unUTF8 $ cs ""
+{-# INLINE emptyUTF8 #-}
+{-# SPECIALIZE INLINE emptyUTF8 :: LazyByteString #-}
+{-# SPECIALIZE INLINE emptyUTF8 :: StrictByteString #-}
+
+
 instance {-# OVERLAPPABLE #-} (ToText a) => ToText (UTF8 a) where
   {-# SPECIALISE instance ToText (UTF8 StrictText) #-}
   {-# SPECIALISE instance ToText (UTF8 LazyText)   #-}
