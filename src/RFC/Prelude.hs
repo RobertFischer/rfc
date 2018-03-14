@@ -26,9 +26,11 @@ module RFC.Prelude
   , module Control.Monad.Fail
   , module Data.Time.Clock
   , module UnliftIO
+  , module GHC.Exts
   ) where
 
-import           ClassyPrelude               hiding (Day, fail, unpack)
+import           ClassyPrelude               hiding (Day, fail, fromList,
+                                              toList, unpack)
 import           Control.Monad               (forever, void, (<=<), (>=>))
 import           Control.Monad.Fail          (MonadFail, fail)
 import           Control.Monad.Trans.Control
@@ -54,6 +56,14 @@ import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
+import           GHC.Exts                    (IsList (..))
+
+ifThenElse :: Bool -> a -> a -> a
+ifThenElse test true false =
+  case test of
+    True  -> true
+    False -> false
+{-# INLINE ifThenElse #-}
 
 charIsUpper :: Char -> Bool
 charIsUpper = Char.isUpper
@@ -74,6 +84,7 @@ safeHead xs =
     (x:_) -> return x
 {-# INLINE safeHead #-}
 {-# SPECIALIZE INLINE safeHead :: [a] -> Maybe a #-}
+{-# SPECIALIZE INLINE safeHead :: [a] -> IO a #-}
 
 foldl :: MonoFoldable mono => (a -> Element mono -> a) -> a -> mono -> a
 foldl = foldl'

@@ -14,7 +14,7 @@ import           ClassyPrelude       hiding (fail)
 import           Control.Monad.Fail  (MonadFail, fail)
 import           RFC.String
 
-import           Data.UUID.Types
+import           Data.UUID.Types     hiding (fromString)
 import qualified Data.UUID.Types     as UUID
 
 #if MIN_VERSION_aeson(1,1,0)

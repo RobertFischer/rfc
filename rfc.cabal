@@ -23,7 +23,9 @@ library
   hs-source-dirs:      src
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
-  default-extensions:  NoImplicitPrelude
+  default-extensions:  RebindableSyntax
+                     , MonadFailDesugaring
+                     , MultiParamTypeClasses
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
   ghc-options:         -fno-max-relevant-binds -fprint-potential-instances
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wall-missed-specialisations -Wnoncanonical-monad-instances
@@ -106,7 +108,7 @@ library
                      , RFC.Miso.String
                      , RFC.Miso.Routing
                      , RFC.Miso.Component
-                     -- , RFC.Miso.MisoApp
+                     , RFC.Miso.MisoApp
                      , RFC.GHCJS
                      , RFC.GHCJS.XHR
                      , RFC.GHCJS.Inject
