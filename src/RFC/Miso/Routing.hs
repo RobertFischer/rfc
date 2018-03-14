@@ -200,8 +200,8 @@ applyRoutes notFoundKey path parent =
 viewRoutes :: (RouteEngine parent, Route notFound) => notFound -> parent -> View (Action parent)
 viewRoutes notFound parent =
     case viewSpec parent of
-      Nothing -> fmap (\it -> it^.re (routeAction parent)) (viewRoute notFound)
-      (Just (ViewSpec (WrappedRoute route, _))) -> fmap (\it -> it^.re (routeAction parent)) (viewRoute route)
+      Nothing                                   -> (\it -> it^.re (routeAction parent)) <$> viewRoute notFound
+      (Just (ViewSpec (WrappedRoute route, _))) -> (\it -> it^.re (routeAction parent)) <$> viewRoute route
 {-# INLINE viewRoutes #-}
 
 applyRoutesToURI :: (RouteEngine parent, Route notFound) => RouteKey notFound -> URI -> parent -> IO (Action parent)

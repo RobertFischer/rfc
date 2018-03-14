@@ -77,21 +77,23 @@ createConnectionPool connInfo = liftIO $
     close = pgDisconnect
 {-# INLINE createConnectionPool #-}
 
-query :: (MonadIO m, HasPsql m, PGQuery q r) => q -> m [r]
-query q = withPsqlConnection $ \conn -> pgQuery conn q
+query :: (MonadIO m, HasPsql m, PGQuery q r) => q -> (r -> a) -> m [a]
+query q f = withPsqlConnection $ \conn -> do
+  results <- pgQuery conn q
+  return $ map f results
 {-# INLINE query #-}
 
-query1 :: (MonadIO m, HasPsql m, PGQuery q r) => q -> m (Maybe r)
-query1 qry = do
-  result <- query qry
-  return $ case result of
+query1 :: (MonadIO m, HasPsql m, PGQuery q r) => q -> (r -> Maybe a) -> m (Maybe a)
+query1 qry f = do
+  result <- query qry f
+  return $ case catMaybes result of
     []    -> Nothing
     (r:_) -> Just r
 {-# INLINE query1 #-}
 
-query1Else :: (MonadIO m, HasPsql m, PGQuery q r, Exception e) => q -> e -> m (Maybe r)
-query1Else qry e = do
-  result <- query1 qry
+query1Else :: (MonadIO m, HasPsql m, PGQuery q r, Exception e) => q -> (r -> Maybe a) -> e -> m (Maybe a)
+query1Else qry f e = do
+  result <- query1 qry f
   case result of
     (Just _) -> return result
     Nothing  -> throwIO e
@@ -100,3 +102,9 @@ query1Else qry e = do
 execute :: (MonadIO m, HasPsql m, PGQuery q ()) => q -> m Int
 execute q = withPsqlConnection $ \conn -> pgExecute conn q
 {-# INLINE execute #-}
+
+execute_ :: (MonadIO m, HasPsql m, PGQuery q ()) => q -> m ()
+execute_ q = do
+  _ <- withPsqlConnection $ \conn -> pgExecute conn q
+  return ()
+{-# INLINE execute_ #-}

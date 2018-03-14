@@ -29,14 +29,14 @@ module RFC.Miso.Component
   , foldrComponents
   ) where
 
-import           Control.Lens    hiding (view)
-import           Data.Proxy
-import           Data.Typeable
-import           Miso.Effect
-import           Miso.Html       (View (..))
-import           Miso.Types      (Transition, fromTransition, toTransition)
-import           RFC.Miso.String ()
-import           RFC.Prelude
+import Control.Lens    hiding ( view )
+import Data.Proxy
+import Data.Typeable
+import Miso.Effect
+import Miso.Html       ( View (..) )
+import Miso.Types      ( Transition, fromTransition, toTransition )
+import RFC.Miso.String ()
+import RFC.Prelude
 
 type ComponentEffect model = Effect (Action model) model
 type ComponentTransition model = Transition (Action model) model
