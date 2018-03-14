@@ -1,8 +1,19 @@
+compiler-check: newer-minor
+resolver: nightly-2018-03-10
+require-stack-version: ! '>=1.6'
+
+flags:
+  rfc:
+    development: true
+  wai-cli:
+    tls: false
+  postgresql-typed:
+    hdbc: false
+
 extra-package-dbs: []
 packages:
 - .
-extra-deps:
-- warp-3.2.18
+extra-deps: 
 - classy-prelude-1.4.0
 - lens-4.16
 - servant-0.13
@@ -14,16 +25,3 @@ extra-deps:
 - simple-logger-0.0.4
 - time-units-1.0.0
 - http-types-0.12.1
-
-
-compiler-check: newer-minor
-resolver: nightly-2018-02-28
-require-stack-version: ! '>=1.6'
-
-flags:
-  rfc:
-    development: true
-  wai-cli:
-    tls: false
-  postgresql-typed:
-    hdbc: false
