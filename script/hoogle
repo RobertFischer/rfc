@@ -1,0 +1,8 @@
+#!/bin/bash -exu
+
+cd `dirname $0`
+stack build --haddock --haddock-deps --fast
+stack hoogle -- generate --local
+stack hoogle -- server --local --port=8080 2>&1 1> hoogle.out  &
+sleep 5s
+xdg-open 'http://localhost:8080' &
