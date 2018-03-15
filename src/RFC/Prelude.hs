@@ -29,10 +29,9 @@ module RFC.Prelude
   , module GHC.Exts
   ) where
 
-import           ClassyPrelude               hiding (Day, fail, fromList,
-                                              toList, unpack)
-import           Control.Monad               (forever, void, (<=<), (>=>))
-import           Control.Monad.Fail          (MonadFail, fail)
+import           ClassyPrelude               hiding ( Day, fail, fromList, toList, unpack )
+import           Control.Monad               ( forever, void, (<=<), (>=>) )
+import           Control.Monad.Fail          ( MonadFail, fail )
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
@@ -40,23 +39,23 @@ import           Data.Bitraversable
 import           Data.Char                   as Char
 import           Data.Default
 import qualified Data.Foldable               as Foldable
-import           Data.Function               ((&))
+import           Data.Function               ( (&) )
 import qualified Data.List                   as List
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
-import           Data.Typeable               (TypeRep, typeOf)
-import           Data.Word                   (Word16)
+import           Data.Typeable               ( TypeRep, typeOf )
+import           Data.Word                   ( Word16 )
 import           GHC.Conc.Sync
-import           GHC.Generics                (Generic)
-import           RFC.Data.UUID               (UUID)
+import           GHC.Generics                ( Generic )
+import           RFC.Data.UUID               ( UUID )
 import           RFC.String
-import           Text.Read                   (Read, read)
+import           Text.Read                   ( Read, read )
 import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
-import           GHC.Exts                    (IsList (..))
+import           GHC.Exts                    ( IsList (..), fromListN )
 
 ifThenElse :: Bool -> a -> a -> a
 ifThenElse test true false =
