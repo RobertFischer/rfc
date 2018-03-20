@@ -27,9 +27,16 @@ module RFC.Prelude
   , module Data.Time.Clock
   , module UnliftIO
   , module GHC.Exts
+  , module Control.Lens.Lens
+  , module Control.Lens.Prism
+  , module Control.Lens.Type
+  , module Data.Proxy
   ) where
 
 import           ClassyPrelude               hiding ( Day, fail, fromList, toList, unpack )
+import           Control.Lens.Lens
+import           Control.Lens.Prism
+import           Control.Lens.Type
 import           Control.Monad               ( forever, void, (<=<), (>=>) )
 import           Control.Monad.Fail          ( MonadFail, fail )
 import           Control.Monad.Trans.Control
@@ -41,6 +48,7 @@ import           Data.Default
 import qualified Data.Foldable               as Foldable
 import           Data.Function               ( (&) )
 import qualified Data.List                   as List
+import           Data.Proxy                  ( Proxy (..) )
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
@@ -53,9 +61,9 @@ import           RFC.String
 import           Text.Read                   ( Read, read )
 import           UnliftIO
 #ifdef VERSION_exceptions
-import           Control.Monad.Catch
+import Control.Monad.Catch
 #endif
-import           GHC.Exts                    ( IsList (..), fromListN )
+import GHC.Exts ( IsList (..), fromListN )
 
 ifThenElse :: Bool -> a -> a -> a
 ifThenElse test true false =

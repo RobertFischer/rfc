@@ -27,7 +27,7 @@ library
                      , MonadFailDesugaring
                      , MultiParamTypeClasses
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
-  ghc-options:         -fno-max-relevant-binds -fprint-potential-instances
+  ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances -dcore-lint
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wall-missed-specialisations -Wnoncanonical-monad-instances
   ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures -Widentities
   if flag(Development)
@@ -56,14 +56,14 @@ library
                      , time
                      , aeson-diff >= 1.1.0.4
                      , mtl
+                     , miso >= 0.14.0.0
+                     , url
+                     , mono-traversable >= 1.0.1.1
   if impl(ghcjs)
     build-depends:     aeson
                      , bifunctors
-                     , miso >= 0.14.0.0
                        -- Servant 0.13 publishes non-GHCJS-compatible Aeson version requirement.
                      , servant >= 0.12.1 && < 0.13
-                     , url
-                     , mono-traversable >= 1.0.1.1
   else
     build-depends:     servant-server >= 0.13
                      , servant >= 0.13
@@ -102,13 +102,13 @@ library
                      , RFC.Data.IdAnd
                      , RFC.Data.ListMoveDirection
                      , RFC.Data.UUID
+                     , RFC.Miso.String
+                     , RFC.Miso.Component
+                     , RFC.Miso.Routing
+                     , RFC.Miso.MisoApp
   if impl(ghcjs)
     cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.Miso
-                     , RFC.Miso.String
-                     , RFC.Miso.Routing
-                     , RFC.Miso.Component
-                     , RFC.Miso.MisoApp
                      , RFC.GHCJS
                      , RFC.GHCJS.XHR
                      , RFC.GHCJS.Inject

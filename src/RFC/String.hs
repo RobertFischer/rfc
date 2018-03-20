@@ -76,16 +76,17 @@ toUTF8 it = decodeConvertText (UTF8 it)
 
 instance {-# OVERLAPPABLE #-} (Show a, DecodeText Maybe a, MonadFail m) => DecodeText m a where
   {-# SPECIALIZE instance DecodeText IO (UTF8 LazyByteString)    #-}
-  {-# SPECIALIZE instance DecodeText [] (UTF8 LazyByteString)    #-}
   {-# SPECIALIZE instance DecodeText IO (UTF8 StrictByteString)  #-}
+  {-# SPECIALIZE instance DecodeText [] (UTF8 LazyByteString)    #-}
   {-# SPECIALIZE instance DecodeText [] (UTF8 StrictByteString)  #-}
+  {-# SPECIALIZE instance DecodeText Maybe (UTF8 LazyByteString)    #-}
+  {-# SPECIALIZE instance DecodeText Maybe (UTF8 StrictByteString)  #-}
   decodeText a =
     case decodeText a of
       [] ->
         fail $ "Could not decode text: " ++ (show a)
       x:_ ->
         return x
-  {-# INLINE decodeText #-}
 
 emptyString :: (FromText a) => a
 emptyString = fromText $ toText ""

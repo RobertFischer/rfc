@@ -77,23 +77,17 @@ createConnectionPool connInfo = liftIO $
     close = pgDisconnect
 {-# INLINE createConnectionPool #-}
 
-query :: (MonadIO m, HasPsql m, PGQuery q r) => q -> (r -> a) -> m [a]
-query q f = withPsqlConnection $ \conn -> do
-  results <- pgQuery conn q
-  return $ map f results
+query :: (MonadIO m, HasPsql m, PGQuery q a) => q -> m [a]
+query q = withPsqlConnection $ \conn -> pgQuery conn q
 {-# INLINE query #-}
 
-query1 :: (MonadIO m, HasPsql m, PGQuery q r) => q -> (r -> Maybe a) -> m (Maybe a)
-query1 qry f = do
-  result <- query qry f
-  return $ case catMaybes result of
-    []    -> Nothing
-    (r:_) -> Just r
+query1 :: (MonadIO m, HasPsql m, PGQuery q a) => q -> m (Maybe a)
+query1 qry = safeHead <$> query qry
 {-# INLINE query1 #-}
 
-query1Else :: (MonadIO m, HasPsql m, PGQuery q r, Exception e) => q -> (r -> Maybe a) -> e -> m (Maybe a)
-query1Else qry f e = do
-  result <- query1 qry f
+query1Else :: (MonadIO m, HasPsql m, PGQuery q a, Exception e) => q -> e -> m (Maybe a)
+query1Else qry e = do
+  result <- query1 qry
   case result of
     (Just _) -> return result
     Nothing  -> throwIO e

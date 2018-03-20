@@ -4,12 +4,11 @@ module RFC.Miso.MisoApp
   , runIso
   ) where
 
-import           Control.Lens              ((^.))
-import qualified Miso                      as Miso (miso, startApp)
+import qualified Miso                      as Miso ( miso, startApp )
 import qualified Miso.Event.Types          as Miso
-import qualified Miso.Html                 as Miso (Sub)
-import           Miso.Router               (HasURI)
-import           Miso.Subscription.History (uriSub)
+import qualified Miso.Html                 as Miso ( Sub )
+import           Miso.Router               ( HasURI )
+import           Miso.Subscription.History ( uriSub )
 import qualified Miso.Types                as Miso
 import           RFC.Miso.Component
 import           RFC.Miso.Routing
@@ -43,7 +42,7 @@ createApp :: (MisoApp model) => model -> Miso.App model (Action model)
 createApp model = Miso.App
   { Miso.model = model
   , Miso.update = update
-  , Miso.view = \model -> model^.view
+  , Miso.view = view
   , Miso.subs = subs model
   , Miso.events = events model
   , Miso.initialAction = initialAction model

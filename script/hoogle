@@ -1,8 +1,11 @@
 #!/bin/bash -exu
 
+STACK_YAML="--stack-yaml=./stack.ghcjs.yaml"
+
 cd `dirname $0`
-stack build --haddock --haddock-deps --fast
-stack hoogle -- generate --local
-stack hoogle -- server --local --port=8080 2>&1 1> hoogle.out  &
+stack build  $STACK_YAML --haddock --haddock-deps --fast 
+stack hoogle $STACK_YAML -- generate --local
+stack hoogle $STACK_YAML -- server --local --port=8080 2>&1 1> hoogle.out  &
+echo "$!" | tee hoogle.pid
 sleep 5s
 xdg-open 'http://localhost:8080' &

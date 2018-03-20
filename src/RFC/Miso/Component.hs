@@ -20,6 +20,7 @@ module RFC.Miso.Component
   , ComponentTransition
   , ComponentView
   , Subcomponents
+  , SubcomponentAction
   , liftComponent
   , consComponent
   , viewComponent
@@ -44,24 +45,26 @@ type ComponentView model = View (Action model)
 
 class (Typeable model, Eq model) => Component model where
   {-# MINIMAL view, (update|transition) #-}
-  data Action model   :: *
+  data Action model :: *
 
-  view        :: Getter (model) (ComponentView model)
+  view        :: model -> ComponentView model
 
   update     :: Action model -> model -> ComponentEffect model
-  update action = fromTransition $ action ^. transition
+  update = fromTransition . transition
   {-# INLINE update #-} -- Only inlines if instance uses default method
 
-  transition :: Getter (Action model) (ComponentTransition model ())
-  transition = to $ \action -> toTransition $ update action
+  transition :: Action model -> ComponentTransition model ()
+  transition = toTransition . update
   {-# INLINE transition #-} -- Only inlines if instance uses default method
+
 
 class (Component parent) => ComponentContainer parent where
   subcomponents :: Lens' parent (Subcomponents parent)
-  childAction   :: forall child. Component child => Prism' (Action parent) (Action child)
+  childAction   :: Prism' (Action parent) (SubcomponentAction parent)
 
-parentAction :: (ComponentContainer parent, Component child) => Getter (Action child) (Action parent)
+parentAction :: (ComponentContainer parent) => Getter (SubcomponentAction parent) (Action parent)
 parentAction = re childAction
+{-# INLINE parentAction #-}
 
 data StashedComponent parent = forall model. Component model => StashedComponent model
 
@@ -71,6 +74,8 @@ instance Eq (StashedComponent parent) where
 
 newtype Subcomponents parent = Subcomponents [StashedComponent parent] deriving (Eq,Monoid,Semigroup,MonoFoldable,MonoFunctor,MonoPointed)
 type instance Element (Subcomponents parent) = StashedComponent parent
+
+data SubcomponentAction parent = forall child. Component child => SubcomponentAction (Action child) deriving (Typeable)
 
 liftComponent :: (Component model) => model -> Subcomponents parent
 liftComponent = Subcomponents . (:[]) . StashedComponent
@@ -108,7 +113,7 @@ applyComponent (StashedComponent child) (SCWrap f) = f child
 
 wrappedView :: (ComponentContainer parent) => StashedComponent parent -> ComponentView parent
 wrappedView (StashedComponent child) =
-  child^.view & fmap (\it -> it^.parentAction)
+  view child & fmap SubcomponentAction & fmap (\it -> it^.parentAction)
 {-# INLINE wrappedView #-}
 
 wrappedUpdate :: (ComponentContainer parent) =>
@@ -116,15 +121,14 @@ wrappedUpdate :: (ComponentContainer parent) =>
 wrappedUpdate action parent sc =
     applyComponent sc doUpdate
   where
-    doUpdate = SCWrap $ \theChild ->
-      case action^?childAction of
-        Nothing       ->
-          noEff parent
-        Just myAction ->
-          let Effect newChild childIOs = update myAction theChild in
-          Effect
-            (replaceSubcomponent sc newChild parent)
-            (map (fmap $ \it -> it^.parentAction) childIOs)
+    doUpdate = SCWrap $ \theChild -> fromMaybe (noEff parent) $ do
+        (SubcomponentAction myAction) <- action^?childAction
+        castAction <- cast myAction
+        let Effect newChild childIOs = update castAction theChild
+        let newParent = replaceSubcomponent sc newChild parent
+        let scIOs = map (fmap SubcomponentAction) childIOs
+        let parentIOs = map (fmap (\it -> it^.parentAction)) scIOs
+        return $ Effect newParent parentIOs
 {-# INLINABLE wrappedUpdate #-}
 
 updateComponents :: (ComponentContainer parent) =>
