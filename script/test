@@ -2,8 +2,8 @@
 
 cd `dirname $0`/..
 
-stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --fast 
-stack build -j 16 --stack-yaml=./stack.ghcjs.yaml --haddock --haddock-deps --fast
+stack build --stack-yaml=./stack.ghcjs.yaml --fast 
+stack build --stack-yaml=./stack.ghcjs.yaml --haddock --haddock-deps --fast
 
-stack build -j 16 --fast 
-stack build -j 16 --haddock --haddock-deps --fast
+stack build --fast 
+stack build --haddock --haddock-deps --fast

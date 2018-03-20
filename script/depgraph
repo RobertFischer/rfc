@@ -2,4 +2,4 @@
 
 cd `dirname $0`/..
 
-stack dot -j 16 --stack-yaml=./stack.ghcjs.yaml --prune base,lens,array,bytestring,mtl,template-haskell,aeson,unordered-containers,classy-prelude,containers,exceptions,stm,lifted-base,async,monad-control,text,deepseq,transformers,rts,time,binary,ghc-prim,integer-gmp,primitive,hashable,vector,transformers-compat,scientific,base-compat --external --no-include-base | tee dependencies.dot | dot -Tsvg -o dependencies.svg
+stack dot --stack-yaml=./stack.ghcjs.yaml --prune base,lens,array,bytestring,mtl,template-haskell,aeson,unordered-containers,classy-prelude,containers,exceptions,stm,lifted-base,async,monad-control,text,deepseq,transformers,rts,time,binary,ghc-prim,integer-gmp,primitive,hashable,vector,transformers-compat,scientific,base-compat --external --no-include-base | tee dependencies.dot | dot -Tsvg -o dependencies.svg
