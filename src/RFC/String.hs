@@ -42,7 +42,6 @@ type ConvertibleFromString a = ConvertibleStrings String a
 
 toStrictText :: (ToText a) => a -> StrictText
 toStrictText = toText
-{-# INLINE toStrictText #-}
 {-# SPECIALIZE INLINE toStrictText :: String -> StrictText #-}
 {-# SPECIALIZE INLINE toStrictText :: LazyText -> StrictText #-}
 {-# SPECIALIZE INLINE toStrictText :: StrictText -> StrictText #-}

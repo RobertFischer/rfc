@@ -1,5 +1,5 @@
 name:                rfc
-version:             0.0.0.24
+version:             0.0.0.25
 synopsis:            Robert Fischer's Common library
 description:         An enhanced Prelude and various utilities for Aeson, Servant, PSQL, and Redis that Robert Fischer uses.
 homepage:            https://github.com/RobertFischer/rfc#README.md
@@ -27,11 +27,11 @@ library
                      , MonadFailDesugaring
                      , MultiParamTypeClasses
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
-  ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances -dcore-lint
-  ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wall-missed-specialisations -Wnoncanonical-monad-instances
+  ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances
+  ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wnoncanonical-monad-instances -Wall-missed-specialisations
   ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures -Widentities
   if flag(Development)
-    ghc-options:       -Werror
+    ghc-options:       -Werror -dcore-lint -dcmm-lint
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10.8.1
                      , classy-prelude >= 1.4
@@ -103,13 +103,12 @@ library
                      , RFC.Data.ListMoveDirection
                      , RFC.Data.UUID
                      , RFC.Miso.String
-                     , RFC.Miso.Component
-                     , RFC.Miso.Routing
-                     , RFC.Miso.MisoApp
+                     -- , RFC.Miso.Component
+                     -- , RFC.Miso.Routing
+                     -- , RFC.Miso.MisoApp
   if impl(ghcjs)
-    cpp-options:       -DCLIENT -DGHCJS_BROWSER -DBROWSER
-    exposed-modules:   RFC.Miso
-                     , RFC.GHCJS
+    cpp-options:       -DGHCJS -DCLIENT -DGHCJS_BROWSER -DBROWSER
+    exposed-modules:   RFC.GHCJS
                      , RFC.GHCJS.XHR
                      , RFC.GHCJS.Inject
                      , RFC.GHCJS.Cookie

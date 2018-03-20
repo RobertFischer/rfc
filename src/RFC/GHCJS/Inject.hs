@@ -36,7 +36,7 @@ injectPreconnectHint str =
   case parseURI str of
     Nothing  -> injectPreconnectHint' str
     Just uri -> injectPreconnectHintURI uri
-{-# INLINE injectPreconnectHint #-}
+{-# INLINABLE injectPreconnectHint #-}
 
 -- | Injects a preconnect hint as a <link rel="preconnect"> element.
 injectPreconnectHintURI :: URI -> IO ()
@@ -45,7 +45,7 @@ injectPreconnectHintURI uri =
     Nothing -> return ()
     Just URIAuth{uriRegName} ->
       injectPreconnectHint uriRegName
-{-# INLINE injectPreconnectHintURI #-}
+{-# INLINABLE injectPreconnectHintURI #-}
 
 injectPreconnectHint' :: String -> IO ()
 injectPreconnectHint' ""          = return ()

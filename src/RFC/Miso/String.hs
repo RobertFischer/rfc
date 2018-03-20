@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE InstanceSigs          #-}
@@ -13,13 +14,15 @@ module RFC.Miso.String
   , module Miso.String
   ) where
 
-import           Data.MonoTraversable
 import           Data.String          ()
-import qualified Data.Text.Lazy       as TL
 import           Miso.String          (MisoString, ToMisoString (..))
 import           RFC.Data.UUID        ()
-import           RFC.Prelude
 import           RFC.String           ()
+
+#ifdef GHCJS
+import           Data.MonoTraversable
+import qualified Data.Text.Lazy       as TL
+import           RFC.Prelude
 
 type instance Element MisoString = Char
 
@@ -30,7 +33,7 @@ instance MonoFunctor MisoString where
 
 instance MonoFoldable MisoString where
   ofoldMap f = ofoldr (mappend . f) mempty
-  {-# INLINE ofoldMap #-}
+  {-# INLINABLE ofoldMap #-}
 
   ofoldr :: (Char -> a -> a) -> a -> MisoString -> a
   ofoldr f init str = TL.foldr f init $ toLazyText str
@@ -41,7 +44,7 @@ instance MonoFoldable MisoString where
   {-# INLINE ofoldl' #-}
 
   otoList = ofoldr (:) []
-  {-# INLINE otoList #-}
+  {-# INLINABLE otoList #-}
 
   oall f str = TL.all f $ toLazyText str
   {-# INLINE oall #-}
@@ -80,3 +83,4 @@ instance {-# OVERLAPPING #-} ToText MisoString where
   toText = fromMisoString
   {-# INLINE toText #-}
 
+#endif
