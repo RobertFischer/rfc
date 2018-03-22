@@ -1,10 +1,10 @@
 #!/bin/bash -exu
 
-STACK_YAML="--stack-yaml=./stack.ghcjs.yaml"
 
 cd `dirname $0`
+STACK_YAML="--stack-yaml=./../stack.yaml"
 stack build  $STACK_YAML --haddock --haddock-deps --fast 
-stack hoogle $STACK_YAML -- generate --local
+stack hoogle $STACK_YAML -- generate --local || echo "Bad error from generate; trying to move forward anyway"
 stack hoogle $STACK_YAML -- server --local --port=8080 2>&1 1> hoogle.out  &
 echo "$!" | tee hoogle.pid
 sleep 5s
