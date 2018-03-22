@@ -13,20 +13,19 @@ module RFC.String
   , module Data.Text.Conversions
   ) where
 
-import           ClassyPrelude          hiding (fail)
-import           Control.Monad.Fail     (MonadFail, fail)
+import           ClassyPrelude          hiding ( fail )
+import           Control.Monad.Fail     ( MonadFail, fail )
 import qualified Data.ByteString        as SB
 import qualified Data.ByteString.Lazy   as LB
-import           Data.String            (String)
+import           Data.String            ( String )
 import qualified Data.Text              as ST
 import           Data.Text.Conversions
 import qualified Data.Text.Lazy         as LT
 import qualified Data.Text.Lazy.Builder as LTBuilder
-import           Network.URI            (URI (..), parseURIReference,
-                                         uriToString)
+import           Network.URI            ( URI (..), parseURIReference, uriToString )
 
 #ifndef GHCJS_BROWSER
-import           Servant.Docs
+import Servant.Docs
 #endif
 
 type LazyText = LT.Text
@@ -205,6 +204,11 @@ instance {-# OVERLAPPING #-} ConvertibleStrings StrictText String where
 
 instance {-# OVERLAPS #-} ConvertibleStrings a a where
   cs :: a -> a
+  cs = id
+  {-# INLINE cs #-}
+
+instance {-# OVERLAPPING #-} ConvertibleStrings [Char] String where
+  cs :: [Char] -> String
   cs = id
   {-# INLINE cs #-}
 
