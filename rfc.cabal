@@ -103,9 +103,6 @@ library
                      , RFC.Data.ListMoveDirection
                      , RFC.Data.UUID
                      , RFC.Miso.String
-                     -- , RFC.Miso.Component
-                     -- , RFC.Miso.Routing
-                     -- , RFC.Miso.MisoApp
   if impl(ghcjs)
     cpp-options:       -DGHCJS -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.GHCJS
