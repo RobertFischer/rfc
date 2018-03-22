@@ -40,7 +40,7 @@ library
                      , unordered-containers
                      , text-conversions >= 0.3.0
                      , data-default
-                     , lens >= 4.16
+                     , lens >= 4.15.4
                      , http-types
                      , http-api-data >= 0.3.7.1
                      , time-units
