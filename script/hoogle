@@ -2,6 +2,7 @@
 
 
 cd `dirname $0`
+( kill -9 `cat hoogle.pid` && sleep 10s ) || echo "Could not kill previous Hoogle"
 STACK_YAML="--stack-yaml=./../stack.yaml"
 stack build  $STACK_YAML --haddock --haddock-deps --fast 
 stack hoogle $STACK_YAML -- generate --download --haskell --local || echo "Bad error from generate; trying to move forward anyway"
