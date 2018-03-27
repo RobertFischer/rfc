@@ -26,6 +26,7 @@ library
   default-extensions:  RebindableSyntax
                      , MonadFailDesugaring
                      , MultiParamTypeClasses
+                     , DisambiguateRecordFields
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
   ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wnoncanonical-monad-instances -Wall-missed-specialisations
@@ -109,6 +110,7 @@ library
                      , RFC.GHCJS.XHR
                      , RFC.GHCJS.Inject
                      , RFC.GHCJS.Cookie
+                     , RFC.GHCJS.Console
   else
     exposed-modules: RFC.Log
                      , RFC.Psql
