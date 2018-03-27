@@ -57,7 +57,7 @@ library
                      , time
                      , aeson-diff >= 1.1.0.4
                      , mtl
-                     , miso >= 0.14.0.0
+                     , miso >= 0.17.0.0
                      , url
                      , mono-traversable >= 1.0.1.1
   if impl(ghcjs)

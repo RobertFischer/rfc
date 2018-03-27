@@ -1,5 +1,5 @@
 compiler-check: newer-minor
-resolver: lts-11.0
+resolver: lts-11.2
 require-stack-version: ! '>=1.6'
 
 flags:
@@ -30,4 +30,4 @@ extra-deps:
 - simple-logger-0.0.4
 - time-units-1.0.0
 - url-2.1.3
-- miso-0.15.0.0
+- miso-0.17.0.0
