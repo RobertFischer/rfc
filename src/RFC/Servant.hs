@@ -6,7 +6,6 @@
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE Rank2Types           #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
@@ -50,15 +49,6 @@ type ApiCtx =
         Handler
       )
     )
-
-instance {-# OVERLAPPING #-} MonadUnliftIO Handler where
-  askUnliftIO = return $ UnliftIO $ \handler -> do
-    either <- runHandler handler
-    case either of
-      Left err -> throwIO err
-      Right v  -> return v
-  {-# INLINE askUnliftIO #-}
-
 
 instance HasAPIClient ApiCtx where
   getAPIClient = ask
@@ -110,9 +100,7 @@ type ServerAPI a =
 
 class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
   restFetchAll :: FetchAllImpl a
-  restFetchAll = do
-    resources <- fetchAllResources
-    return $ idAndsToMap resources
+  restFetchAll = idAndsToMap <$> fetchAllResources
   {-# INLINE restFetchAll #-}
 
   restFetch :: FetchImpl a
@@ -121,7 +109,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     case maybeResource of
       Nothing -> throwError $ err404
         { errReasonPhrase = "No resource found for id"
-        , errBody = asUTF8 $ "Could not find a resource with UUID: " ++ show uuid
+        , errBody = asUTF8 $ "Could not find a resource with UUID: " <> show uuid
         }
       Just value -> return $ IdAnd (uuid, value)
   {-# INLINE restFetch #-}

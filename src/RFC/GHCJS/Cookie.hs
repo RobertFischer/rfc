@@ -20,9 +20,7 @@ foreign import javascript safe
 readCookie :: (ConvertibleStrings s1 MisoString, ConvertibleStrings MisoString s2) => s1 -> IO (Maybe s2)
 readCookie cookieName = do
 	raw <- rawReadCookie $ cs cookieName
-	return $ case null raw of
-		True -> Nothing
-		False -> Just $ cs raw
+	return $ if null raw then Nothing else Just $ cs raw
 
 foreign import javascript safe
 	"Cookies.get($1) || ''"

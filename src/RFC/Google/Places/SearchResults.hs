@@ -50,7 +50,7 @@ instance FromJSON Result where
 instance ToJSON Result where
   toJSON result = toJSON . Map.fromList $
     [ ("geometry"::String, toJSON . Map.fromList $
-        [ ("location"::String, Map.fromList $
+        [ ("location"::String, Map.fromList
             [ ("lat"::String, latitude . resultLocation $ result)
             , ("lng"::String, longitude . resultLocation $ result)
             ]

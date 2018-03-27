@@ -19,7 +19,7 @@ import           RFC.Prelude
 endpoint :: URL
 endpoint =
   case importURL endpointStr of
-    Nothing -> error $ "Could not parse the Google Places API endpoint into a URL: " ++ endpointStr
+    Nothing -> error $ "Could not parse the Google Places API endpoint into a URL: " <> endpointStr
     (Just it) -> it
   where
     endpointStr = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
@@ -53,10 +53,10 @@ placeTypeToString Doctor   = "doctor"
 paramsToPairs :: Params -> [(String,String)]
 paramsToPairs params =
     [ ("key", apiKey params)
-    , ("location", (show lat) ++ "," ++ (show lng))
+    , ("location", (show lat) <> "," <> (show lng))
     , ("radius", show $ radiusMeters params)
     , ("rankBy", rankByToString $ rankBy params)
-    ] ++ optionalPairs
+    ] <> optionalPairs
   where
     loc = location params
     (lat,lng) = (latitude loc, longitude loc)

@@ -1,9 +1,8 @@
-{-# LANGUAGE CPP                        #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module RFC.Prelude
   ( module RFC.Prelude
@@ -33,12 +32,13 @@ module RFC.Prelude
   , module Data.Proxy
   ) where
 
-import           ClassyPrelude               hiding ( Day, fail, fromList, toList, unpack )
+import           ClassyPrelude               hiding (Day, fail, fromList,
+                                              toList, unpack)
 import           Control.Lens.Lens
 import           Control.Lens.Prism
 import           Control.Lens.Type
-import           Control.Monad               ( forever, void, (<=<), (>=>) )
-import           Control.Monad.Fail          ( MonadFail, fail )
+import           Control.Monad               (forever, void, (<=<), (>=>))
+import           Control.Monad.Fail          (MonadFail, fail)
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
@@ -46,24 +46,26 @@ import           Data.Bitraversable
 import           Data.Char                   as Char
 import           Data.Default
 import qualified Data.Foldable               as Foldable
-import           Data.Function               ( (&) )
+import           Data.Function               ((&))
 import qualified Data.List                   as List
-import           Data.Proxy                  ( Proxy (..) )
+import           Data.Proxy                  (Proxy (..))
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
-import           Data.Typeable               ( TypeRep, typeOf )
-import           Data.Word                   ( Word16 )
+import           Data.Typeable               (TypeRep, typeOf)
+import           Data.Word                   (Word16)
 import           GHC.Conc.Sync
-import           GHC.Generics                ( Generic )
-import           RFC.Data.UUID               ( UUID )
+import           GHC.Generics                (Generic)
+import           RFC.Data.UUID               (UUID)
 import           RFC.String
-import           Text.Read                   ( Read, read )
+import           Text.Read                   (Read, read)
 import           UnliftIO
 #ifdef VERSION_exceptions
-import Control.Monad.Catch
+import           Control.Monad.Catch
 #endif
-import GHC.Exts ( IsList (..), fromListN )
+import           GHC.Exts                    (IsList (..), fromListN)
+
+{-# ANN module "HLint: ignore Use if" #-}
 
 ifThenElse :: Bool -> a -> a -> a
 ifThenElse test true false =

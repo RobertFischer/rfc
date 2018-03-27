@@ -23,7 +23,7 @@ import           System.Envy
 import           Text.Read           (readMaybe)
 
 envWithDefault :: Var a => String -> a -> Parser a
-envWithDefault name defaultValue = fmap (fromMaybe defaultValue) $ envMaybe name
+envWithDefault name defaultValue = fromMaybe defaultValue <$> envMaybe name
 {-# INLINE envWithDefault #-}
 
 envWithDevDefault :: Var a => String -> a -> Parser a
@@ -66,7 +66,7 @@ readHost =
 {-# INLINE readHost #-}
 
 readPort :: (MonadIO m, MonadFail m) => Word16 -> m Word16
-readPort devPort = readEnvWithDevDefault "PORT" devPort
+readPort = readEnvWithDevDefault "PORT"
 {-# INLINE readPort #-}
 
 readEnvWithDefault :: (MonadIO m, Read a) => String -> a -> m a
@@ -96,9 +96,9 @@ readEnvOrDie name = do
   case maybeResult of
     Left err ->
       if err == (show (Nothing::Maybe String)) then
-        fail $ "No value set for mandatory environment variable: " ++ name
+        fail $ "No value set for mandatory environment variable: " <> name
       else
-        fail $ "Cannot use value set for mandatory environment variable: " ++ name  ++ " => " ++ err
+        fail $ "Cannot use value set for mandatory environment variable: " <> name  <> " => " <> err
     Right result -> return result
 {-# INLINE readEnvOrDie #-}
 
@@ -116,5 +116,5 @@ instance Var PortID where
   toVar _                    = error "Can only write port numbers to var"
   {-# INLINE toVar #-}
 
-  fromVar = (fmap $ PortNumber . fromInteger) . fromVar
+  fromVar = fmap (PortNumber . fromInteger) . fromVar
   {-# INLINE fromVar #-}

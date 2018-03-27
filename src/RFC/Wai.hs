@@ -6,7 +6,7 @@ module RFC.Wai
   , module Network.Wai
   ) where
 
-import           Control.Logger.Simple
+import           Control.Logger.Simple                     hiding ((<>))
 import           Control.Monad.State.Lazy                  hiding (fail, mapM_)
 import           Network
 import           Network.HTTP.Types.Header
@@ -42,7 +42,7 @@ runApplication app = withSocketsDo $ do
       reuseSocket <- bindSocketReusePort $ getPort warpSettings
       runGraceful
         ServeNormally
-        (flip runSettingsSocket $ reuseSocket)
+        (`runSettingsSocket` reuseSocket)
         warpSettings
         (middlewares app)
 {-# INLINE runApplication #-}
@@ -64,16 +64,15 @@ instance FromEnv Settings where
   fromEnv = do
     portNumber <- envMaybe "PORT" .!= 3000
     return
-      $ setPort portNumber
-      $ setOnExceptionResponse
+      . setPort portNumber
+      . setOnExceptionResponse
         (if isDevelopment then
           exceptionResponseForDebug
         else
           -- TODO Render a JSON error response
           defaultOnExceptionResponse
         )
-      $ setServerName emptyUTF8
-      $ defaultSettings
+      $ setServerName emptyUTF8 defaultSettings
 
 
 defaultMiddleware :: IO Middleware
@@ -84,7 +83,7 @@ defaultMiddleware = do
   return $
     methodOverridePost .
     acceptOverride .
-    (cors $ const $ Just corsConfig).
+    (cors . const $ Just corsConfig).
     autohead .
     jsonp .
     approot .
@@ -93,7 +92,7 @@ defaultMiddleware = do
   where
     isDev = isDevelopment
     handleError msg e = do
-      logError . cs $ "Error while: " ++ msg
+      logError . cs $ "Error while: " <> msg
       logError . cs . show $ e
       throwIO e
     getTmpDir = catchAnyDeep getCanonicalTemporaryDirectory (handleError "getting temp dir")

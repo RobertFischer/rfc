@@ -76,7 +76,7 @@ decodeOrDie input =
 instance FromHttpApiData JSON.Value where
   parseUrlPiece text =
       case parsed of
-        Nothing      -> Left $ (cs "Could not parse JSON: ") ++ text
+        Nothing      -> Left $ (cs "Could not parse JSON: ") <> text
         (Just value) -> Right value
     where
       parser = JSONParser.value'
@@ -98,6 +98,5 @@ instance ToHttpApiData JSON.Value where
 
 #ifndef GHCJS_BROWSER
 instance Swag.ToSchema Value where
-  declareNamedSchema _ = do
-    return $ Swag.NamedSchema (Just $ cs "Value") $ mempty
+  declareNamedSchema _ = return . Swag.NamedSchema (Just $ cs "Value") $ mempty
 #endif

@@ -20,7 +20,7 @@ import           RFC.Prelude
 endpoint :: URL
 endpoint =
   case importURL endpointStr of
-    Nothing -> error $ "Could not parse the Google Place Search API endpoint into a URL: " ++ endpointStr
+    Nothing -> error $ "Could not parse the Google Place Search API endpoint into a URL: " <> endpointStr
     (Just it) -> it
   where
     endpointStr = "https://maps.googleapis.com/maps/api/place/textsearch/json"
@@ -43,7 +43,7 @@ paramsToPairs :: Params -> [(String,String)]
 paramsToPairs params =
     [ ("key", apiKey params)
     , ("query", search params)
-    ]  ++ optionalPairs
+    ]  <> optionalPairs
   where
     toPair = optionalParamToPair params
     optionalPairs = Maybe.catMaybes
@@ -65,5 +65,5 @@ query params = apiGet (paramsToUrl params) onError
   where
     onError :: (MonadIO m) => SomeException -> m Results
     onError err = do
-      logWarn . cs $ "Error performing Google Place Search: " ++ (show err)
+      logWarn . cs $ "Error performing Google Place Search: " <> (show err)
       return $ Results (show err, [])

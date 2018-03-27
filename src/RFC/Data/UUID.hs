@@ -35,7 +35,7 @@ instance ToCapture (Capture "id" UUID) where
   toCapture _ = DocCapture "id" "UUID identifier"
 
 instance ToSample UUID where
-  toSamples _ = samples $ catMaybes $ map UUID.fromString $
+  toSamples _ = samples . catMaybes $ UUID.fromString <$>
     [ "cf41ac06-3f70-479c-a2ed-d618a5e6dee2"
     , "26998bb3-d6c6-4f63-8a36-6b81eb6e6de9"
     , "6176b857-e461-4f34-a6a6-aeb8cbf7ffdf"
@@ -73,7 +73,7 @@ instance {-# OVERLAPS #-} (MonadFail m) => FromText (m UUID) where
   fromText :: Text -> m UUID
   fromText text =
     case UUID.fromText text of
-      Nothing -> fail $ "Could not parse UUID: " ++ (cs text)
+      Nothing -> fail $ "Could not parse UUID: " <> (cs text)
       Just x  -> return x
   {-# INLINE fromText #-}
 

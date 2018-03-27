@@ -27,7 +27,7 @@ data LatLng = LatLng {
 $(JSON.deriveJSON JSON.jsonOptions ''LatLng)
 
 latLng :: Latitude -> Longitude -> LatLng
-latLng lat lng = LatLng lat lng
+latLng = LatLng
 
 lngLat :: Longitude -> Latitude -> LatLng
 lngLat = flip latLng

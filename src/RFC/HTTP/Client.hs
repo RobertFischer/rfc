@@ -34,7 +34,7 @@ createRfcManager :: (MonadIO m) => m Manager
 createRfcManager = liftIO $ newManager rfcManagerSettings
 
 withAPISession :: (MonadIO m) => (Session -> m a) -> m a
-withAPISession = (>>=) $ (liftIO $ newSessionControl Nothing rfcManagerSettings)
+withAPISession = (>>=) $ liftIO (newSessionControl Nothing rfcManagerSettings)
 
 newtype BadStatusException = BadStatusException (Status,URI)
   deriving (Show,Eq,Ord,Generic,Typeable)

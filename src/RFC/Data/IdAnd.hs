@@ -28,7 +28,6 @@ import           RFC.Prelude
 
 
 import           Data.Aeson        as JSON
-import qualified Data.List         as List hiding ((++))
 import qualified Data.Map          as Map
 import qualified Data.UUID.Types   as UUID
 
@@ -42,6 +41,7 @@ import qualified Data.HashMap.Lazy as HashMap
 
 #ifndef GHCJS_BROWSER
 import           Control.Lens      hiding ((.=))
+import qualified Data.List         as List
 import           Data.Proxy        (Proxy (..))
 import           Data.Swagger
 import           Servant.Docs
@@ -79,7 +79,7 @@ idAndToPair :: IdAnd a -> (UUID, IdAnd a)
 idAndToPair idAnd@(IdAnd (id,_)) = (id, idAnd)
 
 idAndsToMap :: [IdAnd a] -> RefMap a
-idAndsToMap list = RefMap $ Map.fromList $ List.map (\idAnd@(IdAnd(uuid,_)) -> (uuid,idAnd)) list
+idAndsToMap list = RefMap . Map.fromList $ (\idAnd@(IdAnd(uuid,_)) -> (uuid,idAnd)) <$> list
 
 instance (FromJSON a) => FromJSON (IdAnd a) where
   parseJSON = JSON.withObject "IdAnd" $ \o -> do
@@ -100,7 +100,7 @@ instance (FromJSON a) => FromJSON (Map UUID (IdAnd a)) where
       objList :: [(Text, Value)]
       objList = HashMap.toList obj
       die :: Text -> Parser UUID
-      die k = fail . cs $ "Could not parse UUID: " ++ k
+      die k = fail . cs $ "Could not parse UUID: " <> k
       mapMKey :: Text -> Parser UUID
       mapMKey k = maybe (die k) return $ UUID.fromText k
       mapMVal :: Value -> Parser (IdAnd a)
@@ -108,7 +108,7 @@ instance (FromJSON a) => FromJSON (Map UUID (IdAnd a)) where
       mapPair :: (Text,Value) -> Parser (UUID, IdAnd a)
       mapPair = bimapM mapMKey mapMVal
       parserList :: [Parser (UUID, IdAnd a)]
-      parserList = map mapPair objList
+      parserList = mapPair <$> objList
       listInParser :: Parser [(UUID, IdAnd a)]
       listInParser = sequence parserList
 
@@ -117,7 +117,7 @@ instance (FromJSON a) => FromJSON (Map UUID (IdAnd a)) where
 
 instance (ToJSON a) => ToJSON (Map UUID (IdAnd a)) where
   toJSON =
-    Object . HashMap.fromList . map (\(k,v) -> (UUID.toText k, toJSON v)) . Map.toList
+    Object . HashMap.fromList . fmap (\(k,v) -> (UUID.toText k, toJSON v)) . Map.toList
 
 #endif
 
@@ -129,7 +129,7 @@ instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
     aSchema <- declareSchemaRef (Proxy :: Proxy a)
     idSchema <- declareSchemaRef (Proxy :: Proxy UUID)
     let maybeSample = safeHead $ toSamples (Proxy :: Proxy (IdAnd a))
-    return $ NamedSchema (map (\name -> "IdAnd " ++ name) aMaybeName) $
+    return . NamedSchema (fmap (\name -> "IdAnd " <> name) aMaybeName) $
       mempty
         & type_ .~ SwaggerObject
         & properties .~ [("id", idSchema), ("value", aSchema)]
@@ -142,14 +142,14 @@ instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (RefMap a) where
     let aMaybeName =  _namedSchemaName
     idAndASchema <- declareSchemaRef (Proxy :: Proxy (IdAnd a))
     let maybeSample = safeHead $ toSamples (Proxy :: Proxy (RefMap a))
-    return $ NamedSchema (map (\name -> "RefMap " ++ name) aMaybeName) $
+    return . NamedSchema (fmap (\name -> "RefMap " <> name) aMaybeName) $
       mempty
         & type_ .~ SwaggerObject
-        & additionalProperties .~ (Just idAndASchema)
+        & additionalProperties ?~ idAndASchema
         & example .~ (toJSON . snd <$> maybeSample)
 
 uuidList :: [UUID]
-uuidList = List.cycle $ map (fromMaybe UUID.nil) $ map UUID.fromString
+uuidList = List.cycle $ fromMaybe UUID.nil . UUID.fromString <$>
   [ "4fc2ffac-9100-41d6-94e1-c33a545e9ba2"
   , "1046948e-f8c7-4985-a008-fec4938696f4"
   , "83162802-598f-4de3-bd35-6c3fc0433965"
@@ -254,15 +254,15 @@ uuidList = List.cycle $ map (fromMaybe UUID.nil) $ map UUID.fromString
 
 instance (ToSample a) => ToSample (IdAnd a) where
   toSamples _ =
-      map idAndify $ zip uuidList (toSamples Proxy)
+      zipWith idAndify uuidList $ toSamples Proxy
     where
-      idAndify (uuid, (desc, a)) = (desc, IdAnd (uuid,a))
+      idAndify uuid (desc, a) = (desc, IdAnd (uuid,a))
 
 instance (ToSample a) => ToSample (RefMap a) where
-  toSamples _ = singleSample $
-      RefMap $ Map.fromList $ map idAndify $ zip uuidList (toSamples Proxy)
+  toSamples _ = singleSample .
+      RefMap . Map.fromList . zipWith idAndify uuidList $ toSamples Proxy
     where
-      idAndify (uuid, (_, a)) = (uuid, IdAnd (uuid,a))
+      idAndify uuid (_, a) = (uuid, IdAnd (uuid,a))
 
 #endif
 

@@ -37,7 +37,7 @@ withPsqlConnection action = do
 withPsqlTransaction :: (HasPsql m, MonadIO m) => IO a -> m a
 withPsqlTransaction action = withPsqlConnection $ \conn -> do
   let newMonad = ReaderT (const action)
-  liftIO $ pgTransaction conn $ runReaderT newMonad conn
+  liftIO . pgTransaction conn $ runReaderT newMonad conn
 {-# INLINABLE withPsqlTransaction #-}
 
 instance {-# OVERLAPPING #-} Env.DefConfig PGDatabase where
@@ -63,9 +63,9 @@ instance Env.FromEnv PGDatabase where
 
 defaultConnectInfo :: (MonadIO m, MonadFail m) => m PGDatabase
 defaultConnectInfo = do
-  result <- liftIO $ Env.decodeEnv
+  result <- liftIO Env.decodeEnv
   case result of
-    Left err       -> fail $ "Could not retrieve psql connection info: " ++ err
+    Left err       -> fail $ "Could not retrieve psql connection info: " <> err
     Right connInfo -> return connInfo
 {-# INLINE defaultConnectInfo #-}
 

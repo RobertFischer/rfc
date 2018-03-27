@@ -8,25 +8,29 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
+
 module RFC.String
   ( module RFC.String
   , module Data.Text.Conversions
   ) where
 
-import           ClassyPrelude          hiding ( fail )
-import           Control.Monad.Fail     ( MonadFail, fail )
+import           ClassyPrelude          hiding (fail)
+import           Control.Monad.Fail     (MonadFail, fail)
 import qualified Data.ByteString        as SB
 import qualified Data.ByteString.Lazy   as LB
-import           Data.String            ( String )
+import           Data.String            (String)
 import qualified Data.Text              as ST
 import           Data.Text.Conversions
 import qualified Data.Text.Lazy         as LT
 import qualified Data.Text.Lazy.Builder as LTBuilder
-import           Network.URI            ( URI (..), parseURIReference, uriToString )
+import           Network.URI            (URI (..), parseURIReference,
+                                         uriToString)
 
 #ifndef GHCJS_BROWSER
-import Servant.Docs
+import           Servant.Docs
 #endif
+
+{-# ANN module "HLint: ignore Use String" #-}
 
 type LazyText = LT.Text
 type StrictText = ST.Text
@@ -53,7 +57,7 @@ toLazyText = LT.fromStrict . toText
 {-# SPECIALIZE INLINE toLazyText :: LazyText -> LazyText #-}
 
 asUTF8 :: (ToText a, FromText (UTF8 b)) => a -> b
-asUTF8 it = unUTF8 $ fromText $ toText it
+asUTF8 it = unUTF8 . fromText $ toText it
 {-# INLINE asUTF8 #-}
 {-# SPECIALIZE INLINE asUTF8 :: String-> LazyByteString   #-}
 {-# SPECIALIZE INLINE asUTF8 :: StrictText -> LazyByteString   #-}
@@ -82,7 +86,7 @@ instance {-# OVERLAPPABLE #-} (Show a, DecodeText Maybe a, MonadFail m) => Decod
   decodeText a =
     case decodeText a of
       [] ->
-        fail $ "Could not decode text: " ++ (show a)
+        fail $ "Could not decode text: " <> (show a)
       x:_ ->
         return x
 
@@ -94,7 +98,7 @@ emptyString = fromText $ toText ""
 {-# SPECIALIZE INLINE emptyString :: StrictText #-}
 
 emptyUTF8 :: (FromText (UTF8 a)) => a
-emptyUTF8 = unUTF8 $ fromText $ toText ""
+emptyUTF8 = unUTF8 . fromText $ toText ""
 {-# INLINE emptyUTF8 #-}
 
 instance {-# OVERLAPPING #-} ToText Char where
@@ -124,7 +128,7 @@ instance {-# OVERLAPS #-} (MonadFail f) => FromText (f URI) where
   {-# SPECIALIZE instance FromText (IO URI)    #-}
   fromText txt =
     case parseURIReference (fromText txt) of
-      Nothing  -> fail $ "Could not parse URI: " ++ (cs txt)
+      Nothing  -> fail $ "Could not parse URI: " <> (cs txt)
       Just uri -> return uri
   {-# INLINE fromText #-}
 
@@ -144,7 +148,7 @@ instance {-# OVERLAPPABLE #-} (DecodeText f a, FromText b) => ConvertibleStrings
   {-# INLINE cs #-}
 
 instance {-# OVERLAPS #-} (ToText (UTF8 a), FromText b) => ConvertibleStrings a (UTF8 b) where
-  cs a = UTF8 $ fromText $ toText $ UTF8 a
+  cs a = UTF8 . fromText . toText $ UTF8 a
   {-# INLINE cs #-}
 
 instance {-# OVERLAPS #-} (ToText a, FromText (UTF8 b)) => ConvertibleStrings (UTF8 a) b where
@@ -154,7 +158,7 @@ instance {-# OVERLAPS #-} (ToText a, FromText (UTF8 b)) => ConvertibleStrings (U
   {-# SPECIALISE instance ConvertibleStrings (UTF8 StrictText) StrictByteString #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 LazyText) StrictByteString   #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 String) StrictByteString     #-}
-  cs (UTF8 it) = unUTF8 $ fromText $ toText it
+  cs (UTF8 it) = unUTF8 . fromText $ toText it
   {-# INLINE cs #-}
 
 instance {-# OVERLAPS #-} (ToText a, FromText b) => ConvertibleStrings a b where

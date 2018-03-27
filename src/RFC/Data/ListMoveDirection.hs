@@ -7,14 +7,14 @@ module RFC.Data.ListMoveDirection (
   module RFC.Data.ListMoveDirection
 ) where
 
-import Data.Aeson  as Aeson
-import Data.Text   as Text
-import RFC.Prelude
+import           Data.Aeson         as Aeson
+import           Data.Text          as Text
+import           RFC.Prelude
 
 #ifndef GHCJS_BROWSER
 
-import RFC.Servant.ApiDoc ( ToSchemaRFC )
-import Servant.Docs
+import           RFC.Servant.ApiDoc (ToSchemaRFC)
+import           Servant.Docs
 
 instance ToSample ListMoveDirection where
   toSamples _ =
@@ -30,7 +30,7 @@ moveInList :: (Eq a) => a -> ListMoveDirection -> [a] -> [a]
 moveInList target dir lst =
   case (lst,dir) of
     ([], _)                   -> []
-    ((_:[]), _)               -> lst
+    ([_], _)                  -> lst
     ((a:b:rest), TowardsHead) | b == target -> b:a:rest
     ((a:b:rest), TowardsTail) | a == target -> b:a:rest
     ((_:b:rest), _)           -> moveInList target dir (b:rest)

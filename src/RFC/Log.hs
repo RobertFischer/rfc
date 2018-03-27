@@ -8,7 +8,7 @@ module RFC.Log
 import           Control.Logger.Simple (logDebug, logError, logInfo, logWarn,
                                         pureDebug, pureError, pureInfo,
                                         pureWarn)
-import           Control.Logger.Simple as Log
+import qualified Control.Logger.Simple as Log
 import           RFC.Env               as Env
 import           RFC.Prelude
 import           System.IO             (BufferMode (..), stderr)
@@ -24,6 +24,6 @@ withLogging action = do
       if Env.isDevelopment then
           Log.LogConfig { Log.lc_file = Nothing, Log.lc_stderr = True }
       else
-          Log.LogConfig { Log.lc_file = Just ("./log/" ++ appSlug ++ ".log"), Log.lc_stderr = False }
+          Log.LogConfig { Log.lc_file = Just ("./log/" <> appSlug <> ".log"), Log.lc_stderr = False }
 
 

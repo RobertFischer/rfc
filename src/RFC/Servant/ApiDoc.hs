@@ -4,7 +4,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 module RFC.Servant.ApiDoc
@@ -53,19 +52,20 @@ apiToSwagger = toSwagger
 
 apiMiddleware :: (HasDocs a, HasSwagger a) => Proxy a -> Swagger -> Application -> Application
 apiMiddleware api addlSwagger application request callback =
-  case (reqMethod, reqPath) of
+  case (cs reqMethod, reqPath) of
     ("GET", Just doIt) -> doIt
     _                  -> application request callback
   where
-    bsToStr = maybe "" cs . decodeText . UTF8
+    bsToStr :: StrictByteString -> String
+    bsToStr = fromMaybe "" . toUTF8
     html = Blaze.renderHtml $ apiToHtml api
     ascii = apiToAscii api
     swaggerToLbs = Builder.toLazyByteString . fromEncoding . toEncoding
     swagger = swaggerToLbs $ apiToSwagger api <> addlSwagger
-    reqMethod = map charToUpper $ bsToStr $ requestMethod request
-    pathInfo = map charToLower $ bsToStr $ rawPathInfo request
+    reqMethod = fmap charToUpper . bsToStr $ requestMethod request
+    pathInfo = fmap charToLower . bsToStr $ rawPathInfo request
     reqPath =
-      case pathInfo of
+      case cs pathInfo of
         "swagger.json"  -> Just serveSwagger
         "/swagger.json" -> Just serveSwagger
         "api.html"      -> Just serveHtml
