@@ -104,6 +104,7 @@ library
                      , RFC.Data.ListMoveDirection
                      , RFC.Data.UUID
                      , RFC.Miso.String
+  other-modules:       RFC.Prelude.Instances
   if impl(ghcjs)
     cpp-options:       -DGHCJS -DCLIENT -DGHCJS_BROWSER -DBROWSER
     exposed-modules:   RFC.GHCJS
@@ -112,7 +113,7 @@ library
                      , RFC.GHCJS.Cookie
                      , RFC.GHCJS.Console
   else
-    exposed-modules: RFC.Log
+    exposed-modules:   RFC.Log
                      , RFC.Psql
                      , RFC.Redis
                      , RFC.Wai

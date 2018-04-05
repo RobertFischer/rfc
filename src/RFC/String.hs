@@ -18,13 +18,16 @@ import           ClassyPrelude          hiding (fail)
 import           Control.Monad.Fail     (MonadFail, fail)
 import qualified Data.ByteString        as SB
 import qualified Data.ByteString.Lazy   as LB
+import qualified Data.ByteString.Short  as Sbs
 import           Data.String            (String)
 import qualified Data.Text              as ST
 import           Data.Text.Conversions
+-- import           Data.Text.Encoding     (encodeUtf8)
 import qualified Data.Text.Lazy         as LT
 import qualified Data.Text.Lazy.Builder as LTBuilder
 import           Network.URI            (URI (..), parseURIReference,
                                          uriToString)
+import           RFC.Prelude.Instances  ()
 
 #ifndef GHCJS_BROWSER
 import           Servant.Docs
@@ -36,6 +39,7 @@ type LazyText = LT.Text
 type StrictText = ST.Text
 type LazyByteString = LB.ByteString
 type StrictByteString = SB.ByteString
+type ShortByteString = Sbs.ShortByteString
 
 type ConvertibleString       = ConvertibleStrings
 type ConvertibleToSBS a      = ConvertibleStrings a StrictByteString
@@ -45,8 +49,8 @@ type ConvertibleFromString a = ConvertibleStrings String a
 
 toStrictText :: (ToText a) => a -> StrictText
 toStrictText = toText
-{-# SPECIALIZE INLINE toStrictText :: String -> StrictText #-}
-{-# SPECIALIZE INLINE toStrictText :: LazyText -> StrictText #-}
+{-# SPECIALIZE INLINE toStrictText :: String -> StrictText     #-}
+{-# SPECIALIZE INLINE toStrictText :: LazyText -> StrictText   #-}
 {-# SPECIALIZE INLINE toStrictText :: StrictText -> StrictText #-}
 
 toLazyText :: (ToText a) => a -> LazyText
@@ -54,41 +58,49 @@ toLazyText = LT.fromStrict . toText
 {-# INLINE toLazyText #-}
 {-# SPECIALIZE INLINE toLazyText :: String -> LazyText     #-}
 {-# SPECIALIZE INLINE toLazyText :: StrictText -> LazyText #-}
-{-# SPECIALIZE INLINE toLazyText :: LazyText -> LazyText #-}
+{-# SPECIALIZE INLINE toLazyText :: LazyText -> LazyText   #-}
 
 asUTF8 :: (ToText a, FromText (UTF8 b)) => a -> b
 asUTF8 it = unUTF8 . fromText $ toText it
 {-# INLINE asUTF8 #-}
-{-# SPECIALIZE INLINE asUTF8 :: String-> LazyByteString   #-}
-{-# SPECIALIZE INLINE asUTF8 :: StrictText -> LazyByteString   #-}
-{-# SPECIALIZE INLINE asUTF8 :: LazyText -> LazyByteString   #-}
-{-# SPECIALIZE INLINE asUTF8 :: String-> StrictByteString   #-}
+{-# SPECIALIZE INLINE asUTF8 :: String-> LazyByteString          #-}
+{-# SPECIALIZE INLINE asUTF8 :: StrictText -> LazyByteString     #-}
+{-# SPECIALIZE INLINE asUTF8 :: LazyText -> LazyByteString       #-}
+{-# SPECIALIZE INLINE asUTF8 :: String-> StrictByteString        #-}
 {-# SPECIALIZE INLINE asUTF8 :: StrictText -> StrictByteString   #-}
-{-# SPECIALIZE INLINE asUTF8 :: LazyText -> StrictByteString   #-}
+{-# SPECIALIZE INLINE asUTF8 :: LazyText -> StrictByteString     #-}
+{-# SPECIALIZE INLINE asUTF8 :: String-> ShortByteString         #-}
+{-# SPECIALIZE INLINE asUTF8 :: StrictText -> ShortByteString    #-}
+{-# SPECIALIZE INLINE asUTF8 :: LazyText -> ShortByteString      #-}
 
 toUTF8 :: (DecodeText f (UTF8 a), FromText b) => a -> f b
 toUTF8 it = decodeConvertText (UTF8 it)
 {-# INLINE toUTF8 #-}
-{-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe String #-}
-{-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe StrictText #-}
-{-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe LazyText #-}
-{-# SPECIALIZE INLINE toUTF8 :: StrictByteString -> Maybe String #-}
+{-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe String       #-}
+{-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe StrictText   #-}
+{-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe LazyText     #-}
+{-# SPECIALIZE INLINE toUTF8 :: StrictByteString -> Maybe String     #-}
 {-# SPECIALIZE INLINE toUTF8 :: StrictByteString -> Maybe StrictText #-}
-{-# SPECIALIZE INLINE toUTF8 :: StrictByteString -> Maybe LazyText #-}
+{-# SPECIALIZE INLINE toUTF8 :: StrictByteString -> Maybe LazyText   #-}
+{-# SPECIALIZE INLINE toUTF8 :: ShortByteString -> Maybe String      #-}
+{-# SPECIALIZE INLINE toUTF8 :: ShortByteString -> Maybe StrictText  #-}
+{-# SPECIALIZE INLINE toUTF8 :: ShortByteString -> Maybe LazyText    #-}
 
-instance {-# OVERLAPPABLE #-} (Show a, DecodeText Maybe a, MonadFail m) => DecodeText m a where
-  {-# SPECIALIZE instance DecodeText IO (UTF8 LazyByteString)    #-}
-  {-# SPECIALIZE instance DecodeText IO (UTF8 StrictByteString)  #-}
-  {-# SPECIALIZE instance DecodeText [] (UTF8 LazyByteString)    #-}
-  {-# SPECIALIZE instance DecodeText [] (UTF8 StrictByteString)  #-}
-  {-# SPECIALIZE instance DecodeText Maybe (UTF8 LazyByteString)    #-}
-  {-# SPECIALIZE instance DecodeText Maybe (UTF8 StrictByteString)  #-}
-  decodeText a =
-    case decodeText a of
-      [] ->
-        fail $ "Could not decode text: " <> (show a)
-      x:_ ->
+instance {-# OVERLAPPING #-} FromText (UTF8 ShortByteString) where
+  fromText = UTF8 . Sbs.toShort . encodeUtf8
+  {-# INLINE fromText #-}
+
+instance {-# INCOHERENT #-} (MonadFail m, Show (UTF8 a), DecodeText Maybe (UTF8 a)) => DecodeText m (UTF8 a) where
+  {-# SPECIALIZE instance DecodeText IO (UTF8 ShortByteString)       #-}
+  {-# SPECIALIZE instance DecodeText [] (UTF8 ShortByteString)       #-}
+  {-# SPECIALIZE instance DecodeText Maybe (UTF8 ShortByteString)    #-}
+  decodeText arg =
+    case decodeText arg of
+      Nothing ->
+        fail $ "Unable to decode text: " <> show arg
+      Just x ->
         return x
+  {-# INLINE decodeText #-}
 
 emptyString :: (FromText a) => a
 emptyString = fromText $ toText ""
@@ -123,7 +135,7 @@ instance {-# OVERLAPPING #-} ToText URI where
   toText uri = toText $ uriToString id uri ""
   {-# INLINE toText #-}
 
-instance {-# OVERLAPS #-} (MonadFail f) => FromText (f URI) where
+instance {-# OVERLAPPING #-} (MonadFail f) => FromText (f URI) where
   {-# SPECIALIZE instance FromText (Maybe URI) #-}
   {-# SPECIALIZE instance FromText (IO URI)    #-}
   fromText txt =
@@ -147,21 +159,24 @@ instance {-# OVERLAPPABLE #-} (DecodeText f a, FromText b) => ConvertibleStrings
   cs = decodeConvertText
   {-# INLINE cs #-}
 
-instance {-# OVERLAPS #-} (ToText (UTF8 a), FromText b) => ConvertibleStrings a (UTF8 b) where
+instance {-# OVERLAPPABLE #-} (ToText (UTF8 a), FromText b) => ConvertibleStrings a (UTF8 b) where
   cs a = UTF8 . fromText . toText $ UTF8 a
   {-# INLINE cs #-}
 
-instance {-# OVERLAPS #-} (ToText a, FromText (UTF8 b)) => ConvertibleStrings (UTF8 a) b where
+instance {-# OVERLAPPABLE #-} (ToText a, FromText (UTF8 b)) => ConvertibleStrings (UTF8 a) b where
   {-# SPECIALISE instance ConvertibleStrings (UTF8 StrictText) LazyByteString   #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 LazyText) LazyByteString     #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 String) LazyByteString       #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 StrictText) StrictByteString #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 LazyText) StrictByteString   #-}
   {-# SPECIALISE instance ConvertibleStrings (UTF8 String) StrictByteString     #-}
+  {-# SPECIALISE instance ConvertibleStrings (UTF8 StrictText) ShortByteString #-}
+  {-# SPECIALISE instance ConvertibleStrings (UTF8 LazyText) ShortByteString #-}
+  {-# SPECIALISE instance ConvertibleStrings (UTF8 String) ShortByteString #-}
   cs (UTF8 it) = unUTF8 . fromText $ toText it
   {-# INLINE cs #-}
 
-instance {-# OVERLAPS #-} (ToText a, FromText b) => ConvertibleStrings a b where
+instance {-# OVERLAPPABLE #-} (ToText a, FromText b) => ConvertibleStrings a b where
   {-# SPECIALIZE instance ConvertibleStrings String LazyText                              #-}
   {-# SPECIALIZE instance ConvertibleStrings String StrictText                            #-}
   {-# SPECIALIZE instance ConvertibleStrings LazyText String                              #-}
@@ -211,6 +226,7 @@ instance {-# OVERLAPS #-} ConvertibleStrings a a where
   cs = id
   {-# INLINE cs #-}
 
+-- This one really shouldn't be necessary, but I actually found a compile error about it!
 instance {-# OVERLAPPING #-} ConvertibleStrings [Char] String where
   cs :: [Char] -> String
   cs = id

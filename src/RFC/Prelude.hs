@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP                  #-}
-{-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -30,6 +29,8 @@ module RFC.Prelude
   , module Control.Lens.Prism
   , module Control.Lens.Type
   , module Data.Proxy
+  , module Data.Ratio
+  , module RFC.Prelude.Instances
   ) where
 
 import           ClassyPrelude               hiding (Day, fail, fromList,
@@ -54,7 +55,6 @@ import           Data.Time.Clock
 import           Data.Time.Units
 import           Data.Typeable               (TypeRep, typeOf)
 import           Data.Word                   (Word16)
-import           GHC.Conc.Sync
 import           GHC.Generics                (Generic)
 import           RFC.Data.UUID               (UUID)
 import           RFC.String
@@ -63,7 +63,9 @@ import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
+import           Data.Ratio                  (Ratio, Rational)
 import           GHC.Exts                    (IsList (..), fromListN)
+import           RFC.Prelude.Instances
 
 {-# ANN module "HLint: ignore Use if" #-}
 
@@ -95,34 +97,3 @@ safeHead xs =
 {-# SPECIALIZE INLINE safeHead :: [a] -> Maybe a #-}
 {-# SPECIALIZE INLINE safeHead :: [a] -> IO a #-}
 
-foldl :: MonoFoldable mono => (a -> Element mono -> a) -> a -> mono -> a
-foldl = foldl'
-{-# INLINE foldl #-}
-
-type Boolean = Bool -- I keep forgetting which Haskell uses....
-
-newtype Failed = Failed String
-  deriving (Show, Eq, Ord, Generic, Typeable)
-instance Exception Failed
-
-instance {-# OVERLAPPABLE #-} (Monad m, MonadIO m) => MonadFail m where
-  fail = throwIO . Failed
-  {-# INLINE fail #-}
-
-#ifdef VERSION_exceptions
-instance {-# OVERLAPPABLE #-} MonadThrow m => MonadFail m where
-  fail = throwM . Failed
-  {-# INLINE fail #-}
-#endif
-
-instance {-# OVERLAPPING #-} MonadFail STM where
-  fail _ = retry
-  {-# INLINE fail #-}
-
-instance {-# OVERLAPPING #-} MonadFail (Either String) where
-  fail = Left
-  {-# INLINE fail #-}
-
-instance {-# OVERLAPPING #-} MonadFail Option where
-  fail _ = Option Nothing
-  {-# INLINE fail #-}
