@@ -22,7 +22,6 @@ import qualified Data.ByteString.Short  as Sbs
 import           Data.String            (String)
 import qualified Data.Text              as ST
 import           Data.Text.Conversions
--- import           Data.Text.Encoding     (encodeUtf8)
 import qualified Data.Text.Lazy         as LT
 import qualified Data.Text.Lazy.Builder as LTBuilder
 import           Network.URI            (URI (..), parseURIReference,
@@ -61,7 +60,7 @@ toLazyText = LT.fromStrict . toText
 {-# SPECIALIZE INLINE toLazyText :: LazyText -> LazyText   #-}
 
 asUTF8 :: (ToText a, FromText (UTF8 b)) => a -> b
-asUTF8 it = unUTF8 . fromText $ toText it
+asUTF8 = unUTF8 . fromText . toText
 {-# INLINE asUTF8 #-}
 {-# SPECIALIZE INLINE asUTF8 :: String-> LazyByteString          #-}
 {-# SPECIALIZE INLINE asUTF8 :: StrictText -> LazyByteString     #-}
@@ -74,7 +73,7 @@ asUTF8 it = unUTF8 . fromText $ toText it
 {-# SPECIALIZE INLINE asUTF8 :: LazyText -> ShortByteString      #-}
 
 toUTF8 :: (DecodeText f (UTF8 a), FromText b) => a -> f b
-toUTF8 it = decodeConvertText (UTF8 it)
+toUTF8 = decodeConvertText . UTF8
 {-# INLINE toUTF8 #-}
 {-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe String       #-}
 {-# SPECIALIZE INLINE toUTF8 :: LazyByteString -> Maybe StrictText   #-}
