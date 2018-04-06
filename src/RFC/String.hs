@@ -92,7 +92,6 @@ instance {-# OVERLAPPING #-} FromText (UTF8 ShortByteString) where
 instance {-# INCOHERENT #-} (MonadFail m, Show (UTF8 a), DecodeText Maybe (UTF8 a)) => DecodeText m (UTF8 a) where
   {-# SPECIALIZE instance DecodeText IO (UTF8 ShortByteString)       #-}
   {-# SPECIALIZE instance DecodeText [] (UTF8 ShortByteString)       #-}
-  {-# SPECIALIZE instance DecodeText Maybe (UTF8 ShortByteString)    #-}
   decodeText arg =
     case decodeText arg of
       Nothing ->
