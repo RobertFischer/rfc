@@ -33,8 +33,8 @@ module RFC.Prelude
   , module RFC.Prelude.Instances
   ) where
 
-import           ClassyPrelude               hiding (Day, fail, fromList,
-                                              toList, unpack)
+import           ClassyPrelude               hiding (Day, fail, fromList, map,
+                                              toList, unpack, (++))
 import           Control.Lens.Lens
 import           Control.Lens.Prism
 import           Control.Lens.Type
