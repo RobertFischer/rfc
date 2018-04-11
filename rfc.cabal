@@ -46,25 +46,23 @@ library
                      , http-api-data >= 0.3.7.1
                      , time-units
                      , text
-                     , lifted-async >= 0.9.3.3
                      , unliftio >= 0.2.4.0
                      , unliftio-core >= 0.1.1.0
                      , monad-control >= 1.0.2.2
                      , natural-transformation >= 0.4
                      , network-uri
-                     , attoparsec
                      , resource-pool
                      , time
                      , aeson-diff >= 1.1.0.4
                      , mtl
                      , miso >= 0.17.0.0
-                     , url
                      , mono-traversable >= 1.0.1.1
+                     , bifunctors
   if impl(ghcjs)
     build-depends:     aeson
-                     , bifunctors
                        -- Servant 0.13 publishes non-GHCJS-compatible Aeson version requirement.
                      , servant >= 0.12.1 && < 0.13
+                     , attoparsec
   else
     build-depends:     servant-server >= 0.13
                      , servant >= 0.13
@@ -87,7 +85,6 @@ library
                      , servant-swagger >= 1.1.5
                      , swagger2 >= 2.2
                      , markdown
-                     , servant-client >= 0.13
                      , binary
                      , network
                      , warp >= 3.2.18
