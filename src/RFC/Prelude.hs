@@ -31,6 +31,7 @@ module RFC.Prelude
   , module Data.Proxy
   , module Data.Ratio
   , module RFC.Prelude.Instances
+  , module Data.Tuple.Curry
   ) where
 
 import           ClassyPrelude               hiding (Day, fail, fromList, map,
@@ -64,6 +65,7 @@ import           UnliftIO
 import           Control.Monad.Catch
 #endif
 import           Data.Ratio                  (Ratio, Rational)
+import           Data.Tuple.Curry            (curryN, uncurryN)
 import           GHC.Exts                    (IsList (..), fromListN)
 import           RFC.Prelude.Instances
 
@@ -97,3 +99,28 @@ safeHead xs =
 {-# SPECIALIZE INLINE safeHead :: [a] -> Maybe a #-}
 {-# SPECIALIZE INLINE safeHead :: [a] -> IO a #-}
 
+lg :: Integer -> Integer
+lg 0 = 0
+lg z = 1 + lg (z `div` 2)
+{-# INLINEABLE lg #-}
+
+lg' :: (Integral z, Integral z') => z -> z'
+lg' z = fromInteger $
+  if z > -1 && z < 1 then
+    0
+  else
+    1 + lg ((toInteger z) `div` 2)
+{-# INLINEABLE lg' #-}
+{-# SPECIALIZE INLINE lg' :: Integer -> Integer #-}
+{-# SPECIALIZE INLINE lg' :: Int -> Int         #-}
+{-# SPECIALIZE INLINE lg' :: Integer -> Int     #-}
+{-# SPECIALIZE INLINE lg' :: Int -> Integer     #-}
+
+isSingleton :: (Foldable f) => f a -> Bool
+isSingleton xs =
+  case Foldable.toList xs of
+    [_] -> True
+    _   -> False
+{-# INLINEABLE isSingleton #-}
+{-# SPECIALIZE INLINE isSingleton :: [a] -> Bool   #-}
+{-# SPECIALIZE INLINE isSingleton :: Seq a -> Bool #-}
