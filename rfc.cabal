@@ -58,6 +58,7 @@ library
                      , miso >= 0.17.0.0
                      , mono-traversable >= 1.0.1.1
                      , bifunctors
+                     , tuple
   if impl(ghcjs)
     build-depends:     aeson
                        -- Servant 0.13 publishes non-GHCJS-compatible Aeson version requirement.
@@ -89,6 +90,9 @@ library
                      , network
                      , warp >= 3.2.18
                      , mtl >= 2.2.2
+                     , postgresql-binary >= 0.12.1
+                     , bytestring-strict-builder >= 0.4.3
+                     , transformers >= 0.5.2.0
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent
