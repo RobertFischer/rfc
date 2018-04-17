@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd "`dirname $0`/.."
+stack build --fast --haddock --haddock-deps --file-watch
