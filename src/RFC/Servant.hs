@@ -54,9 +54,9 @@ instance HasAPIClient ApiCtx where
   getAPIClient = ask
   {-# INLINE getAPIClient #-}
 
-instance Psql.HasPsql ApiCtx where
-  getPsqlPool = lift ask
-  {-# INLINE getPsqlPool #-}
+--instance Psql.HasPsql ApiCtx where
+  --withPslConnection = lift ask
+  --{-# INLINE getPsqlPool #-}
 
 instance Redis.HasRedis ApiCtx where
   getRedisPool = lift $ lift ask
