@@ -15,14 +15,18 @@ module RFC.Miso.String
   ) where
 
 import           Data.String          ()
-import           Miso.String          (MisoString, ToMisoString (..))
+import           Miso.String          ( MisoString, ToMisoString (..) )
 import           RFC.Data.UUID        ()
 import           RFC.String           ()
 
 #ifdef GHCJS
+import qualified Data.JSString        as JSString
 import           Data.MonoTraversable
 import qualified Data.Text.Lazy       as TL
 import           RFC.Prelude
+
+instance Semigroup MisoString where
+  (<>) = JSString.append
 
 type instance Element MisoString = Char
 

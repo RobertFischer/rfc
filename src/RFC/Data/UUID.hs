@@ -3,7 +3,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE InstanceSigs          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
 module RFC.Data.UUID
@@ -12,17 +11,16 @@ module RFC.Data.UUID
 
 import           ClassyPrelude       hiding (fail)
 import           Control.Monad.Fail  (MonadFail, fail)
-import           RFC.String
-
-import           Data.UUID.Types     hiding (fromString)
+import qualified Data.Text           as T
+import           Data.UUID.Types
 import qualified Data.UUID.Types     as UUID
+import           RFC.String
 
 #if MIN_VERSION_aeson(1,1,0)
 -- UUID has ToJSON and FromJSON
 #else
 import           Data.Aeson.Types    (FromJSON (..), ToJSON (..),
                                       Value (String), typeMismatch)
-import qualified Data.Text           as T
 #endif
 
 #ifndef GHCJS_BROWSER
@@ -73,7 +71,7 @@ instance {-# OVERLAPS #-} (MonadFail m) => FromText (m UUID) where
   fromText :: Text -> m UUID
   fromText text =
     case UUID.fromText text of
-      Nothing -> fail $ "Could not parse UUID: " <> (cs text)
+      Nothing -> fail $ "Could not parse UUID: " <> (T.unpack text)
       Just x  -> return x
   {-# INLINE fromText #-}
 

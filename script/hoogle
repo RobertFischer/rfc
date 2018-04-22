@@ -2,11 +2,11 @@
 
 
 cd `dirname $0`
-( kill -9 `cat hoogle.pid` && sleep 10s ) || echo "Could not kill previous Hoogle"
+( kill -9 `cat $HOME/.hoogle.pid` && sleep 10s ) || echo "Could not kill previous Hoogle"
 STACK_YAML="--stack-yaml=./../stack.yaml"
 stack build  $STACK_YAML --haddock --haddock-deps --fast 
 stack hoogle $STACK_YAML -- generate --download --haskell --local || echo "Bad error from generate; trying to move forward anyway"
 stack hoogle $STACK_YAML -- server --local --port=8080 2>&1 1> hoogle.out  &
-echo "$!" | tee hoogle.pid
+echo "$!" | tee "$HOME/.hoogle.pid"
 sleep 5s
 xdg-open 'http://localhost:8080' &

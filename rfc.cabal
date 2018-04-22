@@ -14,7 +14,7 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 
-Flag Development
+Flag development
   Description: Turn on errors for warnings
   Default:     False
   Manual:      True
@@ -23,15 +23,16 @@ library
   hs-source-dirs:      src
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
-  default-extensions:  RebindableSyntax
+  default-extensions:  NoImplicitPrelude
                      , MonadFailDesugaring
                      , MultiParamTypeClasses
                      , DisambiguateRecordFields
+
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
   ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wnoncanonical-monad-instances -Wall-missed-specialisations
   ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures -Widentities
-  if flag(Development)
+  if flag(development)
     ghc-options:       -Werror -dcore-lint -dcmm-lint
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10.8.1
@@ -65,6 +66,7 @@ library
                      , servant >= 0.12.1 && < 0.13
                      , attoparsec
   else
+    default-extensions:  RebindableSyntax
     build-depends:     servant-server >= 0.13
                      , servant >= 0.13
                      , servant-docs >= 0.11.2
@@ -107,22 +109,23 @@ library
                      , RFC.Miso.String
   other-modules:       RFC.Prelude.Instances
   if impl(ghcjs)
-    cpp-options:       -DGHCJS -DCLIENT -DGHCJS_BROWSER -DBROWSER
-    exposed-modules:   RFC.GHCJS
-                     , RFC.GHCJS.XHR
-                     , RFC.GHCJS.Inject
-                     , RFC.GHCJS.Cookie
-                     , RFC.GHCJS.Console
+      build-depends:     ghcjs-base
+      cpp-options:       -DGHCJS -DCLIENT -DGHCJS_BROWSER -DBROWSER
+      exposed-modules:   RFC.GHCJS
+                       , RFC.GHCJS.XHR
+                       , RFC.GHCJS.Inject
+                       , RFC.GHCJS.Cookie
+                       , RFC.GHCJS.Console
   else
-    exposed-modules:   RFC.Log
-                     , RFC.Psql
-                     , RFC.Redis
-                     , RFC.Wai
-                     , RFC.Env
-                     , RFC.HTTP.Client
-                     , RFC.Servant
-                     , RFC.Servant.ApiDoc
-                     -- , RFC.Client.Coinhive
+      exposed-modules:   RFC.Log
+                       , RFC.Psql
+                       , RFC.Redis
+                       , RFC.Wai
+                       , RFC.Env
+                       , RFC.HTTP.Client
+                       , RFC.Servant
+                       , RFC.Servant.ApiDoc
+                       -- , RFC.Client.Coinhive
 
 
 source-repository head

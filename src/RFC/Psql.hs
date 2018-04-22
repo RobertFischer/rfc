@@ -6,9 +6,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module RFC.Psql
   ( module Database.PostgreSQL.Typed
+  , module Database.PostgreSQL.Typed.Array
   , module Database.PostgreSQL.Typed.Query
   , module Database.PostgreSQL.Typed.Types
   , module Database.PostgreSQL.Typed.TH
@@ -21,11 +23,13 @@ import           Data.Bits                       (Bits, isSigned)
 import qualified Data.ByteString.Char8           as C8
 import           Data.Pool
 import           Database.PostgreSQL.Typed
+import           Database.PostgreSQL.Typed.Array
 import           Database.PostgreSQL.Typed.Query
 import           Database.PostgreSQL.Typed.TH
 import           Database.PostgreSQL.Typed.Types
 import qualified PostgreSQL.Binary.Decoding      as BinD
 import qualified PostgreSQL.Binary.Encoding      as BinE
+import qualified RFC.Data.UUID                   as UUID
 import qualified RFC.Env                         as Env
 import           RFC.Prelude                     hiding (ask)
 
@@ -177,14 +181,39 @@ instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "small
   {-# SPECIALIZE instance PGParameter "smallint" Word    #-}
 
 
-instance {-# OVERLAPS #-} PGColumn "smallint" (Maybe Integer) where
+instance {-# OVERLAPPING #-} PGColumn "smallint" (Maybe Integer) where
   pgDecode t = Just . pgDecode t
   pgDecodeBinary e t = Just . pgDecodeBinary e t
   pgDecodeValue _ _ PGNullValue = Nothing
   pgDecodeValue e t v           = Just $ pgDecodeValue e t v
 
-instance {-# OVERLAPS #-} PGParameter "smallint" (Maybe Integer) where
+instance {-# OVERLAPPING #-} PGParameter "smallint" (Maybe Integer) where
   pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
   pgLiteral = maybe (C8.pack "NULL") . pgLiteral
   pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
 
+instance {-# OVERLAPPING #-} PGColumn "bigint" (Maybe Integer) where
+  pgDecode t = Just . pgDecode t
+  pgDecodeBinary e t = Just . pgDecodeBinary e t
+  pgDecodeValue _ _ PGNullValue = Nothing
+  pgDecodeValue e t v           = Just $ pgDecodeValue e t v
+
+instance {-# OVERLAPPING #-} PGParameter "bigint" (Maybe Integer) where
+  pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
+  pgLiteral = maybe (C8.pack "NULL") . pgLiteral
+  pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
+
+instance PGType "style" where
+  type PGVal "style" = StrictText
+  pgBinaryColumn _ _ = True
+
+instance PGStringType "style"
+
+instance PGColumn "uuid[]" [UUID] where
+  pgDecode _ sbs =
+      let (sbsList::[StrictByteString]) = C8.split (pgArrayDelim pgTypePxy) sbs in
+      let strList = catMaybes $ toUTF8 <$> sbsList in
+      let uuidList = catMaybes $ UUID.fromString <$> strList in
+      uuidList
+    where
+      pgTypePxy = PGTypeProxy :: PGTypeID "uuid[]"
