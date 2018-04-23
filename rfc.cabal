@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 
 Flag development
-  Description: Turn on errors for warnings
+  -- Description: Disable errors on warnings, and enable aggressive optimizations
+  Description: Enable errors on warnings and disable optimizations
   Default:     False
   Manual:      True
 
