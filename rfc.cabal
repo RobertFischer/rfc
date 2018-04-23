@@ -27,13 +27,14 @@ library
                      , MonadFailDesugaring
                      , MultiParamTypeClasses
                      , DisambiguateRecordFields
-
+                     , ScopedTypeVariables
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
   ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wnoncanonical-monad-instances -Wall-missed-specialisations
   ghc-options:         -Wnoncanonical-monadfail-instances -Wimplicit-prelude -Wmissing-exported-signatures -Widentities
   if flag(development)
-    ghc-options:       -Werror -dcore-lint -dcmm-lint
+    cpp-options:       -DDEVELOPMENT
+    ghc-options:       -freverse-errors -Werror -dcore-lint -dcmm-lint
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10.8.1
                      , classy-prelude >= 1.4
@@ -54,7 +55,6 @@ library
                      , network-uri
                      , resource-pool
                      , time
-                     , aeson-diff >= 1.1.0.4
                      , mtl
                      , miso >= 0.17.0.0
                      , mono-traversable >= 1.0.1.1

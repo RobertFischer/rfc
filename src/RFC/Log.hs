@@ -13,7 +13,7 @@ import           RFC.Env               as Env
 import           RFC.Prelude
 import           System.IO             (BufferMode (..), stderr)
 
-withLogging :: (MonadFail m, MonadUnliftIO m) => m a -> m a
+withLogging :: (MonadUnliftIO m, MonadFail m) => m a -> m a
 withLogging action = do
   appSlug <- Env.readAppSlug
   hSetBuffering stderr LineBuffering

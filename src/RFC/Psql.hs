@@ -15,11 +15,12 @@ module RFC.Psql
   , module Database.PostgreSQL.Typed.Types
   , module Database.PostgreSQL.Typed.TH
   , module RFC.Psql
+  , module Network
   ) where
 
-import           Control.Monad.Trans.Class       (MonadTrans (..))
-import           Control.Monad.Trans.Reader      (ask)
-import           Data.Bits                       (Bits, isSigned)
+import           Control.Monad.Trans.Class       ( MonadTrans (..) )
+import           Control.Monad.Trans.Reader      ( ask )
+import           Data.Bits                       ( Bits, isSigned )
 import qualified Data.ByteString.Char8           as C8
 import           Data.Pool
 import           Database.PostgreSQL.Typed
@@ -27,11 +28,12 @@ import           Database.PostgreSQL.Typed.Array
 import           Database.PostgreSQL.Typed.Query
 import           Database.PostgreSQL.Typed.TH
 import           Database.PostgreSQL.Typed.Types
+import           Network                         ( PortID (PortNumber) )
 import qualified PostgreSQL.Binary.Decoding      as BinD
 import qualified PostgreSQL.Binary.Encoding      as BinE
 import qualified RFC.Data.UUID                   as UUID
 import qualified RFC.Env                         as Env
-import           RFC.Prelude                     hiding (ask)
+import           RFC.Prelude                     hiding ( ask )
 
 type PGConnectionPool = Pool PGConnection
 type ConnectionPool = PGConnectionPool

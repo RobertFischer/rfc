@@ -26,7 +26,6 @@ module RFC.Servant
 
 import           Control.Natural      (type (~>))
 import           Data.Aeson           as JSON
-import qualified Data.Aeson.Diff      as JSON
 import           Data.Swagger         (Swagger, ToSchema)
 import           Network.Wreq.Session as Wreq
 import           RFC.API
@@ -75,8 +74,8 @@ type FetchImpl a = UUID -> ApiCtx (IdAnd a)
 type FetchAPI a = Capture "id" UUID :> JGet (IdAnd a)
 type CreateImpl a = a -> ApiCtx (IdAnd a)
 type CreateAPI a = JReqBody a :> JPost (IdAnd a)
-type PatchImpl a = UUID -> JSON.Patch -> ApiCtx (IdAnd a)
-type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
+--type PatchImpl a = UUID -> JSON.Patch -> ApiCtx (IdAnd a)
+--type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
 type ReplaceImpl a = UUID -> a -> ApiCtx (IdAnd a)
 type ReplaceAPI a = Capture "id" UUID :> JReqBody a :> JPost (IdAnd a)
 
@@ -84,13 +83,13 @@ type ServerImpl a =
   (FetchAllImpl a)
   :<|> (FetchImpl a)
   :<|> (CreateImpl a)
-  :<|> (PatchImpl a)
+  -- :<|> (PatchImpl a)
   :<|> (ReplaceImpl a)
 type ServerAPI a =
   (FetchAllAPI a)
   :<|> (FetchAPI a)
   :<|> (CreateAPI a)
-  :<|> (PatchAPI a)
+  -- :<|> (PatchAPI a)
   :<|> (ReplaceAPI a)
 
 
@@ -121,6 +120,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
           }
   {-# INLINE restCreate #-}
 
+{-
   restPatch :: PatchImpl a
   restPatch id patch = do
     (IdAnd (_,original::a)) <- restFetch id
@@ -137,6 +137,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
             }
           Right value -> restReplace id value
   {-# INLINE restPatch #-}
+-}
 
   restReplace :: ReplaceImpl a
   restReplace id value = do
@@ -151,7 +152,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     restFetchAll
     :<|> restFetch
     :<|> restCreate
-    :<|> restPatch
+    -- :<|> restPatch
     :<|> restReplace
 
   fetchResource :: UUID -> ApiCtx (Maybe a)

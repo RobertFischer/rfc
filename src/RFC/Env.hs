@@ -1,9 +1,9 @@
-{-# LANGUAGE CPP          #-}
-{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE InstanceSigs        #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module RFC.Env
   ( isDevelopment
-  , readEnvironment
   , readHost
   , readPort
   , readAppSlug
@@ -20,7 +20,7 @@ import           Network             (PortID (..))
 import           RFC.Prelude
 import           System.Environment
 import           System.Envy
-import           Text.Read           (readMaybe)
+import           Text.Read           (readEither, readMaybe)
 
 envWithDefault :: Var a => String -> a -> Parser a
 envWithDefault name defaultValue = fromMaybe defaultValue <$> envMaybe name
@@ -51,27 +51,41 @@ forDevOnly defaultValue =
     Nothing
 {-# INLINE forDevOnly #-}
 
-readEnvironment :: (MonadIO m) => m String
-readEnvironment =
-  readEnvWithDefault "ENV" "development"
-{-# INLINE readEnvironment #-}
-
 readAppSlug :: (MonadIO m, MonadFail m) => m String
-readAppSlug = readEnvWithDevDefault "APP_SLUG" "dev"
+readAppSlug = readEnvStringWithDevDefault "APP_SLUG" "dev"
 {-# INLINE readAppSlug #-}
 
 readHost :: (MonadIO m, MonadFail m) => m String
 readHost =
-  readEnvWithDevDefault "HOST" "localhost"
+  readEnvStringWithDevDefault "HOST" "localhost"
 {-# INLINE readHost #-}
 
 readPort :: (MonadIO m, MonadFail m) => Word16 -> m Word16
 readPort = readEnvWithDevDefault "PORT"
 {-# INLINE readPort #-}
 
+readEnvStringWithDefault :: (MonadIO m) => String -> String -> m String
+readEnvStringWithDefault name defaultValue =
+  fromMaybe defaultValue <$> readEnvString name
+{-# INLINE readEnvStringWithDefault #-}
+
+readEnvStringWithDevDefault :: (MonadIO m, MonadFail m) => String -> String -> m String
+readEnvStringWithDevDefault =
+  if isDevelopment then
+    readEnvStringWithDefault
+  else
+    (\name _ -> do -- Need to join the MonadFail instances
+      result <- readEnvString name
+      case result of
+        Left err -> fail err
+        Right x  -> return x
+    )
+{-# INLINE readEnvStringWithDevDefault #-}
+
 readEnvWithDefault :: (MonadIO m, Read a) => String -> a -> m a
-readEnvWithDefault name defaultValue =
-  either (const defaultValue) id <$> readEnv name
+readEnvWithDefault name defaultValue = do
+  maybeVal <- readEnvString name
+  return . fromMaybe defaultValue $ maybeVal >>= readMaybe
 {-# INLINE readEnvWithDefault #-}
 
 readEnvWithDevDefault :: (MonadIO m, MonadFail m, Read a) => String -> a -> m a
@@ -79,28 +93,32 @@ readEnvWithDevDefault =
   if isDevelopment then
     readEnvWithDefault
   else
-    (\name _ -> readEnvOrDie name)
+    (\name _ -> do
+      errOrResult <- readEnv name
+      case errOrResult of
+        Left err -> fail err
+        Right x  -> return x
+    )
 {-# INLINE readEnvWithDevDefault #-}
 
-readEnv :: (MonadIO m, Read a) => String -> m (Either String a)
-readEnv name = liftIO $ do
-  result <- lookupEnv name
-  return $ case result >>= readMaybe of
-    Nothing        -> Left (show result)
-    Just goodValue -> Right goodValue
-{-# INLINE readEnv #-}
+readEnvString :: (MonadIO m1, MonadFail m2) => String -> m1 (m2 String)
+readEnvString name = do
+  result <- liftIO $ lookupEnv name
+  return $ case result of
+    Nothing -> fail $ "No value set for environment variable: " <> name
+    Just x  -> return x
+{-# INLINE readEnvString #-}
 
-readEnvOrDie :: (MonadIO m, MonadFail m, Read a) => String -> m a
-readEnvOrDie name = do
-  maybeResult <- readEnv name
-  case maybeResult of
-    Left err ->
-      if err == (show (Nothing::Maybe String)) then
-        fail $ "No value set for mandatory environment variable: " <> name
-      else
-        fail $ "Cannot use value set for mandatory environment variable: " <> name  <> " => " <> err
-    Right result -> return result
-{-# INLINE readEnvOrDie #-}
+readEnv :: (MonadIO m1, MonadFail m2, Read a) => String -> m1 (m2 a)
+readEnv name = do
+  eitherOrVal <- readEnvString name
+  return $ case eitherOrVal :: ((Either String) String) of
+    Left err -> fail err
+    Right val ->
+      case readEither val of
+        Left err -> fail $ "Error parsing value from environment variable. " <> name <> " = " <> (show val) <> " => " <> err
+        Right result -> return result
+{-# INLINE readEnv #-}
 
 instance Var NominalDiffTime where
   toVar :: NominalDiffTime -> String
