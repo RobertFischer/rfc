@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE CPP              #-}
+{-# LANGUAGE RebindableSyntax #-}
 
 module RFC.Wai
   ( runApplication
@@ -6,32 +7,30 @@ module RFC.Wai
   , module Network.Wai
   ) where
 
-import           Control.Logger.Simple                     hiding ((<>))
-import           Control.Monad.State.Lazy                  hiding (fail, mapM_)
+import           Control.Logger.Simple                     hiding ( (<>) )
+import           Control.Monad.State.Lazy                  hiding ( fail, mapM_ )
 import           Network
 import           Network.HTTP.Types.Header
 import           Network.HTTP.Types.Method
 import           Network.Socket
 import           Network.Wai
-import           Network.Wai.Cli                           hiding (socket)
+import           Network.Wai.Cli                           hiding ( socket )
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Handler.Warp.Internal
 import           Network.Wai.Middleware.AcceptOverride
-import           Network.Wai.Middleware.Approot            (envFallback)
+import           Network.Wai.Middleware.Approot            ( envFallback )
 import           Network.Wai.Middleware.Autohead
 import           Network.Wai.Middleware.Cors
 import           Network.Wai.Middleware.Gzip
 import           Network.Wai.Middleware.Jsonp
 import           Network.Wai.Middleware.MethodOverridePost
-import           Network.Wai.Middleware.RequestLogger      (logStdout,
-                                                            logStdoutDev)
-import           RFC.Env                                   (FromEnv (..),
-                                                            decodeEnv, envMaybe,
-                                                            isDevelopment,
-                                                            showEnv, (.!=))
+import           Network.Wai.Middleware.RequestLogger      ( logStdout, logStdoutDev )
+import           RFC.Env
+  ( FromEnv (..), decodeEnv, envMaybe, isDevelopment, showEnv, (.!=) )
 import           RFC.Log
 import           RFC.Prelude
-import           System.IO.Temp                            (createTempDirectory, getCanonicalTemporaryDirectory)
+import           System.IO.Temp
+  ( createTempDirectory, getCanonicalTemporaryDirectory )
 
 logStartup :: String -> IO ()
 logStartup = logInfo . cs
@@ -66,11 +65,13 @@ bindSocketReusePort p =
     mapM_ (uncurry $ setSocketOption sock) $ filter (isSupportedSocketOption . fst)
           [ (NoDelay  , 1)
           , (KeepAlive, 1)
+#ifndef DEVELOPMENT
           , (ReuseAddr, 1)
           , (ReusePort, 1) -- <-- Here we add the SO_REUSEPORT flag.
+#endif
           ]
     bind sock $ SockAddrInet (fromIntegral p) iNADDR_ANY
-    listen sock (max 2048 maxListenQueue)
+    listen sock (min 2048 maxListenQueue)
     return sock
 
 instance FromEnv Settings where
@@ -116,6 +117,7 @@ defaultMiddleware = do
     mkGzipDir tmpDir = catchAnyDeep (createTempDirectory tmpDir "wai-gzip-middleware") (handleError "making temp dir")
     corsConfig = simpleCorsResourcePolicy
       { corsRequireOrigin = False
+      , corsOrigins = Nothing
       , corsVaryOrigin = False
       , corsMaxAge = Nothing
       , corsRequestHeaders = hContentType : simpleHeaders
