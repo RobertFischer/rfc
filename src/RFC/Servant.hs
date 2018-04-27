@@ -78,6 +78,8 @@ type CreateAPI a = JReqBody a :> JPost (IdAnd a)
 --type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
 type ReplaceImpl a = UUID -> a -> ApiCtx (IdAnd a)
 type ReplaceAPI a = Capture "id" UUID :> JReqBody a :> JPost (IdAnd a)
+type DeleteImpl = UUID -> ApiCtx ()
+type DeleteAPI a = Capture "id" UUID :> JDelete ()
 
 type ServerImpl a =
   (FetchAllImpl a)
@@ -85,12 +87,14 @@ type ServerImpl a =
   :<|> (CreateImpl a)
   -- :<|> (PatchImpl a)
   :<|> (ReplaceImpl a)
+  :<|> DeleteImpl
 type ServerAPI a =
   (FetchAllAPI a)
   :<|> (FetchAPI a)
   :<|> (CreateAPI a)
   -- :<|> (PatchAPI a)
   :<|> (ReplaceAPI a)
+  :<|> (DeleteAPI a)
 
 
 class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
@@ -147,6 +151,9 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
       newValue = IdAnd (id,value)
   {-# INLINE restReplace #-}
 
+  restDelete :: Proxy a -> DeleteImpl
+  restDelete = deleteResource
+
   restServer :: ServerImpl a
   restServer =
     restFetchAll
@@ -154,8 +161,10 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     :<|> restCreate
     -- :<|> restPatch
     :<|> restReplace
+    :<|> (restDelete (Proxy::Proxy a))
 
   fetchResource :: UUID -> ApiCtx (Maybe a)
   fetchAllResources :: ApiCtx [IdAnd a]
   createResource :: a -> ApiCtx (Maybe UUID)
   replaceResource :: (IdAnd a) -> ApiCtx ()
+  deleteResource :: Proxy a -> UUID -> ApiCtx ()
