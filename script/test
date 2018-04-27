@@ -4,5 +4,5 @@ cd `dirname $0`/..
 
 stack exec -- hlint -j -c --cross ./src
 stack build --haddock --haddock-deps --fast
-#stack build --stack-yaml=./stack.ghcjs.yaml --fast
+stack build --stack-yaml=./stack.ghcjs.yaml --fast
 
