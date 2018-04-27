@@ -22,6 +22,8 @@ module RFC.Data.IdAnd
   , RefMap(..)
   , refMapElems
   , refMapToMap
+  , refMapIds
+  , emptyRefMap
   ) where
 
 import           RFC.Prelude
@@ -29,21 +31,21 @@ import           RFC.Prelude
 
 import           Data.Aeson        as JSON
 import qualified Data.Map          as Map
-import qualified Data.UUID.Types   as UUID
 
 #if MIN_VERSION_aeson(1,0,0)
   -- Don't need the backflips for maps
 #else
-import           Data.Aeson.Types  (Parser, typeMismatch)
+import           Data.Aeson.Types  ( Parser, typeMismatch )
 -- import           Data.Bitraversable
 import qualified Data.HashMap.Lazy as HashMap
 #endif
 
 #ifndef GHCJS_BROWSER
-import           Control.Lens      hiding ((.=))
+import           Control.Lens      hiding ( (.=) )
 import qualified Data.List         as List
-import           Data.Proxy        (Proxy (..))
+import           Data.Proxy        ( Proxy (..) )
 import           Data.Swagger
+import qualified Data.UUID.Types   as UUID
 import           Servant.Docs
 #endif
 
@@ -54,8 +56,14 @@ newtype IdAnd a = IdAnd (UUID, a)
 newtype RefMap a = RefMap (Map.Map UUID (IdAnd a))
   deriving (Eq, Ord, Show, Generic, Typeable, FromJSON, ToJSON)
 
+emptyRefMap :: RefMap a
+emptyRefMap = RefMap Map.empty
+
 refMapElems :: RefMap a -> [IdAnd a]
 refMapElems = Map.elems . refMapToMap
+
+refMapIds :: RefMap a -> [UUID]
+refMapIds = fmap idAndToId . refMapElems
 
 refMapToMap :: RefMap a -> Map.Map UUID (IdAnd a)
 refMapToMap (RefMap it) = it
