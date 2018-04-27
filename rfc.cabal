@@ -76,7 +76,7 @@ library
                      , wai >= 3.2.1.1
                      , aeson >= 1.2.3.0
                      , wai-extra
-                     , wai-cors
+                     , wai-cors >= 0.2.6
                      , wai-cli >= 0.1.1
                      , envy >= 1.5.0.0
                      , postgresql-typed >= 0.5.2
@@ -96,6 +96,7 @@ library
                      , postgresql-binary >= 0.12.1
                      , bytestring-strict-builder >= 0.4.3
                      , transformers >= 0.5.2.0
+                     , time >= 1.8.0.2
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent
