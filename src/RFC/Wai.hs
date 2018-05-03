@@ -49,9 +49,9 @@ runApplication port app = withLogging . withSocketsDo $ do
       logStartup "Instantiating middleware"
       middlewares <- defaultMiddleware
       let warpSettings = origWarpSettings { settingsPort = port }
-      logStartup "Binding socket to be SO_REUSEPORT"
+      logStartup "Configuring socket"
       reuseSocket <- bindSocketReusePort port
-      logStartup "Running the app gracefully"
+      logStartup $ "Running the app gracefully on port " <> (show port)
       runGraceful
         ServeNormally
         (`runSettingsSocket` reuseSocket)

@@ -1,13 +1,12 @@
-{-# LANGUAGE CPP                        #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedLists            #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedLists     #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 
 module RFC.Data.IdAnd
@@ -19,7 +18,7 @@ module RFC.Data.IdAnd
   , idAndToTuple
   , tupleToIdAnd
   , idAndToPair
-  , RefMap(..)
+  , RefMap
   , refMapElems
   , refMapToMap
   , refMapIds
@@ -53,20 +52,19 @@ import           Servant.Docs
 newtype IdAnd a = IdAnd (UUID, a)
   deriving (Eq, Ord, Show, Generic, Typeable)
 
-newtype RefMap a = RefMap (Map.Map UUID (IdAnd a))
-  deriving (Eq, Ord, Show, Generic, Typeable, FromJSON, ToJSON)
+type RefMap a = Map.Map UUID (IdAnd a)
 
 emptyRefMap :: RefMap a
-emptyRefMap = RefMap Map.empty
+emptyRefMap = Map.empty
 
 refMapElems :: RefMap a -> [IdAnd a]
-refMapElems = Map.elems . refMapToMap
+refMapElems = Map.elems
 
 refMapIds :: RefMap a -> [UUID]
-refMapIds = fmap idAndToId . refMapElems
+refMapIds = Map.keys
 
 refMapToMap :: RefMap a -> Map.Map UUID (IdAnd a)
-refMapToMap (RefMap it) = it
+refMapToMap = id
 
 idAndToValue :: IdAnd a -> a
 idAndToValue (IdAnd(_,a)) = a
@@ -87,7 +85,7 @@ idAndToPair :: IdAnd a -> (UUID, IdAnd a)
 idAndToPair idAnd@(IdAnd (id,_)) = (id, idAnd)
 
 idAndsToMap :: [IdAnd a] -> RefMap a
-idAndsToMap list = RefMap . Map.fromList $ (\idAnd@(IdAnd(uuid,_)) -> (uuid,idAnd)) <$> list
+idAndsToMap list = Map.fromList $ (\idAnd@(IdAnd(uuid,_)) -> (uuid,idAnd)) <$> list
 
 instance (FromJSON a) => FromJSON (IdAnd a) where
   parseJSON = JSON.withObject "IdAnd" $ \o -> do
@@ -142,18 +140,6 @@ instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
         & type_ .~ SwaggerObject
         & properties .~ [("id", idSchema), ("value", aSchema)]
         & required .~ ["id", "value"]
-        & example .~ (toJSON . snd <$> maybeSample)
-
-instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (RefMap a) where
-  declareNamedSchema _ = do
-    NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
-    let aMaybeName =  _namedSchemaName
-    idAndASchema <- declareSchemaRef (Proxy :: Proxy (IdAnd a))
-    let maybeSample = safeHead $ toSamples (Proxy :: Proxy (RefMap a))
-    return . NamedSchema (fmap (\name -> "RefMap " <> name) aMaybeName) $
-      mempty
-        & type_ .~ SwaggerObject
-        & additionalProperties ?~ idAndASchema
         & example .~ (toJSON . snd <$> maybeSample)
 
 uuidList :: [UUID]
@@ -268,7 +254,7 @@ instance (ToSample a) => ToSample (IdAnd a) where
 
 instance (ToSample a) => ToSample (RefMap a) where
   toSamples _ = singleSample .
-      RefMap . Map.fromList . zipWith idAndify uuidList $ toSamples Proxy
+      Map.fromList . zipWith idAndify uuidList $ toSamples Proxy
     where
       idAndify uuid (_, a) = (uuid, IdAnd (uuid,a))
 

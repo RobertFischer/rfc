@@ -118,6 +118,7 @@ library
                        , RFC.GHCJS.Inject
                        , RFC.GHCJS.Cookie
                        , RFC.GHCJS.Console
+                       , RFC.GHCJS.Navigation
   else
       exposed-modules:   RFC.Log
                        , RFC.Psql
