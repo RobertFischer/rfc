@@ -1,5 +1,5 @@
 compiler-check: newer-minor
-resolver: lts-11.7
+resolver: lts-11.8
 require-stack-version: ! '>=1.6'
 
 flags:
