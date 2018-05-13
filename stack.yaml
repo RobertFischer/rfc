@@ -1,5 +1,5 @@
 compiler-check: newer-minor
-resolver: lts-11.8
+resolver: lts-11.9
 require-stack-version: ! '>=1.6'
 
 flags:
@@ -9,6 +9,8 @@ flags:
       tls: false
   postgresql-typed:
       hdbc: false
+  postgresql-binary:
+      hdbc: false
   base:
       integer-gmp: true
   http-api-data:
@@ -16,6 +18,7 @@ flags:
   aeson:
       cffi: true
       fast: false
+      developer: false
   cryptonite:
       support_pclmuldq: true
   zlib:
