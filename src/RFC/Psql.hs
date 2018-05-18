@@ -166,6 +166,7 @@ instance {-# OVERLAPPABLE #-} (Read a, Integral a, Bits a) => PGColumn "smallint
   pgDecodeBinary _ = binDec BinD.int
   {-# SPECIALIZE instance PGColumn "smallint" Integer #-}
   {-# SPECIALIZE instance PGColumn "smallint" Word    #-}
+  {-# SPECIALIZE instance PGColumn "smallint" Word64  #-}
 
 instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "smallint" a where
   pgEncode _ = C8.pack . show
@@ -181,7 +182,31 @@ instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "small
           BinE.int8_word64 $ fromIntegral v
   {-# SPECIALIZE instance PGParameter "smallint" Integer #-}
   {-# SPECIALIZE instance PGParameter "smallint" Word    #-}
+  {-# SPECIALIZE instance PGParameter "smallint" Word64  #-}
 
+instance {-# OVERLAPS #-} (Read a, Integral a, Bits a) => PGColumn "smallint" (Maybe a) where
+  pgDecode t = Just . pgDecode t
+  pgDecodeBinary e t = Just . pgDecodeBinary e t
+  pgDecodeValue _ _ PGNullValue = Nothing
+  pgDecodeValue e t v           = Just $ pgDecodeValue e t v
+  {-# SPECIALIZE instance PGColumn "smallint" (Maybe Word)    #-}
+
+instance {-# OVERLAPS #-} (Show a, Integral a, Bits a) => PGParameter "smallint" (Maybe a) where
+  pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
+  pgLiteral = maybe (C8.pack "NULL") . pgLiteral
+  pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
+  {-# SPECIALIZE instance PGParameter "smallint" (Maybe Word)    #-}
+
+instance {-# OVERLAPPING #-} PGColumn "smallint" (Maybe Word64) where
+  pgDecode t = Just . pgDecode t
+  pgDecodeBinary e t = Just . pgDecodeBinary e t
+  pgDecodeValue _ _ PGNullValue = Nothing
+  pgDecodeValue e t v           = Just $ pgDecodeValue e t v
+
+instance {-# OVERLAPPING #-} PGParameter "smallint" (Maybe Word64) where
+  pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
+  pgLiteral = maybe (C8.pack "NULL") . pgLiteral
+  pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
 
 instance {-# OVERLAPPING #-} PGColumn "smallint" (Maybe Integer) where
   pgDecode t = Just . pgDecode t

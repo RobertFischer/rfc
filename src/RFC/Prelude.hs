@@ -32,15 +32,16 @@ module RFC.Prelude
   , module Data.Ratio
   , module RFC.Prelude.Instances
   , module Data.Tuple.Curry
+  , module Data.Either
   ) where
 
-import           ClassyPrelude               hiding
-  ( Day, fail, fromList, map, toList, unpack, (++) )
+import           ClassyPrelude               hiding (Day, fail, fromList, map,
+                                              toList, unpack, (++))
 import           Control.Lens.Lens
 import           Control.Lens.Prism
 import           Control.Lens.Type
-import           Control.Monad               ( forever, void, (<=<), (>=>) )
-import           Control.Monad.Fail          ( MonadFail, fail )
+import           Control.Monad               (forever, void, (<=<), (>=>))
+import           Control.Monad.Fail          (MonadFail, fail)
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
@@ -48,29 +49,54 @@ import           Data.Bitraversable
 import           Data.Char                   as Char
 import           Data.Default
 import qualified Data.Foldable               as Foldable
-import           Data.Function               ( (&) )
+import           Data.Function               ((&))
 import qualified Data.List                   as List
-import           Data.Proxy                  ( Proxy (..) )
+import           Data.Proxy                  (Proxy (..))
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
-import           Data.Typeable               ( TypeRep, typeOf )
-import           Data.Word                   ( Word16 )
-import           GHC.Generics                ( Generic )
-import           RFC.Data.UUID               ( UUID )
+import           Data.Typeable               (TypeRep, typeOf)
+import           Data.Word                   (Word16)
+import           GHC.Generics                (Generic)
+import           RFC.Data.UUID               (UUID)
 import           RFC.String
-import           Text.Read                   ( Read, read )
+import           Text.Read                   (Read, read)
 import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
-import           Data.Ratio                  ( Ratio, Rational )
-import           Data.Tuple.Curry            ( curryN, uncurryN )
-import           GHC.Exts                    ( IsList (..), fromListN )
+import           Data.Either                 (Either (..))
+import           Data.Ratio                  (Ratio, Rational)
+import           Data.Tuple.Curry            (curryN, uncurryN)
+import           GHC.Exts                    (IsList (..), fromListN)
 import           RFC.Prelude.Instances
 
 {-# ANN module "HLint: ignore Use if" #-}
 
+-- | Unwraps an 'Either', returning a default value if it is a 'Left'.
+fromRight :: b -> Either a b -> b
+fromRight _ (Right b) = b
+fromRight b (Left  _) = b
+
+-- | Unwraps an 'Either', returning a default value if it is a 'Right'.
+fromLeft :: a -> Either a b -> a
+fromLeft a (Right _) = a
+fromLeft _ (Left  a) = a
+
+-- | An equivalent to 'maybe' for 'Right'.
+right :: x -> (b -> x) -> Either a b -> x
+right _ f (Right b) = f b
+right x _ (Left _)  = x
+{-# INLINE right #-}
+
+-- | An equivalent to 'maybe' for 'Left'.
+left :: x -> (a -> x) -> Either a b -> x
+left _ f (Left a)  = f a
+left x _ (Right _) = x
+{-# INLINE left #-}
+{-# SPECIALIZE INLINE left :: x -> (String -> x) -> Either String b -> x #-}
+
+-- | Our implementation of if, which is pretty much exactly what you would suspect.
 ifThenElse :: Bool -> a -> a -> a
 ifThenElse test true false =
   case test of
@@ -140,3 +166,5 @@ infixl 4 <$$>
 (<$$>) :: (Functor f, Functor g) => (a -> b) -> f(g a) -> f(g b)
 (<$$>) = fmap2
 {-# INLINE (<$$>) #-}
+
+
