@@ -1,0 +1,43 @@
+flags: {}
+extra-package-dbs: []
+packages:
+- .
+extra-deps:
+- git: git@github.com:dylex/postgresql-typed.git
+  commit: 964c7ec8dfb781a1607ef4a230ebfda39fdd2295
+- haddock-2.18.1
+- haddock-api-2.18.1
+- haddock-library-1.4.4
+- simple-logger-0.0.4
+- time-units-1.0.0
+- tuple-0.3.0.2
+- OneTuple-0.2.2
+
+
+
+
+
+compiler-check: newer-minor
+resolver: nightly-2018-05-23
+require-stack-version: ! '>=1.6'
+
+flags:
+    base:
+        integer-gmp: true
+    http-api-data:
+        use-text-show: true
+    aeson:
+        cffi: true
+        fast: false
+        developer: false
+    cryptonite:
+        support_pclmuldq: true
+    zlib:
+        non-blocking-ffi: true
+    tls:
+        compat: false
+    postgresql-binary:
+        hdbc: false
+    rfc:
+      development: true
+
