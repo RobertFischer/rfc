@@ -45,6 +45,7 @@ instance FromEnv R.ConnectInfo where
     <*> envWithDefault "REDIS_MAX_CONNS" (R.connectMaxConnections defConfig)
     <*> envWithDefault "REDIS_IDLE_TIMEOUT" (R.connectMaxIdleTime defConfig)
     <*> envWithDefault "REDIS_CONN_TIMEOUT" (Just (nominalDay/24)) -- No timeout by default!
+    <*> return Nothing
   {-# INLINABLE fromEnv #-}
 
 createConnectionPool :: (MonadUnliftIO m, MonadFail m) => m ConnectionPool

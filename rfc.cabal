@@ -97,6 +97,8 @@ library
                      , bytestring-strict-builder >= 0.4.3
                      , transformers >= 0.5.2.0
                      , time >= 1.8.0.2
+                     , amazonka
+                     , amazonka-s3
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent

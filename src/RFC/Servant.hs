@@ -24,48 +24,53 @@ module RFC.Servant
   , module RFC.API
   ) where
 
-import           Control.Natural      (type (~>))
-import           Data.Aeson           as JSON
-import           Data.Swagger         (Swagger, ToSchema)
-import           Network.Wreq.Session as Wreq
+import           Control.Monad.Trans.AWS
+import           Control.Natural         (type (~>))
+import           Data.Aeson              as JSON
+import           Data.Swagger            (Swagger, ToSchema)
+import           Network.AWS             as AWS
+import           Network.Wreq.Session    as Wreq
 import           RFC.API
 import           RFC.Data.IdAnd
 import           RFC.HTTP.Client
-import           RFC.JSON             ()
-import           RFC.Prelude          hiding (Handler)
-import qualified RFC.Psql             as Psql
-import qualified RFC.Redis            as Redis
+import           RFC.JSON                ()
+import           RFC.Prelude             hiding (Handler)
+import qualified RFC.Psql                as Psql
+import qualified RFC.Redis               as Redis
 import           Servant
-import           Servant.Docs         hiding (API)
-import           Servant.HTML.Blaze   (HTML)
-import           Servant.Server       (Handler, runHandler)
+import           Servant.Docs            hiding (API)
+import           Servant.HTML.Blaze      (HTML)
+import           Servant.Server          (Handler, runHandler)
 import           Text.Blaze.Html
 
 type ApiCtx =
-  ReaderT Wreq.Session
-    ( ReaderT Psql.ConnectionPool
-      ( ReaderT Redis.ConnectionPool
-        Handler
+  AWST
+    ( ReaderT Wreq.Session
+      ( ReaderT Psql.ConnectionPool
+        ( ReaderT Redis.ConnectionPool
+          Handler
+        )
       )
     )
 
 instance HasAPIClient ApiCtx where
-  getAPIClient = ask
+  getAPIClient = lift ask
   {-# INLINE getAPIClient #-}
 
 instance Redis.HasRedis ApiCtx where
-  getRedisPool = lift $ lift ask
+  getRedisPool = lift . lift $ lift ask
   {-# INLINE getRedisPool #-}
 
-apiCtxToHandler :: Wreq.Session -> Redis.ConnectionPool -> Psql.ConnectionPool -> ApiCtx ~> Handler
-apiCtxToHandler apiClient redisPool psqlPool = toHandler
+apiCtxToHandler :: Wreq.Session -> Redis.ConnectionPool -> Psql.ConnectionPool -> AWS.Env -> ApiCtx ~> Handler
+apiCtxToHandler apiClient redisPool psqlPool awsEnv = toHandler
   where
     toHandler :: ApiCtx ~> Handler
-    toHandler = withRedis . withPsql . withAPIClient
+    toHandler = withRedis . withPsql . withAPIClient . withAws
       where
         withAPIClient m = runReaderT m apiClient
         withRedis m = runReaderT m redisPool
         withPsql m = runReaderT m psqlPool
+        withAws = runAWST awsEnv
 {-# INLINE apiCtxToHandler #-}
 
 type FetchAllImpl a = ApiCtx (RefMap a)
