@@ -11,6 +11,7 @@ module RFC.HTTP.Client
   , HasHttpManager(..)
   , BadStatusException
   , apiGet
+  , webGet
   , module Network.Wreq.Session
   , module Network.HTTP.Types.Status
   ) where
@@ -42,20 +43,29 @@ instance Exception BadStatusException
 
 apiExecute :: (HasAPIClient m, MonadUnliftIO m, ConvertibleString LazyByteString s)  =>
   URI -> (Session -> String -> IO (Response LazyByteString)) -> (s -> m a) -> m a
-apiExecute rawUrl action converter = do
-    session <- getAPIClient
-    response <- liftIO $ action session url
-    let status = response ^. responseStatus
-    case status ^. statusCode of
-      200 -> converter . cs $ response ^. responseBody
-      _   -> throwIO $ badResponseStatus status
+apiExecute rawUrl action converter =
+  converter . cs <$> webExecute rawUrl action
+
+webExecute :: (HasAPIClient m, MonadUnliftIO m, Exception e) =>
+  URI -> (Session -> String -> IO (Response LazyByteString)) -> m LazyByteString
+webExecute rawUrl action = handle onError $ do
+  session <- getAPIClient
+  response <- liftIO $ action session url
+  let status = response ^. responseStatus
+  case status ^. statusCode of
+    200 -> return $ response ^. responseBody
+    _   -> throwIO $ badResponseStatus status
   where
     url = show rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)
 
+webGet :: (HasAPIClient m, MonadUnliftIO m, Exception e) => URI -> (e -> m a) -> m a
+webGet url onError =
+  handle onError $ webExecute url get
+
 apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URI -> (e -> m a) -> m a
 apiGet url onError =
-      handle onError $ apiExecute url get decodeOrDie
+  handle onError $ apiExecute url get decodeOrDie
 
 class HasAPIClient m where
   getAPIClient :: m Session
