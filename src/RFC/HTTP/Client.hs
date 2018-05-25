@@ -43,12 +43,13 @@ instance Exception BadStatusException
 
 apiExecute :: (HasAPIClient m, MonadUnliftIO m, ConvertibleString LazyByteString s)  =>
   URI -> (Session -> String -> IO (Response LazyByteString)) -> (s -> m a) -> m a
-apiExecute rawUrl action converter =
-  converter . cs <$> webExecute rawUrl action
+apiExecute rawUrl action converter = do
+  result <- cs <$> webExecute rawUrl action
+  converter result
 
-webExecute :: (HasAPIClient m, MonadUnliftIO m, Exception e) =>
+webExecute :: (HasAPIClient m, MonadUnliftIO m) =>
   URI -> (Session -> String -> IO (Response LazyByteString)) -> m LazyByteString
-webExecute rawUrl action = handle onError $ do
+webExecute rawUrl action = do
   session <- getAPIClient
   response <- liftIO $ action session url
   let status = response ^. responseStatus
@@ -59,7 +60,7 @@ webExecute rawUrl action = handle onError $ do
     url = show rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)
 
-webGet :: (HasAPIClient m, MonadUnliftIO m, Exception e) => URI -> (e -> m a) -> m a
+webGet :: (HasAPIClient m, MonadUnliftIO m, Exception e) => URI -> (e -> m LazyByteString) -> m LazyByteString
 webGet url onError =
   handle onError $ webExecute url get
 
