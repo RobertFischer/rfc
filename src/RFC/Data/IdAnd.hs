@@ -30,13 +30,13 @@ import           RFC.Prelude
 
 import           Data.Aeson        as JSON
 import qualified Data.Map          as Map
+import qualified Data.UUID.Types   as UUID
 
 #if MIN_VERSION_aeson(1,0,0)
   -- Don't need the backflips for maps
 #else
 import           Data.Aeson.Types  (Parser, typeMismatch)
 import qualified Data.HashMap.Lazy as HashMap
-import qualified Data.UUID.Types   as UUID
 #endif
 
 #ifndef GHCJS_BROWSER
@@ -44,7 +44,6 @@ import           Control.Lens      hiding ((.=))
 import qualified Data.List         as List
 import           Data.Proxy        (Proxy (..))
 import           Data.Swagger
-import qualified Data.UUID.Types   as UUID
 import           Servant.Docs
 #endif
 
