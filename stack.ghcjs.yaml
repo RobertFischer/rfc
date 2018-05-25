@@ -5,8 +5,8 @@ setup-info:
   ghcjs:
     source:
       ghcjs-0.2.1.9009021_ghc-8.0.2:
-        url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9009021.tar.gz
-        sha1: b1740c3c99e5039ac306702894cd6e58283f4d31
+        url: https://github.com/matchwood/ghcjs-stack-dist/raw/develop/ghcjs-0.2.1.9009021.tar.gz
+        sha1: db8cd3252e47dbef3db7d1cf0d6d997e8d029f84
 
 flags:  
   rfc: 
