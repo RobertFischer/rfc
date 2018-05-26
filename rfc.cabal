@@ -80,7 +80,7 @@ library
                      , wai-cli >= 0.1.1
                      , envy >= 1.5.0.0
                      , postgresql-typed >= 0.5.2
-                     , hedis >= 0.10.0
+                     , hedis >= 0.10.2
                      , simple-logger
                      , temporary
                      , http-client
