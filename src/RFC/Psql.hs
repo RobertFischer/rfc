@@ -208,6 +208,17 @@ instance {-# OVERLAPPING #-} PGParameter "smallint" (Maybe Word64) where
   pgLiteral = maybe (C8.pack "NULL") . pgLiteral
   pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
 
+instance {-# OVERLAPPING #-} PGColumn "integer" (Maybe Word) where
+  pgDecode t = Just . pgDecode t
+  pgDecodeBinary e t = Just . pgDecodeBinary e t
+  pgDecodeValue _ _ PGNullValue = Nothing
+  pgDecodeValue e t v           = Just $ pgDecodeValue e t v
+
+instance {-# OVERLAPPING #-} PGParameter "integer" (Maybe Word) where
+  pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
+  pgLiteral = maybe (C8.pack "NULL") . pgLiteral
+  pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
+
 instance {-# OVERLAPPING #-} PGColumn "smallint" (Maybe Integer) where
   pgDecode t = Just . pgDecode t
   pgDecodeBinary e t = Just . pgDecodeBinary e t
@@ -230,13 +241,13 @@ instance {-# OVERLAPPING #-} PGParameter "bigint" (Maybe Integer) where
   pgLiteral = maybe (C8.pack "NULL") . pgLiteral
   pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
 
-instance PGType "style" where
+instance {-# OVERLAPPING #-} PGType "style" where
   type PGVal "style" = StrictText
   pgBinaryColumn _ _ = True
 
-instance PGStringType "style"
+instance {-# OVERLAPPING #-} PGStringType "style"
 
-instance PGColumn "uuid[]" [UUID] where
+instance {-# OVERLAPPING #-} PGColumn "uuid[]" [UUID] where
   pgDecode _ sbs =
       let (sbsList::[StrictByteString]) = C8.split (pgArrayDelim pgTypePxy) sbs in
       let strList = catMaybes $ toUTF8 <$> sbsList in
