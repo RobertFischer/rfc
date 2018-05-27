@@ -87,6 +87,7 @@ library
                      , http-client-tls
                      , wreq >= 0.5.2.0
                      , servant-swagger >= 1.1.5
+                     , servant-swagger-ui >= 0.3.0.3.13.2
                      , swagger2 >= 2.2
                      , markdown
                      , binary

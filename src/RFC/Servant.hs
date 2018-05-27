@@ -19,7 +19,6 @@ module RFC.Servant
   , module Servant.Docs
   , module Servant.HTML.Blaze
   , module Text.Blaze.Html
-  , module Data.Swagger
   , module RFC.Data.IdAnd
   , module RFC.API
   ) where
@@ -41,6 +40,8 @@ import           Servant
 import           Servant.Docs            hiding (API)
 import           Servant.HTML.Blaze      (HTML)
 import           Servant.Server          (Handler, runHandler)
+import           Servant.Swagger
+import           Servant.Swagger.UI
 import           Text.Blaze.Html
 
 type ApiCtx =

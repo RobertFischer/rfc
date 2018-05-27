@@ -13,26 +13,30 @@ module RFC.Servant.ApiDoc
   , apiMiddleware
   , swaggerSchemaOptions
   , ToSchemaRFC
+  , module Data.Swagger
+  , module Servant.Swagger.UI
+  , module Servant.Swagger
   ) where
 
 import qualified Data.Aeson                      as Aeson
-import           Data.Aeson.Types                ( fromEncoding, toEncoding )
+import           Data.Aeson.Types                (fromEncoding, toEncoding)
 import qualified Data.Binary.Builder             as Builder
-import           Data.Default                    ( def )
-import           Data.Monoid                     ( (<>) )
+import           Data.Default                    (def)
+import           Data.Monoid                     ((<>))
 import           Data.Swagger
 import           Data.Swagger.Declare
-import           Data.Swagger.Internal.Schema    ( GToSchema )
-import           Data.Swagger.Internal.TypeShape ( TypeHasSimpleShape )
-import           GHC.Generics                    ( Rep )
-import           Network.HTTP.Types.Header       ( hContentType )
+import           Data.Swagger.Internal.Schema    (GToSchema)
+import           Data.Swagger.Internal.TypeShape (TypeHasSimpleShape)
+import           GHC.Generics                    (Rep)
+import           Network.HTTP.Types.Header       (hContentType)
 import           Network.HTTP.Types.Status
 import           Network.Wai
-import           RFC.JSON                        ( jsonOptions )
-import           RFC.Prelude                     hiding ( (<>) )
+import           RFC.JSON                        (jsonOptions)
+import           RFC.Prelude                     hiding ((<>))
 import           RFC.Servant
 import           RFC.String                      ()
 import           Servant.Swagger
+import           Servant.Swagger.UI
 import qualified Text.Blaze.Html.Renderer.String as Blaze
 import qualified Text.Markdown                   as MD
 
@@ -103,3 +107,6 @@ class ToSchemaRFC a where
 
 instance {-# OVERLAPPABLE #-} ToSchemaRFC a => ToSchema a where
   declareNamedSchema = declareNamedSchemaRFC
+
+instance ToSchemaRFC Rational where
+  declaredNamedSchemaRFC _ = declareNamedSchema (Proxy :: Proxy Float)
