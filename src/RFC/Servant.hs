@@ -26,7 +26,6 @@ module RFC.Servant
 import           Control.Monad.Trans.AWS
 import           Control.Natural         (type (~>))
 import           Data.Aeson              as JSON
-import           Data.Swagger            (Swagger, ToSchema)
 import           Network.AWS             as AWS
 import           Network.Wreq.Session    as Wreq
 import           RFC.API
@@ -40,8 +39,6 @@ import           Servant
 import           Servant.Docs            hiding (API)
 import           Servant.HTML.Blaze      (HTML)
 import           Servant.Server          (Handler, runHandler)
-import           Servant.Swagger
-import           Servant.Swagger.UI
 import           Text.Blaze.Html
 
 type ApiCtx =

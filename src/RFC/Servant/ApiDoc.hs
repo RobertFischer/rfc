@@ -108,5 +108,5 @@ class ToSchemaRFC a where
 instance {-# OVERLAPPABLE #-} ToSchemaRFC a => ToSchema a where
   declareNamedSchema = declareNamedSchemaRFC
 
-instance ToSchemaRFC Rational where
-  declaredNamedSchemaRFC _ = declareNamedSchema (Proxy :: Proxy Float)
+instance ToSchema Rational where
+  declareNamedSchema _ = declareNamedSchema (Proxy :: Proxy Float)
