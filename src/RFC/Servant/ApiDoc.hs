@@ -18,6 +18,7 @@ module RFC.Servant.ApiDoc
   , module Servant.Swagger
   ) where
 
+import           Control.Lens
 import qualified Data.Aeson                      as Aeson
 import           Data.Aeson.Types                (fromEncoding, toEncoding)
 import qualified Data.Binary.Builder             as Builder
@@ -108,5 +109,13 @@ class ToSchemaRFC a where
 instance {-# OVERLAPPABLE #-} ToSchemaRFC a => ToSchema a where
   declareNamedSchema = declareNamedSchemaRFC
 
-instance ToSchema Rational where
-  declareNamedSchema _ = declareNamedSchema (Proxy :: Proxy Float)
+instance {-# OVERLAPPABLE #-} ToSchema (Ratio a) where
+  declareNamedSchema _ = do
+    integerSchema <- declareSchemaRef (Proxy :: Proxy Integer)
+    return . NamedSchema (Just . toText $ "Ratio") $ mempty
+      & type_ .~ SwaggerObject
+      & properties .~ (fromList
+        [ (toText "numerator", integerSchema)
+        , (toText "denominator", integerSchema)
+        ])
+      & required .~ (toText <$> [ "numerator", "denominator" ])
