@@ -99,7 +99,7 @@ library
                      , transformers >= 0.5.2.0
                      , time >= 1.8.0.2
                      , amazonka
-                     , amazonka-s3
+                     , lens
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent
