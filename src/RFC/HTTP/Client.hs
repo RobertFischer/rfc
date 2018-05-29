@@ -11,7 +11,6 @@ module RFC.HTTP.Client
   , HasHttpManager(..)
   , BadStatusException
   , apiGet
-  , webGet
   , module Network.Wreq.Session
   , module Network.HTTP.Types.Status
   ) where
@@ -59,10 +58,6 @@ webExecute rawUrl action = do
   where
     url = show rawUrl
     badResponseStatus status = BadStatusException (status, rawUrl)
-
-webGet :: (HasAPIClient m, MonadUnliftIO m, Exception e) => URI -> (e -> m LazyByteString) -> m LazyByteString
-webGet url onError =
-  handle onError $ webExecute url get
 
 apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URI -> (e -> m a) -> m a
 apiGet url onError =
