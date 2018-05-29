@@ -22,6 +22,7 @@ module RFC.Data.IdAnd
   , refMapElems
   , refMapToMap
   , refMapIds
+  , toRefMap
   , emptyRefMap
   ) where
 
@@ -65,6 +66,9 @@ refMapIds = Map.keys
 
 refMapToMap :: RefMap a -> Map.Map UUID (IdAnd a)
 refMapToMap = id
+
+toRefMap :: [IdAnd a] -> RefMap a
+toRefMap = Map.fromList . fmap (\idAnd@(IdAnd(id,_)) -> (id,idAnd))
 
 idAndToValue :: IdAnd a -> a
 idAndToValue (IdAnd(_,a)) = a
