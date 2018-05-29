@@ -184,6 +184,21 @@ instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "small
   {-# SPECIALIZE instance PGParameter "smallint" Word    #-}
   {-# SPECIALIZE instance PGParameter "smallint" Word64  #-}
 
+instance {-# OVERLAPS #-} (Read a, Integral a, Bits a) => PGColumn "smallint" (Maybe a) where
+  pgDecode t = Just . pgDecode t
+  pgDecodeBinary e t = Just . pgDecodeBinary e t
+  pgDecodeValue _ _ PGNullValue = Nothing
+  pgDecodeValue e t v           = Just $ pgDecodeValue e t v
+  {-# SPECIALIZE instance PGColumn "smallint" (Maybe Word)    #-}
+  {-# SPECIALIZE instance PGColumn "smallint" (Maybe Word64)    #-}
+
+instance {-# OVERLAPS #-} (Show a, Integral a, Bits a) => PGParameter "smallint" (Maybe a) where
+  pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
+  pgLiteral = maybe (C8.pack "NULL") . pgLiteral
+  pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
+  {-# SPECIALIZE instance PGParameter "smallint" (Maybe Word)    #-}
+  {-# SPECIALIZE instance PGParameter "smallint" (Maybe Word64)    #-}
+
 instance {-# OVERLAPPING #-} PGType "style" where
   type PGVal "style" = StrictText
   pgBinaryColumn _ _ = True
