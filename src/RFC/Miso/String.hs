@@ -14,13 +14,13 @@ module RFC.Miso.String
   , module Miso.String
   ) where
 
-import           Data.String          ()
-import           Miso.String          ( MisoString, ToMisoString (..) )
+import           Miso.String          (MisoString, ToMisoString (..))
 import           RFC.Data.UUID        ()
 import           RFC.String           ()
 
 #ifdef GHCJS
 import qualified Data.JSString        as JSString
+import qualified Data.List            as List
 import           Data.MonoTraversable
 import qualified Data.Text.Lazy       as TL
 import           RFC.Prelude
@@ -64,11 +64,17 @@ instance MonoFoldable MisoString where
   {-# INLINE olength64 #-}
 
   ofoldr1Ex :: (Char -> Char -> Char) -> MisoString -> Char
-  ofoldr1Ex f str = TL.foldr1 f $ toLazyText str
+  ofoldr1Ex f str = doIt $ fromMisoString str
+    where
+      doIt []           = '\0'
+      doIt (start:rest) = List.foldr f start rest
   {-# INLINE ofoldr1Ex #-}
 
   ofoldl1Ex' :: (Char -> Char -> Char) -> MisoString -> Char
-  ofoldl1Ex' f str = TL.foldl1' f $ toLazyText str
+  ofoldl1Ex' f str = doIt $ fromMisoString str
+    where
+      doIt []           = '\0'
+      doIt (start:rest) = List.foldl' f start rest
   {-# INLINE ofoldl1Ex' #-}
 
   headEx = TL.head . toLazyText
