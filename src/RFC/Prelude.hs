@@ -36,7 +36,7 @@ module RFC.Prelude
   ) where
 
 import           ClassyPrelude               hiding (Day, fail, fromList, map,
-                                              toList, unpack, (++))
+                                              toList, unpack, (++), readMay)
 import           Control.Lens.Lens
 import           Control.Lens.Prism
 import           Control.Lens.Type
@@ -60,7 +60,7 @@ import           Data.Word                   (Word16)
 import           GHC.Generics                (Generic)
 import           RFC.Data.UUID               (UUID)
 import           RFC.String
-import           Text.Read                   (Read, read)
+import           Text.Read                   (Read, read, readMaybe)
 import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
@@ -72,6 +72,8 @@ import           GHC.Exts                    (IsList (..), fromListN)
 import           RFC.Prelude.Instances
 
 {-# ANN module "HLint: ignore Use if" #-}
+readMay :: (ConvertibleString input String, Read output) => input -> Maybe output
+readMay = readMaybe . cs
 
 -- | Unwraps an 'Either', returning a default value if it is a 'Left'.
 fromRight :: b -> Either a b -> b
