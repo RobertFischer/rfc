@@ -18,9 +18,8 @@ module RFC.Psql
   , module Network
   ) where
 
-import           Control.Monad.Trans.Class       (MonadTrans (..))
-import           Control.Monad.Trans.Reader      (ask)
-import           Data.Bits                       (Bits, isSigned)
+import           Control.Monad.Trans.Class       ( MonadTrans (..) )
+import           Control.Monad.Trans.Reader      ( ask )
 import qualified Data.ByteString.Char8           as C8
 import           Data.Pool
 import           Database.PostgreSQL.Typed
@@ -28,12 +27,10 @@ import           Database.PostgreSQL.Typed.Array
 import           Database.PostgreSQL.Typed.Query
 import           Database.PostgreSQL.Typed.TH
 import           Database.PostgreSQL.Typed.Types
-import           Network                         (PortID (PortNumber))
-import qualified PostgreSQL.Binary.Decoding      as BinD
-import qualified PostgreSQL.Binary.Encoding      as BinE
+import           Network                         ( PortID (PortNumber) )
 import qualified RFC.Data.UUID                   as UUID
 import qualified RFC.Env                         as Env
-import           RFC.Prelude                     hiding (ask)
+import           RFC.Prelude                     hiding ( ask )
 
 type PGConnectionPool = Pool PGConnection
 type ConnectionPool = PGConnectionPool
@@ -131,74 +128,6 @@ execute_ :: (MonadIO m, HasPsql m, PGQuery q ()) => q -> m ()
 execute_ = void . execute
 {-# INLINE execute_ #-}
 
-type BinDecoder = BinD.Value
-type BinEncoder a = a -> BinE.Encoding
-
-binDec :: PGType t => BinDecoder a -> PGTypeID t -> StrictByteString -> a
-binDec d t v = either handleError id result
-  where
-    result = BinD.valueParser d v
-    handleError e = error $ "pgDecodeBinary " <> show (pgTypeName t) <> ": " <> show e
-
-instance {-# OVERLAPPABLE #-} (Read a, Integral a, Bits a) => PGColumn "bigint" a where
-  pgDecode _ = read . C8.unpack
-  pgDecodeBinary _ = binDec BinD.int
-  {-# SPECIALIZE instance PGColumn "bigint" Integer #-}
-  {-# SPECIALIZE instance PGColumn "bigint" Word    #-}
-
-instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "bigint" a where
-  pgEncode _ = C8.pack . show
-  pgLiteral _ = C8.pack . show
-  pgEncodeValue _ _ v = pgbinval
-    where
-      pgbinval = PGBinaryValue bytes
-      bytes = BinE.encodingBytes encoded
-      encoded =
-        if isSigned v then
-          BinE.int8_int64 $ fromIntegral v
-        else
-          BinE.int8_word64 $ fromIntegral v
-  {-# SPECIALIZE instance PGParameter "bigint" Integer #-}
-  {-# SPECIALIZE instance PGParameter "bigint" Word    #-}
-
-instance {-# OVERLAPPABLE #-} (Read a, Integral a, Bits a) => PGColumn "smallint" a where
-  pgDecode _ = read . C8.unpack
-  pgDecodeBinary _ = binDec BinD.int
-  {-# SPECIALIZE instance PGColumn "smallint" Integer #-}
-  {-# SPECIALIZE instance PGColumn "smallint" Word    #-}
-  {-# SPECIALIZE instance PGColumn "smallint" Word64  #-}
-
-instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "smallint" a where
-  pgEncode _ = C8.pack . show
-  pgLiteral _ = C8.pack . show
-  pgEncodeValue _ _ v = pgbinval
-    where
-      pgbinval = PGBinaryValue bytes
-      bytes = BinE.encodingBytes encoded
-      encoded =
-        if isSigned v then
-          BinE.int8_int64 $ fromIntegral v
-        else
-          BinE.int8_word64 $ fromIntegral v
-  {-# SPECIALIZE instance PGParameter "smallint" Integer #-}
-  {-# SPECIALIZE instance PGParameter "smallint" Word    #-}
-  {-# SPECIALIZE instance PGParameter "smallint" Word64  #-}
-
-instance {-# OVERLAPS #-} (Read a, Integral a, Bits a) => PGColumn "smallint" (Maybe a) where
-  pgDecode t = Just . pgDecode t
-  pgDecodeBinary e t = Just . pgDecodeBinary e t
-  pgDecodeValue _ _ PGNullValue = Nothing
-  pgDecodeValue e t v           = Just $ pgDecodeValue e t v
-  {-# SPECIALIZE instance PGColumn "smallint" (Maybe Word)    #-}
-  {-# SPECIALIZE instance PGColumn "smallint" (Maybe Word64)    #-}
-
-instance {-# OVERLAPS #-} (Show a, Integral a, Bits a) => PGParameter "smallint" (Maybe a) where
-  pgEncode t = maybe (error $ "pgEncode " <> show (pgTypeName t) <> ": Nothing") (pgEncode t)
-  pgLiteral = maybe (C8.pack "NULL") . pgLiteral
-  pgEncodeValue e = maybe PGNullValue . pgEncodeValue e
-  {-# SPECIALIZE instance PGParameter "smallint" (Maybe Word)    #-}
-  {-# SPECIALIZE instance PGParameter "smallint" (Maybe Word64)    #-}
-
 instance {-# OVERLAPPING #-} PGType "style" where
   type PGVal "style" = StrictText
   pgBinaryColumn _ _ = True
@@ -213,26 +142,4 @@ instance {-# OVERLAPPING #-} PGColumn "uuid[]" [UUID] where
       uuidList
     where
       pgTypePxy = PGTypeProxy :: PGTypeID "uuid[]"
-
-instance {-# OVERLAPPABLE #-} (Read a, Integral a, Bits a) => PGColumn "integer" a where
-  pgDecode _ = read . C8.unpack
-  pgDecodeBinary _ = binDec BinD.int
-  {-# SPECIALIZE instance PGColumn "integer" Integer #-}
-  {-# SPECIALIZE instance PGColumn "integer" Word    #-}
-
-instance {-# OVERLAPPABLE #-} (Show a, Integral a, Bits a) => PGParameter "integer" a where
-  pgEncode _ = C8.pack . show
-  pgLiteral _ = C8.pack . show
-  pgEncodeValue _ _ v = pgbinval
-    where
-      pgbinval = PGBinaryValue bytes
-      bytes = BinE.encodingBytes encoded
-      encoded =
-        if isSigned v then
-          BinE.int8_int64 $ fromIntegral v
-        else
-          BinE.int8_word64 $ fromIntegral v
-  {-# SPECIALIZE instance PGParameter "integer" Integer #-}
-  {-# SPECIALIZE instance PGParameter "integer" Word    #-}
-
 
