@@ -5,6 +5,8 @@ packages:
 extra-deps:
 - git: git@github.com:dylex/postgresql-typed.git
   commit: 964c7ec8dfb781a1607ef4a230ebfda39fdd2295
+- git: git@github.com:dylex/bytestring-strict-builder.git
+  commit: 969171201e59bc4ca4daa3b3a6fc86d89c02118f
 - simple-logger-0.0.4
 - time-units-1.0.0
 - tuple-0.3.0.2
@@ -15,7 +17,7 @@ extra-deps:
 
 
 compiler-check: newer-minor
-resolver: nightly-2018-05-25
+resolver: nightly-2018-05-30
 require-stack-version: ! '>=1.6'
 
 flags:
@@ -33,6 +35,8 @@ flags:
         non-blocking-ffi: true
     tls:
         compat: false
+    postgresql-typed:
+        hdbc: false
     postgresql-binary:
         hdbc: false
     rfc:
