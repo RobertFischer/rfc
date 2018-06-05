@@ -13,6 +13,10 @@ import           Control.Monad.Fail
 import           Data.Semigroup
 import           GHC.Conc
 
+#ifdef VERSION_data_default
+import           Data.Default
+#endif
+
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
@@ -45,3 +49,13 @@ instance {-# OVERLAPPING #-} MonadFail Option where
   fail _ = Option Nothing
   {-# INLINE fail #-}
 
+#ifdef VERSION_data_default
+instance {-# OVERLAPPABLE #-} (Semigroup m, Default m) => Monoid m where
+  mempty = def
+  mappend = (<>)
+  {-# INLINE mempty #-}
+
+instance {-# OVERLAPPABLE #-} (Monoid m) => Default m where
+  def = mempty
+  {-# INLINE def #-}
+#endif
