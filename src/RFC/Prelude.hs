@@ -33,6 +33,7 @@ module RFC.Prelude
   , module RFC.Prelude.Instances
   , module Data.Tuple.Curry
   , module Data.Either
+  , module Data.Int
   ) where
 
 import           ClassyPrelude               hiding (Day, fail, fromList, map,
@@ -70,6 +71,7 @@ import           Data.Ratio                  (Ratio, Rational)
 import           Data.Tuple.Curry            (curryN, uncurryN)
 import           GHC.Exts                    (IsList (..), fromListN)
 import           RFC.Prelude.Instances
+import Data.Int
 
 {-# ANN module "HLint: ignore Use if" #-}
 readMay :: (ConvertibleString input String, Read output) => input -> Maybe output
