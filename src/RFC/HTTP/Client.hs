@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 module RFC.HTTP.Client
@@ -13,19 +14,52 @@ module RFC.HTTP.Client
   , apiGet
   , module Network.Wreq.Session
   , module Network.HTTP.Types.Status
+  , geocodeGet
+  , GoogleGeocodeResult(..)
   ) where
 
 import           Control.Lens
+import           Data.Aeson                as JSON
+import           Data.Aeson.Types          as JSON
+import qualified Data.Scientific           as Sci
+import           Data.Vector               ((!?))
 import           Network.HTTP.Client       (Manager, ManagerSettings,
                                             newManager)
 import           Network.HTTP.Client.TLS   (tlsManagerSettings)
 import           Network.HTTP.Types.Status hiding (statusCode, statusMessage)
-import           Network.URI
+import           Network.URI               as URI
 import           Network.Wreq.Lens
 import           Network.Wreq.Session      hiding (withAPISession)
 import           RFC.JSON                  (FromJSON, decodeOrDie)
 import           RFC.Prelude
 import           RFC.String                ()
+import           Servant.Server
+
+data GoogleGeocodeResult = GoogleGeocodeResult
+  { ggrLat  :: Float
+  , ggrLng  :: Float
+  , ggrAddr :: StrictText
+  } deriving (Eq,Ord,Show,Generic,Typeable)
+instance FromJSON GoogleGeocodeResult where
+  parseJSON = JSON.withObject "GoogleGeocodeResult" $ \v -> do
+      resultsAry <- v .: "results"
+      result <- JSON.withArray "results[0]" extractHead resultsAry
+      withObject "results[0] content" parseResult result
+    where
+      extractHead :: JSON.Array -> JSON.Parser JSON.Value
+      extractHead vec =
+        maybe
+          (fail "Empty results array returned")
+          return
+          (vec !? 0)
+      parseResult :: JSON.Object -> JSON.Parser GoogleGeocodeResult
+      parseResult obj = do
+        addr <- obj .: "formatted_address" >>= withText "results[0].formatted_address" return
+        geometry <- obj .: "geometry" >>= withObject "results[0].geometry" return
+        location <- geometry .: "location" >>= withObject "results[0].geometry.location" return
+        lat <- location .: "lat" >>= withScientific "results[0].geometry.location.lat" (return . Sci.toRealFloat)
+        lng <- location .: "lng" >>= withScientific "results[0].geometry.location.lng" (return . Sci.toRealFloat)
+        return GoogleGeocodeResult { ggrLat = lat, ggrLng = lng, ggrAddr = addr }
 
 rfcManagerSettings :: ManagerSettings
 rfcManagerSettings = tlsManagerSettings
@@ -62,6 +96,16 @@ webExecute rawUrl action = do
 apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URI -> (e -> m a) -> m a
 apiGet url onError =
   handle onError $ apiExecute url get decodeOrDie
+
+geocodeGet :: (HasAPIClient m, MonadUnliftIO m, Exception e) => StrictText -> (e -> m GoogleGeocodeResult) -> m GoogleGeocodeResult
+geocodeGet addr onError = handle onError $
+    case URI.parseURI "https://maps.googleapis.com/maps/api/geocode/json" of
+      Nothing -> throwIO err500 { errBody = "Cannot parse the geocoding URI" }
+      Just uri -> do
+        let address = URI.escapeURIString URI.isUnescapedInURIComponent (cs addr)
+        let apiKey = "AIzaSyDL1yQ2fFJExMM6CcmsgpklR2Q4c-O4kks"
+        let uriWithQuery = uri { uriQuery = "address=" <> address <> "&" <> "key=" <> apiKey <> "&" <> uriQuery uri }
+        apiGet uriWithQuery onError
 
 class HasAPIClient m where
   getAPIClient :: m Session
