@@ -1,5 +1,3 @@
-flags: {}
-extra-package-dbs: []
 packages:
 - .
 extra-deps:
@@ -16,7 +14,7 @@ extra-deps:
 
 
 
-compiler-check: newer-minor
+compiler-check: match-exact
 resolver: nightly-2018-05-30
 require-stack-version: ! '>=1.6'
 
@@ -41,4 +39,6 @@ flags:
         hdbc: false
     rfc:
       development: true
+    vector:
+      boundschecks: false
 
