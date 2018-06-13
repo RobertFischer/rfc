@@ -1,6 +1,10 @@
 {-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE ExplicitForAll       #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE InstanceSigs         #-}
+{-# LANGUAGE LambdaCase           #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -8,7 +12,7 @@ module RFC.Prelude.Instances
   ( module RFC.Prelude.Instances
   ) where
 
-import           ClassyPrelude
+import           ClassyPrelude        hiding (fail)
 import           Control.Monad.Fail
 import           Data.Semigroup
 import           GHC.Conc
@@ -19,6 +23,10 @@ import           Data.Default
 
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
+#endif
+
+#ifdef VERSION_mtl
+import           Control.Monad.Except (ExceptT (..))
 #endif
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....
@@ -58,4 +66,17 @@ instance {-# OVERLAPPABLE #-} (Semigroup m, Default m) => Monoid m where
 instance {-# OVERLAPPABLE #-} (Monoid m) => Default m where
   def = mempty
   {-# INLINE def #-}
+#endif
+
+#ifdef VERSION_unliftio_core
+#ifdef VERSION_mtl
+-- HOLY BALLS this was a pain in the ass to get to compile...
+instance {-# OVERLAPPABLE #-} (Exception e, MonadUnliftIO m) => MonadUnliftIO (ExceptT e m) where
+  askUnliftIO = f <$> (lift $ askUnliftIO)
+    where
+      f innerUIO = UnliftIO $ \(ExceptT m) -> ((unliftIO innerUIO) m >>= \case
+              Left e  -> throwIO e
+              Right a -> return a
+            )
+#endif
 #endif
