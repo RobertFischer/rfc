@@ -63,6 +63,7 @@ library
                      , mono-traversable >= 1.0.1.1
                      , bifunctors
                      , tuple
+                     , scientific
   if impl(ghcjs)
     build-depends:     aeson
                        -- Servant 0.13 publishes non-GHCJS-compatible Aeson version requirement.
@@ -101,6 +102,7 @@ library
                      , time >= 1.8.0.2
                      , amazonka
                      , lens
+                     , vector
   exposed-modules:     RFC.Prelude
                      , RFC.String
                      , RFC.Concurrent
