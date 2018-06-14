@@ -66,6 +66,10 @@ instance HasAPIClient ApiCtx where
   getAPIClient = lift ask
   {-# INLINE getAPIClient #-}
 
+instance (Monad m) => HasAPIClient (ReaderT Wreq.Session m) where
+  getAPIClient = ask
+  {-# INLINE getAPIClient #-}
+
 instance Redis.HasRedis ApiCtx where
   getRedisPool = lift . lift $ lift ask
   {-# INLINE getRedisPool #-}
