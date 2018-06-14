@@ -24,7 +24,7 @@ module RFC.Servant
   ) where
 
 import           Control.Monad.Trans.AWS
-import           Control.Natural         ( type (~>) )
+import           Control.Natural         (type (~>))
 import           Data.Aeson              as JSON
 import           Network.AWS             as AWS
 import           Network.Wreq.Session    as Wreq
@@ -32,13 +32,14 @@ import           RFC.API
 import           RFC.Data.IdAnd
 import           RFC.HTTP.Client
 import           RFC.JSON                ()
-import           RFC.Prelude             hiding ( Handler )
+import           RFC.Prelude             hiding (Handler)
+import           RFC.Prelude.Instances   ()
 import qualified RFC.Psql                as Psql
 import qualified RFC.Redis               as Redis
 import           Servant
-import           Servant.Docs            hiding ( API )
-import           Servant.HTML.Blaze      ( HTML )
-import           Servant.Server          ( Handler, runHandler )
+import           Servant.Docs            hiding (API)
+import           Servant.HTML.Blaze      (HTML)
+import           Servant.Server          (Handler, runHandler)
 import           Text.Blaze.Html
 
 type ApiCtx =
@@ -50,6 +51,12 @@ type ApiCtx =
         )
       )
     )
+
+instance MonadUnliftIO Handler where
+  askUnliftIO = do
+    innerUIO <- lift $ askUnliftIO
+
+  {-# INLINE askIO #-}
 
 instance HasAPIClient ApiCtx where
   getAPIClient = lift ask
