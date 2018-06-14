@@ -53,10 +53,14 @@ type ApiCtx =
     )
 
 instance MonadUnliftIO Handler where
-  askUnliftIO = do
-    innerUIO <- lift $ askUnliftIO
-
-  {-# INLINE askIO #-}
+  withRunInIO iobFactory = liftIO $ iobFactory converter
+    where
+      converter h = do
+        eitherT <- runHandler h
+        case eitherT of
+          Left err -> throwIO err
+          Right a  -> return a
+  {-# INLINE withRunInIO #-}
 
 instance HasAPIClient ApiCtx where
   getAPIClient = lift ask
