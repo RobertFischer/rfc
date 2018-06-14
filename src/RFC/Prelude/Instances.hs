@@ -12,7 +12,7 @@ module RFC.Prelude.Instances
   ( module RFC.Prelude.Instances
   ) where
 
-import           ClassyPrelude        hiding (fail)
+import           ClassyPrelude
 import           Control.Monad.Fail
 import           Data.Semigroup
 import           GHC.Conc
@@ -28,6 +28,8 @@ import           Control.Monad.Catch
 #ifdef VERSION_mtl
 import           Control.Monad.Except (ExceptT (..))
 #endif
+
+{-# ANN module "HLint: ignore Unused LANGUAGE pragma" #-}
 
 type Boolean = Bool -- I keep forgetting which Haskell uses....
 
