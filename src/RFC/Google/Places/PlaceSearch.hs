@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module RFC.Google.Places.PlaceSearch
   ( module RFC.Google.Places.PlaceSearch
@@ -52,7 +53,7 @@ paramsToPairs params =
       ]
 
 optionalParamToPair :: Params -> (Params -> Maybe String) -> String -> Maybe (String,String)
-optionalParamToPair param field paramName = (\paramVal -> (paramName, paramVal)) <$> field param
+optionalParamToPair param field paramName = (paramName,) <$> field param
 
 paramsToUrl :: Params -> URL
 paramsToUrl params =

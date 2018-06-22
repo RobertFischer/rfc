@@ -18,8 +18,8 @@ module RFC.Psql
   , module Network
   ) where
 
-import           Control.Monad.Trans.Class       ( MonadTrans (..) )
-import           Control.Monad.Trans.Reader      ( ask )
+import           Control.Monad.Trans.Class       (MonadTrans (..))
+import           Control.Monad.Trans.Reader      (ask)
 import qualified Data.ByteString.Char8           as C8
 import           Data.Pool
 import           Database.PostgreSQL.Typed
@@ -27,10 +27,10 @@ import           Database.PostgreSQL.Typed.Array
 import           Database.PostgreSQL.Typed.Query
 import           Database.PostgreSQL.Typed.TH
 import           Database.PostgreSQL.Typed.Types
-import           Network                         ( PortID (PortNumber) )
+import           Network                         (PortID (PortNumber))
 import qualified RFC.Data.UUID                   as UUID
 import qualified RFC.Env                         as Env
-import           RFC.Prelude                     hiding ( ask )
+import           RFC.Prelude                     hiding (ask)
 
 type PGConnectionPool = Pool PGConnection
 type ConnectionPool = PGConnectionPool
@@ -62,9 +62,9 @@ liftHasPsql :: (PGConnection -> IO a) -> ReaderT PGConnection IO a
 liftHasPsql = ReaderT
 {-# INLINE liftHasPsql #-}
 
-withPsqlTransaction :: (HasPsql psql) => (PGConnection -> IO a) -> psql a
+withPsqlTransaction :: (HasPsql psql) => (ReaderT PGConnection IO a) -> psql a
 withPsqlTransaction action = withPsqlConnection $ \conn ->
-    pgTransaction conn (action conn)
+    pgTransaction conn $ runReaderT action conn
 {-# INLINABLE withPsqlTransaction #-}
 
 instance {-# OVERLAPPING #-} Env.DefConfig PGDatabase where

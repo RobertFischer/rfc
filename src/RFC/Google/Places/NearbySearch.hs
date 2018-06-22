@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module RFC.Google.Places.NearbySearch
   ( module RFC.Google.Places.NearbySearch
@@ -69,7 +70,7 @@ paramsToPairs params =
       ]
 
 optionalParamToPair :: Params -> (Params -> Maybe String) -> String -> Maybe (String,String)
-optionalParamToPair param field paramName = (\paramVal -> (paramName, paramVal)) <$> field param
+optionalParamToPair param field paramName = (paramName,) <$> field param
 
 paramsToUrl :: Params -> URL
 paramsToUrl params =
