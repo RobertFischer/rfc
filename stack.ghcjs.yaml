@@ -25,4 +25,4 @@ extra-deps:
 - unliftio-core-0.1.1.0
 - basic-prelude-0.7.0
 - git: git@github.com:dmjio/miso.git
-  commit: f5e9730cf9f486fbea76644792778bb360d040fc
+  commit: d6fd3fa96cf5adca9052460328be888c64df52d8

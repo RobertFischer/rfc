@@ -5,6 +5,8 @@ extra-deps:
   commit: 964c7ec8dfb781a1607ef4a230ebfda39fdd2295
 - git: git@github.com:dylex/bytestring-strict-builder.git
   commit: 969171201e59bc4ca4daa3b3a6fc86d89c02118f
+- git: git@github.com:dmjio/miso.git
+  commit: d6fd3fa96cf5adca9052460328be888c64df52d8
 - simple-logger-0.0.4
 - time-units-1.0.0
 - tuple-0.3.0.2
