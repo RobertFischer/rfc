@@ -31,6 +31,7 @@ library
                      , ScopedTypeVariables
                      , FlexibleContexts
                      , FlexibleInstances
+                     , TupleSections
   ghc-options:         -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans
   ghc-options:         -fno-max-relevant-binds -fprint-potential-instances -Wno-missing-monadfail-instances
   ghc-options:         -fno-warn-name-shadowing -fno-warn-tabs -Wnoncanonical-monad-instances -Wall-missed-specialisations
