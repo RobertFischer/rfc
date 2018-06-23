@@ -116,6 +116,12 @@ type ServerAPI a =
 
 
 class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
+
+  -- | Provide all UUID of all the children of this resource.
+  --   A "child" of a resource "parent" is defined as another
+  --   resource which is copied when the parent is copied.
+  restChildIds :: Proxy a -> UUID -> ApiCtx [UUID]
+
   restFetchAll :: FetchAllImpl a
   restFetchAll = idAndsToMap <$> fetchAllResources
   {-# INLINE restFetchAll #-}
