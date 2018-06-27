@@ -117,10 +117,13 @@ type ServerAPI a =
 
 class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
 
+
   -- | Provide all UUID of all the children of this resource.
-  --   A "child" of a resource "parent" is defined as another
-  --   resource which is copied when the parent is copied.
+  --   The graph of all resources to children should form a directed acyclic graph.
   resourceChildIds :: Proxy a -> UUID -> ApiCtx [UUID]
+
+  -- | Update the child id from the first 'UUID' argument to the second 'UUID' argument.
+  resourceUpdateChildId :: Proxy a -> UUID -> UUID -> ApiCtx ()
 
   restFetchAll :: FetchAllImpl a
   restFetchAll = idAndsToMap <$> fetchAllResources
