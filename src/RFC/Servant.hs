@@ -120,10 +120,10 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
 
   -- | Provide all UUID of all the children of this resource.
   --   The graph of all resources to children should form a directed acyclic graph.
-  resourceChildIds :: Proxy a -> UUID -> ApiCtx [UUID]
+  resourceChildIds :: IdAnd (Proxy a) -> ApiCtx [UUID]
 
-  -- | Update the child id from the first 'UUID' argument to the second 'UUID' argument.
-  resourceUpdateChildId :: Proxy a -> UUID -> UUID -> ApiCtx ()
+  -- | Update the child id for the parent at the first 'UUID' argument from the second 'UUID' argument to the third 'UUID' argument.
+  resourceUpdateChildId :: IdAnd (Proxy a) -> UUID -> UUID -> ApiCtx ()
 
   restFetchAll :: FetchAllImpl a
   restFetchAll = idAndsToMap <$> fetchAllResources
