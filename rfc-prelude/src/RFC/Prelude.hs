@@ -1,7 +1,5 @@
-{-# LANGUAGE CPP                  #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP              #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module RFC.Prelude
   ( module RFC.Prelude
@@ -25,24 +23,21 @@ module RFC.Prelude
   , module Data.Time.Clock
   , module UnliftIO
   , module GHC.Exts
-  , module Control.Lens.Lens
-  , module Control.Lens.Prism
-  , module Control.Lens.Type
   , module Data.Proxy
   , module Data.Ratio
-  , module RFC.Prelude.Instances
   , module Data.Tuple.Curry
   , module Data.Either
   , module Data.Int
+  , module RFC.Prelude.Instances
   ) where
 
-import           ClassyPrelude               hiding (Day, fail, fromList, map,
-                                              toList, unpack, (++), readMay)
+import           ClassyPrelude               hiding
+  ( Day, fail, fromList, map, readMay, toList, unpack, (++) )
 import           Control.Lens.Lens
 import           Control.Lens.Prism
 import           Control.Lens.Type
-import           Control.Monad               (forever, void, (<=<), (>=>))
-import           Control.Monad.Fail          (MonadFail, fail)
+import           Control.Monad               ( forever, void, (<=<), (>=>) )
+import           Control.Monad.Fail          ( MonadFail, fail )
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
@@ -50,28 +45,28 @@ import           Data.Bitraversable
 import           Data.Char                   as Char
 import           Data.Default
 import qualified Data.Foldable               as Foldable
-import           Data.Function               ((&))
+import           Data.Function               ( (&) )
 import qualified Data.List                   as List
-import           Data.Proxy                  (Proxy (..))
+import           Data.Proxy                  ( Proxy (..) )
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
-import           Data.Typeable               (TypeRep, typeOf)
-import           Data.Word                   (Word16)
-import           GHC.Generics                (Generic)
-import           RFC.Data.UUID               (UUID)
+import           Data.Typeable               ( TypeRep, typeOf )
+import           Data.Word                   ( Word16 )
+import           GHC.Generics                ( Generic )
+import           RFC.Data.UUID               ( UUID )
 import           RFC.String
-import           Text.Read                   (Read, read, readMaybe)
+import           Text.Read                   ( Read, read, readMaybe )
 import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
-import           Data.Either                 (Either (..))
-import           Data.Ratio                  (Ratio, Rational)
-import           Data.Tuple.Curry            (curryN, uncurryN)
-import           GHC.Exts                    (IsList (..), fromListN)
+import           Data.Either                 ( Either (..) )
+import           Data.Int
+import           Data.Ratio                  ( Ratio, Rational )
+import           Data.Tuple.Curry            ( curryN, uncurryN )
+import           GHC.Exts                    ( IsList (..), fromListN )
 import           RFC.Prelude.Instances
-import Data.Int
 
 {-# ANN module "HLint: ignore Use if" #-}
 readMay :: (ConvertibleString input String, Read output) => input -> Maybe output

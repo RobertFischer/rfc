@@ -1,0 +1,19 @@
+name: rfc-prelude
+version: 0.0.0.1
+synopsis: The Prelude from the Robert Fischer Commons.
+description: >
+  A Prelude deriving from @Classy-Prelude@ which provides additional useful bits of 
+  functionality and convenient names.
+category: prelude
+github: RobertFischer/rfc/rfc-prelude
+author: Robert Fischer
+license: MIT
+
+_common: !include "../package.common.yaml"
+
+<<: *defaults
+
+dependencies:
+  - classy-prelude >= 1.4.0
+  - lens >= 4.16.1
+    
