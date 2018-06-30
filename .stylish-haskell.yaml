@@ -222,3 +222,8 @@ newline: lf
 language_extensions:
    - OverloadedStrings
    - NamedFieldPuns
+   - CPP
+   - FlexibleContexts
+   - FlexibleInstances
+   - MultiParamTypeClasses
+   - DataKinds
