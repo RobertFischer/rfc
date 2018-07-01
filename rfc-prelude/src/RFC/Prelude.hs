@@ -33,9 +33,6 @@ module RFC.Prelude
 
 import           ClassyPrelude               hiding
   ( Day, fail, fromList, map, readMay, toList, unpack, (++) )
-import           Control.Lens.Lens
-import           Control.Lens.Prism
-import           Control.Lens.Type
 import           Control.Monad               ( forever, void, (<=<), (>=>) )
 import           Control.Monad.Fail          ( MonadFail, fail )
 import           Control.Monad.Trans.Control
@@ -69,24 +66,31 @@ import           GHC.Exts                    ( IsList (..), fromListN )
 import           RFC.Prelude.Instances
 
 {-# ANN module "HLint: ignore Use if" #-}
-readMay :: (ConvertibleString input String, Read output) => input -> Maybe output
-readMay = readMaybe . cs
+
+readMay :: (ToText input, Read output) => input -> Maybe output
+readMay = readMaybe . fromText . toText
+{-# INLINEABLE readMay #-}
+{-# SPECIALIZE INLINE readMay :: (Read output) => StrictText -> Maybe output #-}
+{-# SPECIALIZE INLINE readMay :: (Read output) => String -> Maybe output #-}
 
 -- | Unwraps an 'Either', returning a default value if it is a 'Left'.
 fromRight :: b -> Either a b -> b
 fromRight _ (Right b) = b
 fromRight b (Left  _) = b
+{-# INLINE fromRight #-}
 
 -- | Unwraps an 'Either', returning a default value if it is a 'Right'.
 fromLeft :: a -> Either a b -> a
 fromLeft a (Right _) = a
 fromLeft _ (Left  a) = a
+{-# INLINE fromLeft #-}
 
 -- | An equivalent to 'maybe' for 'Right'.
 right :: x -> (b -> x) -> Either a b -> x
 right _ f (Right b) = f b
 right x _ (Left _)  = x
 {-# INLINE right #-}
+{-# SPECIALIZE INLINE right :: x -> (String -> x) -> Either a String -> x #-}
 
 -- | An equivalent to 'maybe' for 'Left'.
 left :: x -> (a -> x) -> Either a b -> x
@@ -160,10 +164,13 @@ fmap2 f x = fmap f <$> x
 {-# SPECIALIZE INLINE fmap2 :: Functor g => (a->b) -> Maybe (g a) -> Maybe (g b) #-}
 {-# SPECIALIZE INLINE fmap2 :: Functor f => (a->b) -> f (Maybe a) -> f (Maybe b) #-}
 
-
 infixl 4 <$$>
 (<$$>) :: (Functor f, Functor g) => (a -> b) -> f(g a) -> f(g b)
 (<$$>) = fmap2
 {-# INLINE (<$$>) #-}
-
-
+{-# SPECIALIZE INLINE (<$$>) :: Functor g => (a->b) -> [g a] -> [g b]  #-}
+{-# SPECIALIZE INLINE (<$$>) :: Functor f => (a->b) -> f [a] -> f [b]  #-}
+{-# SPECIALIZE INLINE (<$$>) :: Functor g => (a->b) -> IO (g a) -> IO (g b) #-}
+{-# SPECIALIZE INLINE (<$$>) :: Functor f => (a->b) -> f (IO a) -> f (IO b) #-}
+{-# SPECIALIZE INLINE (<$$>) :: Functor g => (a->b) -> Maybe (g a) -> Maybe (g b) #-}
+{-# SPECIALIZE INLINE (<$$>) :: Functor f => (a->b) -> f (Maybe a) -> f (Maybe b) #-}

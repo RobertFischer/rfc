@@ -26,7 +26,7 @@ import           Control.Monad.Catch
 #endif
 
 #ifdef VERSION_mtl
-import           Control.Monad.Except (ExceptT (..))
+import           Control.Monad.Except ( ExceptT (..) )
 #endif
 
 {-# ANN module "HLint: ignore Unused LANGUAGE pragma" #-}

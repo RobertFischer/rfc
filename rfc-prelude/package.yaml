@@ -14,6 +14,19 @@ _common: !include "../package.common.yaml"
 <<: *defaults
 
 dependencies:
-  - classy-prelude >= 1.4.0
-  - lens >= 4.16.1
-    
+  - base >= 4.10 
+  - classy-prelude >= 1.4
+  - lens >= 4.16 
+  - bifunctors >= 5.5
+  - transformers >= 0.5
+  - monad-control >= 1.0
+  - data-default >= 0.7
+  - unliftio >= 0.2
+  - time >= 1.8
+  - bytestring >= 0.10
+  - text >= 1.2
+  - text-conversions >= 0.3
+  - network-uri >= 2.6
+  - time-units >= 1.0
+  - tuple >= 0.3
+  - uuid-types >= 1.0
