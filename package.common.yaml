@@ -36,7 +36,6 @@
     - MultiParamTypeClasses
     - MultiWayIf
     - NamedFieldPuns
-    - OverloadedStrings
     - PatternSynonyms
     - RankNTypes
     - ScopedTypeVariables
@@ -62,6 +61,7 @@
     - -Wno-missing-monadfail-instances
     - -fno-warn-name-shadowing 
     - -fno-warn-tabs 
+    - -fno-warn-orphans
     - -Wnoncanonical-monad-instances 
     - -Wall-missed-specialisations
     - -Wnoncanonical-monadfail-instances 
