@@ -14,23 +14,24 @@ _common: !include "../package.common.yaml"
 <<: *defaults
 
 dependencies:
-  - classy-prelude >= 1.4
-  - lens >= 4.16 
+  - aeson >= 1.4
+  - base >= 4.10
   - bifunctors >= 5.5
-  - transformers >= 0.5
-  - monad-control >= 1.0
-  - data-default >= 0.7
-  - unliftio >= 0.2
-  - time >= 1.8
   - bytestring >= 0.10
+  - classy-prelude >= 1.4
+  - containers >= 0.5
+  - data-default >= 0.7
+  - http-api-data >= 0.3
+  - integer-logarithms >= 1.0
+  - lens >= 4.16 
+  - monad-control >= 1.0
+  - network-uri >= 2.6
   - text >= 1.2
   - text-conversions >= 0.3
-  - network-uri >= 2.6
+  - time >= 1.8
   - time-units >= 1.0
+  - transformers >= 0.5
   - tuple >= 0.3
+  - unliftio >= 0.2
+  - unliftio-core >= 0.1
   - uuid-types >= 1.0
-  - base >= 4.10
-  - integer-logarithms >= 1.0
-  - aeson >= 1.4
-  - http-api-data >= 0.3
-  - containers >= 0.5

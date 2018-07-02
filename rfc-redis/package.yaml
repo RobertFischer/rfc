@@ -1,0 +1,21 @@
+name: rfc-redis
+version: 0.0.0.1
+synopsis: The Redis extensions from the Robert Fischer Commons.
+description: >
+  Various capabilities supporting @Redis@/@Hedis@ development, including some simplification
+  of the interface.
+category: redis
+github: RobertFischer/rfc/rfc-redis
+author: Robert Fischer
+license: MIT
+
+_common: !include "../package.common.yaml"
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - rfc-env
+  - base >= 4.10
+  - hedis >= 0.10
+  - time >= 1.8

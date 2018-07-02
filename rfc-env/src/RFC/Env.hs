@@ -16,11 +16,11 @@ module RFC.Env
 import           Control.Applicative
 import           Data.Time.Clock
 import           Data.Word
-import           Network             (PortID (..))
+import           Network             ( PortID (..) )
 import           RFC.Prelude
 import           System.Environment
 import           System.Envy
-import           Text.Read           (readEither, readMaybe)
+import           Text.Read           ( readEither, readMaybe )
 
 envWithDefault :: Var a => String -> a -> Parser a
 envWithDefault name defaultValue = fromMaybe defaultValue <$> envMaybe name

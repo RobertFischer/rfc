@@ -5,10 +5,10 @@ setup-info:
   ghcjs:
     source:
       ghcjs-0.2.0.9011009_ghc-8.4.1:
+        url: https://github.com/alexanderkjeldaas/ghcjs/releases/download/fghcjs-8.4.1/ghcjs.tar.gz
+        sha1: 9e9d68ae01aca1b02fcbb03e5b891a7e2118a9db
 
 flags:  
-  rfc: 
-    development: true
   miso:
     tests: false
     examples: false

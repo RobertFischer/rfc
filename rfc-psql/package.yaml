@@ -1,0 +1,23 @@
+name: rfc-psql
+version: 0.0.0.1
+synopsis: The PostgreSQL extensions from the Robert Fischer Commons.
+description: >
+  Provides best-of-breed support for PostgreSQL, currently based on @postgresql-typed@.
+category: Database
+github: RobertFischer/rfc/rfc-psql
+author: Robert Fischer
+license: MIT
+
+_common: !include "../package.common.yaml"
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - rfc-env
+  - base >= 4.10
+  - postgresql-typed >= 0.5
+  - network >= 2.6
+  - bytestring >= 0.10
+  - resource-pool >= 0.2
+  - transformers >= 0.5

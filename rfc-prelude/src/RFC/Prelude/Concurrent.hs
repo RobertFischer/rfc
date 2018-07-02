@@ -4,18 +4,18 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module RFC.Concurrent
-  ( module RFC.Concurrent
+module RFC.Prelude.Concurrent
+  ( module RFC.Prelude.Concurrent
   , module Control.Monad.IO.Unlift
   , module UnliftIO.Concurrent
   , module UnliftIO.Async
   , module Control.Monad.Trans.Control
   ) where
 
+import           ClassyPrelude
 import           Control.Monad.IO.Unlift
 import           Control.Monad.Trans.Control
-import           Data.Foldable               (foldrM)
-import           RFC.Prelude
+import           Data.Foldable               ( foldrM )
 import           UnliftIO.Async
 import           UnliftIO.Concurrent
 
@@ -35,17 +35,16 @@ doConcurrently_ = mapConcurrently_ id
 {-# INLINE doConcurrently_ #-}
 
 -- |Executes all the IO actions simultaneously and then filters the results based on the filter function.
-filterConcurrently :: (Traversable t, Applicative t, Monoid (t a), MonadUnliftIO m) => (a -> Bool) -> t (m a) -> m (t a)
+filterConcurrently :: (Traversable t, Applicative t, Semigroup (t a), Monoid (t a), MonadUnliftIO m) => (a -> Bool) -> t (m a) -> m (t a)
 filterConcurrently test actions = do
     !asyncActions <- mapM async actions
     foldrM foldImpl mempty asyncActions
   where
     foldImpl !promise results = do
       result <- wait promise
-      return $ if test result then
-        (pure result) `mappend` results
-      else
-        results
+      return $ case test result of
+        True  -> (pure result) <> results
+        False -> results
 {-# INLINABLE filterConcurrently #-}
 {-# SPECIALIZE INLINE filterConcurrently :: (MonadUnliftIO m) => (a -> Bool) -> [m a] -> m [a] #-}
 {-# SPECIALIZE INLINE filterConcurrently :: (a -> Bool) -> [IO a] -> IO [a]                    #-}

@@ -1,0 +1,20 @@
+name: rfc-env
+version: 0.0.0.1
+synopsis: Support for interacting with environment variables from the Robert Fischer Commons.
+description: >
+  Provides an opinionated and simple way to interface with environment variables.
+category: envars
+github: RobertFischer/rfc/rfc-env
+author: Robert Fischer
+license: MIT
+
+_common: !include "../package.common.yaml"
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - base >= 4.10
+  - envy >= 1.5
+  - network >= 2.6
+  - time >= 1.8

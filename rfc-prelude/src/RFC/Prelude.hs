@@ -30,6 +30,7 @@ module RFC.Prelude
   , module RFC.Prelude.Instances
   , module RFC.Prelude.JSON
   , module RFC.Prelude.String
+  , module RFC.Prelude.Concurrent
   ) where
 
 import           ClassyPrelude                hiding
@@ -42,31 +43,33 @@ import           Data.Bifunctor
 import           Data.Bitraversable
 import           Data.Char                    as Char
 import           Data.Default
+import           Data.Either                  ( Either (..) )
 import qualified Data.Foldable                as Foldable
 import           Data.Function                ( (&) )
+import           Data.Int
 import qualified Data.List                    as List
 import           Data.Proxy                   ( Proxy (..) )
+import           Data.Ratio                   ( Ratio, Rational )
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
+import           Data.Tuple.Curry             ( curryN, uncurryN )
 import           Data.Typeable                ( TypeRep, typeOf )
 import           Data.Word                    ( Word16 )
+import           GHC.Exts                     ( IsList (..), fromListN )
 import           GHC.Generics                 ( Generic )
+import           Math.NumberTheory.Logarithms ( integerLog2 )
 import           RFC.Data.UUID                ( UUID )
+import           RFC.Prelude.Concurrent
+import           RFC.Prelude.Instances
 import           RFC.Prelude.JSON
 import           RFC.Prelude.String
 import           Text.Read                    ( Read, read, readMaybe )
 import           UnliftIO
+
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
-import           Data.Either                  ( Either (..) )
-import           Data.Int
-import           Data.Ratio                   ( Ratio, Rational )
-import           Data.Tuple.Curry             ( curryN, uncurryN )
-import           GHC.Exts                     ( IsList (..), fromListN )
-import           Math.NumberTheory.Logarithms ( integerLog2 )
-import           RFC.Prelude.Instances
 
 {-# ANN module "HLint: ignore Use if" #-}
 
