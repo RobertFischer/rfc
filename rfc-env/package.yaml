@@ -8,7 +8,7 @@ github: RobertFischer/rfc/rfc-env
 author: Robert Fischer
 license: MIT
 
-_common: !include "../package.common.yaml"
+_common: !include package.common.yaml
 
 <<: *defaults
 

@@ -1,8 +1,13 @@
 - &defaults
+  author: Robert Fischer
+  maintainer: smokejumperit+rfc@gmail.com
+  license: MIT
+  license-file: LICENSE
+
   flags:
     production:
       description: If true, disables failing on warnings and enables aggressive optimizations.
-      manual: false
+      manual: true
       default: false
 
   library:
@@ -10,8 +15,10 @@
       - './src'
 
   extra-source-files:
+    - LICENSE
     - README.md
     - package.yaml
+    - package.common.yaml
 
   default-extensions:
     - ApplicativeDo
@@ -86,13 +93,11 @@
         - -fstrictness-before=3
         - -funfolding-keeness-factor=1.5
         - -funfolding-use-threshold=150
-        - -O2
     else:
       cpp-options:
         - -DDEVELOPMENT
       ghc-options:
         - -freverse-errors
         - -Werror 
-        - -O0 
         - -dcore-lint 
         - -dcmm-lint
