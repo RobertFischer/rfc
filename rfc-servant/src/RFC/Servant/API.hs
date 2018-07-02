@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module RFC.API
+module RFC.Servant.API
   ( JDelete
   , JGet
   , JPatch

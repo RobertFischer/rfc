@@ -1,0 +1,38 @@
+name: rfc-servant
+version: 0.0.0.1
+synopsis: The Servant extensions from the Robert Fischer Commons.
+description: >
+  Various capabilities supporting @Servant@ development, including creating the concept of a 
+  "Resource" (which simplifies REST boilerplate).
+category: prelude
+github: RobertFischer/rfc/rfc-servant
+author: Robert Fischer
+license: MIT
+
+_common: !include "../package.common.yaml"
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - rfc-redis
+  - rfc-psql
+  - rfc-http-client
+  - base >= 4.10
+  - data-default >= 0.7
+  - aeson >= 1.4
+  - binary >= 0.8
+  - lens >= 4.16
+  - servant >= 0.13
+  - servant-server >= 0.13
+  - servant-swagger >= 1.1
+  - servant-swagger-ui >= 0.2
+  - swagger2 >= 2.2
+  - wai >= 3.2
+  - http-types >= 0.12
+  - amazonka >= 1.6
+  - natural-transformation >= 0.4
+  - wreq >= 0.5
+  - servant-docs >= 0.11
+  - blaze-html >= 0.9
+  - servant-blaze >= 0.8

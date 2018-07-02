@@ -29,7 +29,6 @@ flags:
 extra-package-dbs: []
 packages:
 - './rfc-prelude'
-- './rfc-servant'
 extra-deps:  
 - time-units-1.0.0
 - aeson-1.4.0.0

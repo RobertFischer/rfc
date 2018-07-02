@@ -6,7 +6,7 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module RFC.Servant.ApiDoc
+module RFC.Servant.Server.ApiDoc
   ( apiToHtml
   , apiToAscii
   , apiToSwagger
@@ -32,10 +32,8 @@ import           GHC.Generics                    ( Rep )
 import           Network.HTTP.Types.Header       ( hContentType )
 import           Network.HTTP.Types.Status
 import           Network.Wai
-import           RFC.JSON                        ( jsonOptions )
 import           RFC.Prelude                     hiding ( (<>) )
-import           RFC.Servant
-import           RFC.String                      ()
+import           RFC.Servant.Server
 import           Servant.Swagger
 import           Servant.Swagger.UI
 import qualified Text.Blaze.Html.Renderer.String as Blaze
