@@ -33,3 +33,4 @@ dependencies:
   - integer-logarithms >= 1.0
   - aeson >= 1.4
   - http-api-data >= 0.3
+  - containers >= 0.5

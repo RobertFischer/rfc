@@ -24,6 +24,9 @@ module RFC.Data.IdAnd
   , refMapIds
   , toRefMap
   , emptyRefMap
+  , refMapUUIDs
+  , refMapProxy
+  , idProxy
   ) where
 
 import           RFC.Prelude
@@ -31,75 +34,118 @@ import           RFC.Prelude
 
 import           Data.Aeson        as JSON
 import qualified Data.Map          as Map
+import           Data.Proxy        ( Proxy (..) )
 
+#ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,0,0)
   -- Don't need the backflips for maps
 #else
-import           Data.Aeson.Types  (Parser, typeMismatch)
+import           Data.Aeson.Types  ( Parser, typeMismatch )
 import qualified Data.HashMap.Lazy as HashMap
 import qualified Data.UUID.Types   as UUID
 #endif
+#endif
 
-#ifndef GHCJS_BROWSER
-import           Control.Lens      hiding ((.=))
+-- TODO Make this check more precise
+#ifdef VERSION_servant_doc
 import qualified Data.List         as List
-import           Data.Proxy        (Proxy (..))
-import           Data.Swagger
 import qualified Data.UUID.Types   as UUID
 import           Servant.Docs
 #endif
+#ifdef VERSION_swagger2
+import           Control.Lens      hiding ( (.=) )
+import           Data.Swagger
+#endif
 
--- |Represents something which has an ID.
-newtype IdAnd a = IdAnd (UUID, a)
+newtype Id a = Id { idToUUID :: UUID }
   deriving (Eq, Ord, Show, Generic, Typeable)
 
-type RefMap a = Map.Map UUID (IdAnd a)
+-- |Represents something which has an ID.
+newtype IdAnd a = IdAnd (Id a, a)
+  deriving (Eq, Ord, Show, Generic, Typeable)
+
+type RefMap a = Map.Map (Id a) (IdAnd a)
+
+idProxy :: Id a -> Proxy a
+idProxy _ = Proxy
+{-# INLINE idProxy #-}
+
+refMapProxy :: RefMap a -> Proxy a
+refMapProxy _ = Proxy
+{-# INLINE refMapProxy #-}
 
 emptyRefMap :: RefMap a
 emptyRefMap = Map.empty
+{-# INLINE emptyRefMap #-}
 
 refMapElems :: RefMap a -> [IdAnd a]
 refMapElems = Map.elems
+{-# INLINE refMapElems #-}
 
-refMapIds :: RefMap a -> [UUID]
+refMapUUIDs :: RefMap a -> [UUID]
+refMapUUIDs = fmap idToUUID . refMapIds
+{-# INLINE refMapUUIDs #-}
+
+refMapIds :: RefMap a -> [Id a]
 refMapIds = Map.keys
+{-# INLINE refMapIds #-}
 
 refMapToMap :: RefMap a -> Map.Map UUID (IdAnd a)
-refMapToMap = id
+refMapToMap = Map.mapKeys idToUUID
+{-# INLINE refMapToMap #-}
 
 toRefMap :: [IdAnd a] -> RefMap a
 toRefMap = Map.fromList . fmap (\idAnd@(IdAnd(id,_)) -> (id,idAnd))
+{-# INLINEABLE toRefMap #-}
 
 idAndToValue :: IdAnd a -> a
 idAndToValue (IdAnd(_,a)) = a
+{-# INLINE idAndToValue #-}
 
-idAndToId :: IdAnd a -> UUID
+idAndToId :: IdAnd a -> Id a
 idAndToId (IdAnd(id,_)) = id
+{-# INLINE idAndToId #-}
 
 tupleToIdAnd :: (UUID, a) -> IdAnd a
-tupleToIdAnd = IdAnd
+tupleToIdAnd (id,a) = IdAnd (Id id, a)
+{-# INLINE tupleToIdAnd #-}
 
 valuesToIdAnd :: UUID -> a -> IdAnd a
-valuesToIdAnd id a = IdAnd(id,a)
+valuesToIdAnd id a = IdAnd(Id id,a)
+{-# INLINE valuesToIdAnd #-}
 
 idAndToTuple :: IdAnd a -> (UUID, a)
-idAndToTuple (IdAnd it) = it
+idAndToTuple (IdAnd (Id id,val)) = (id,val)
+{-# INLINE idAndToTuple #-}
 
-idAndToPair :: IdAnd a -> (UUID, IdAnd a)
+idAndToPair :: IdAnd a -> (Id a, IdAnd a)
 idAndToPair idAnd@(IdAnd (id,_)) = (id, idAnd)
+{-# INLINE idAndToPair #-}
 
 idAndsToMap :: [IdAnd a] -> RefMap a
-idAndsToMap list = Map.fromList $ (\idAnd@(IdAnd(uuid,_)) -> (uuid,idAnd)) <$> list
+idAndsToMap list = Map.fromList $ idAndToPair <$> list
+{-# INLINEABLE idAndsToMap #-}
 
 instance (FromJSON a) => FromJSON (IdAnd a) where
   parseJSON = JSON.withObject "IdAnd" $ \o -> do
     id <- o .: "id"
     value <- o .: "value"
-    return $ IdAnd(id, value)
+    return $ IdAnd(Id id, value)
+  {-# INLINEABLE parseJSON #-}
 
 instance (ToJSON a) => ToJSON (IdAnd a) where
-  toJSON (IdAnd (id,value)) = object [ "id".=id, "value".=value ]
+  toJSON (IdAnd (Id id,value)) = object [ "id".=id, "value".=value ]
+  {-# INLINEABLE toJSON #-}
 
+instance (FromJSON a) => FromJSON (Id a) where
+  parseJSON = fmap Id . parseJSON
+  {-# INLINE parseJSON #-}
+
+instance (ToJSON a) => ToJSON (Id a) where
+  toJSON (Id a) = toJSON a
+  {-# INLINE toJSON #-}
+
+#ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,0,0)
   -- Have Mpa instances automatically created
 #else
@@ -130,8 +176,9 @@ instance (ToJSON a) => ToJSON (Map UUID (IdAnd a)) where
     Object . HashMap.fromList . fmap (\(k,v) -> (UUID.toText k, toJSON v)) . Map.toList
 
 #endif
+#endif
 
-#ifndef GHCJS_BROWSER
+#ifdef VERSION_swagger2
 instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
   declareNamedSchema _ = do
     NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
@@ -145,7 +192,9 @@ instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
         & properties .~ [("id", idSchema), ("value", aSchema)]
         & required .~ ["id", "value"]
         & example .~ (toJSON . snd <$> maybeSample)
+#endif
 
+#ifdef VERSION_servant_doc
 uuidList :: [UUID]
 uuidList = List.cycle $ fromMaybe UUID.nil . UUID.fromString <$>
   [ "4fc2ffac-9100-41d6-94e1-c33a545e9ba2"
@@ -254,13 +303,13 @@ instance (ToSample a) => ToSample (IdAnd a) where
   toSamples _ =
       zipWith idAndify uuidList $ toSamples Proxy
     where
-      idAndify uuid (desc, a) = (desc, IdAnd (uuid,a))
+      idAndify uuid (desc, a) = (desc, IdAnd (Id uuid,a))
 
 instance (ToSample a) => ToSample (RefMap a) where
   toSamples _ = singleSample .
       Map.fromList . zipWith idAndify uuidList $ toSamples Proxy
     where
-      idAndify uuid (_, a) = (uuid, IdAnd (uuid,a))
+      idAndify uuid (_, a) = (Id uuid, IdAnd (Id uuid,a))
 
 #endif
 
