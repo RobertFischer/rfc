@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP           #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module RFC.JSON
+module RFC.Prelude.JSON
 ( jsonOptions
 , deriveJSON
 , FromJSON(..)
@@ -21,24 +21,25 @@ module RFC.JSON
 import           ClassyPrelude
 import           Data.Aeson                 as JSON
 import           Data.Aeson.Parser          as JSONParser
-import           Data.Aeson.TH              (deriveJSON)
-import           Data.Aeson.Types           (Options (..), SumEncoding (..),
-                                             Value (..))
+import           Data.Aeson.TH              ( deriveJSON )
+import           Data.Aeson.Types           ( Options (..), SumEncoding (..), Value (..) )
 import           Data.Char
-import           RFC.String
+import           RFC.Prelude.String
 import           Web.HttpApiData
 
 -- How we go about executing the parser
+#ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,0,0)
 import           Data.Aeson.Text            as JSON
 import qualified Data.Aeson.Types           as JSONTypes
 #else
 import qualified Data.Aeson.Encode          as JSON
 import           Data.Attoparsec.ByteString as JSON
-import           Data.Either                (either)
+import           Data.Either                ( either )
+#endif
 #endif
 
-#ifndef GHCJS_BROWSER
+#ifdef VERSION_swagger2
 import qualified Data.Swagger               as Swag
 #endif
 
@@ -64,6 +65,7 @@ decodeEither = eitherDecode
 decodeEither' :: (FromJSON a) => LazyByteString -> Either String a
 decodeEither' = eitherDecode'
 
+#ifdef VERSION_aeson
 newtype DecodeError = DecodeError (LazyByteString, String) deriving (Show,Eq,Ord,Generic,Typeable)
 instance Exception DecodeError
 
@@ -76,27 +78,29 @@ decodeOrDie input =
 instance FromHttpApiData JSON.Value where
   parseUrlPiece text =
       case parsed of
-        Nothing      -> Left $ (cs "Could not parse JSON: ") <> text
+        Nothing      -> Left $ (toText "Could not parse JSON: ") <> text
         (Just value) -> Right value
     where
+      textBs = toUTF8 text
       parser = JSONParser.value'
       parsed =
 #if MIN_VERSION_aeson(1,0,0)
-          let textBs = asUTF8 text in
           JSONParser.decodeStrictWith parser JSONTypes.Success textBs
 #else
-          either (const Nothing) Just $ JSON.parseOnly parser (unUTF8 $ fromText text)
+          either (const Nothing) Just $ JSON.parseOnly parser textBs
 #endif
 
 instance ToHttpApiData JSON.Value where
   toUrlPiece =
 #if MIN_VERSION_aeson(1,0,0)
-    cs . JSON.encodeToLazyText
+    fromText . toText . JSON.encodeToLazyText
 #else
-    cs . JSON.encodeToTextBuilder
+    fromText . toText . JSON.encodeToTextBuilder
 #endif
 
-#ifndef GHCJS_BROWSER
+#ifdef VERSION_swagger2
 instance Swag.ToSchema Value where
   declareNamedSchema _ = return . Swag.NamedSchema (Just $ cs "Value") $ mempty
+#endif
+
 #endif

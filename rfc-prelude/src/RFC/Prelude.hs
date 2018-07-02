@@ -16,7 +16,6 @@ module RFC.Prelude
   , module Data.Default
   , module ClassyPrelude
   , module Control.Monad.Trans.Control
-  , module RFC.String
   , module Data.Word
   , module Data.Semigroup
   , module Control.Monad.Fail
@@ -29,40 +28,44 @@ module RFC.Prelude
   , module Data.Either
   , module Data.Int
   , module RFC.Prelude.Instances
+  , module RFC.Prelude.JSON
+  , module RFC.Prelude.String
   ) where
 
-import           ClassyPrelude               hiding
+import           ClassyPrelude                hiding
   ( Day, fail, fromList, map, readMay, toList, unpack, (++) )
-import           Control.Monad               ( forever, void, (<=<), (>=>) )
-import           Control.Monad.Fail          ( MonadFail, fail )
+import           Control.Monad                ( forever, void, (<=<), (>=>) )
+import           Control.Monad.Fail           ( MonadFail, fail )
 import           Control.Monad.Trans.Control
 import           Data.Bifoldable
 import           Data.Bifunctor
 import           Data.Bitraversable
-import           Data.Char                   as Char
+import           Data.Char                    as Char
 import           Data.Default
-import qualified Data.Foldable               as Foldable
-import           Data.Function               ( (&) )
-import qualified Data.List                   as List
-import           Data.Proxy                  ( Proxy (..) )
+import qualified Data.Foldable                as Foldable
+import           Data.Function                ( (&) )
+import qualified Data.List                    as List
+import           Data.Proxy                   ( Proxy (..) )
 import           Data.Semigroup
 import           Data.Time.Clock
 import           Data.Time.Units
-import           Data.Typeable               ( TypeRep, typeOf )
-import           Data.Word                   ( Word16 )
-import           GHC.Generics                ( Generic )
-import           RFC.Data.UUID               ( UUID )
-import           RFC.String
-import           Text.Read                   ( Read, read, readMaybe )
+import           Data.Typeable                ( TypeRep, typeOf )
+import           Data.Word                    ( Word16 )
+import           GHC.Generics                 ( Generic )
+import           RFC.Data.UUID                ( UUID )
+import           RFC.Prelude.JSON
+import           RFC.Prelude.String
+import           Text.Read                    ( Read, read, readMaybe )
 import           UnliftIO
 #ifdef VERSION_exceptions
 import           Control.Monad.Catch
 #endif
-import           Data.Either                 ( Either (..) )
+import           Data.Either                  ( Either (..) )
 import           Data.Int
-import           Data.Ratio                  ( Ratio, Rational )
-import           Data.Tuple.Curry            ( curryN, uncurryN )
-import           GHC.Exts                    ( IsList (..), fromListN )
+import           Data.Ratio                   ( Ratio, Rational )
+import           Data.Tuple.Curry             ( curryN, uncurryN )
+import           GHC.Exts                     ( IsList (..), fromListN )
+import           Math.NumberTheory.Logarithms ( integerLog2 )
 import           RFC.Prelude.Instances
 
 {-# ANN module "HLint: ignore Use if" #-}
@@ -129,21 +132,20 @@ safeHead xs =
 {-# SPECIALIZE INLINE safeHead :: [a] -> IO a #-}
 
 lg :: Integer -> Integer
-lg 0 = 0
-lg z = 1 + lg (z `div` 2)
-{-# INLINEABLE lg #-}
+lg z
+  | z > 0 = toInteger $ integerLog2 z
+  | z == 0 = 0
+  | otherwise = toInteger $ integerLog2 (-1 * z)
+{-# INLINE lg #-}
 
 lg' :: (Integral z, Integral z') => z -> z'
-lg' z = fromInteger $
-  if z > -1 && z < 1 then
-    0
-  else
-    1 + lg ((toInteger z) `div` 2)
+lg' = fromInteger . lg . toInteger
 {-# INLINEABLE lg' #-}
-{-# SPECIALIZE INLINE lg' :: Integer -> Integer #-}
-{-# SPECIALIZE INLINE lg' :: Int -> Int         #-}
-{-# SPECIALIZE INLINE lg' :: Integer -> Int     #-}
-{-# SPECIALIZE INLINE lg' :: Int -> Integer     #-}
+{-# SPECIALIZE INLINE lg' :: Integer -> Integer             #-}
+{-# SPECIALIZE INLINE lg' :: (Integral z') => Integer -> z' #-}
+{-# SPECIALIZE INLINE lg' :: (Integral z ) => z -> Int      #-}
+{-# SPECIALIZE INLINE lg' :: (Integral z ) => z -> Integer  #-}
+{-# SPECIALIZE INLINE lg' :: Word -> Word                   #-}
 
 isSingleton :: (Foldable f) => f a -> Bool
 isSingleton xs =

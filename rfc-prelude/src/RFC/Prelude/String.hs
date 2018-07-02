@@ -9,8 +9,8 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 
-module RFC.String
-  ( module RFC.String
+module RFC.Prelude.String
+  ( module RFC.Prelude.String
   , module Data.Text.Conversions
   ) where
 

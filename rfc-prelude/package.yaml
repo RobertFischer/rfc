@@ -14,7 +14,6 @@ _common: !include "../package.common.yaml"
 <<: *defaults
 
 dependencies:
-  - base >= 4.10 
   - classy-prelude >= 1.4
   - lens >= 4.16 
   - bifunctors >= 5.5
@@ -30,3 +29,7 @@ dependencies:
   - time-units >= 1.0
   - tuple >= 0.3
   - uuid-types >= 1.0
+  - base >= 4.10
+  - integer-logarithms >= 1.0
+  - aeson >= 1.4
+  - http-api-data >= 0.3

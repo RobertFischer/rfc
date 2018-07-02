@@ -2,7 +2,7 @@
   flags:
     production:
       description: If true, disables failing on warnings and enables aggressive optimizations.
-      manual: true
+      manual: false
       default: false
 
   library:
@@ -96,5 +96,3 @@
         - -O0 
         - -dcore-lint 
         - -dcmm-lint
-
-

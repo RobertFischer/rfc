@@ -1,5 +1,5 @@
 compiler-check: newer-minor
-resolver: lts-11.15
+resolver: lts-11.16
 require-stack-version: ! '>=1.6'
 
 flags:
@@ -29,5 +29,7 @@ flags:
 extra-package-dbs: []
 packages:
 - './rfc-prelude'
+- './rfc-servant'
 extra-deps:  
 - time-units-1.0.0
+- aeson-1.4.0.0

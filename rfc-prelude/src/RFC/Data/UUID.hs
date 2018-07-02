@@ -14,9 +14,9 @@ import           Control.Monad.Fail  ( MonadFail, fail )
 import qualified Data.Text           as T
 import           Data.UUID.Types
 import qualified Data.UUID.Types     as UUID
-import           RFC.String
+import           RFC.Prelude.String
 
-#if VERSION_aeson
+#ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,1,0)
 -- UUID has ToJSON and FromJSON after Aeson 1.1.0
 #else
@@ -24,12 +24,12 @@ import           Data.Aeson.Types    ( FromJSON (..), ToJSON (..), Value (String
 #endif
 #endif
 
-#if VERSION_servant_docs
+#ifdef VERSION_servant_docs
 import           Servant.API.Capture
 import           Servant.Docs
 #endif
 
-#if VERSION_servant_docs
+#ifdef VERSION_servant_docs
 instance ToCapture (Capture "id" UUID) where
   toCapture _ = DocCapture "id" "UUID identifier"
 
@@ -42,7 +42,7 @@ instance ToSample UUID where
     ]
 #endif
 
-#if VERSION_aeson
+#ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,1,0)
 -- UUID has ToJSON and FromJSON after Aeson 1.1.0
 #else
