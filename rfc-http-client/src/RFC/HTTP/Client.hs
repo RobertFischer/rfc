@@ -22,17 +22,14 @@ import           Control.Lens
 import           Data.Aeson                as JSON
 import           Data.Aeson.Types          as JSON
 import qualified Data.Scientific           as Sci
-import           Data.Vector               ((!?))
-import           Network.HTTP.Client       (Manager, ManagerSettings,
-                                            newManager)
-import           Network.HTTP.Client.TLS   (tlsManagerSettings)
-import           Network.HTTP.Types.Status hiding (statusCode, statusMessage)
+import           Data.Vector               ( (!?) )
+import           Network.HTTP.Client       ( Manager, ManagerSettings, newManager )
+import           Network.HTTP.Client.TLS   ( tlsManagerSettings )
+import           Network.HTTP.Types.Status hiding ( statusCode, statusMessage )
 import           Network.URI               as URI
 import           Network.Wreq.Lens
-import           Network.Wreq.Session      hiding (withAPISession)
-import           RFC.JSON                  (FromJSON, decodeOrDie)
+import           Network.Wreq.Session      hiding ( withAPISession )
 import           RFC.Prelude
-import           RFC.String                ()
 import           Servant.Server
 
 data GoogleGeocodeResult = GoogleGeocodeResult
@@ -74,11 +71,9 @@ newtype BadStatusException = BadStatusException (Status,URI)
   deriving (Show,Eq,Ord,Generic,Typeable)
 instance Exception BadStatusException
 
-apiExecute :: (HasAPIClient m, MonadUnliftIO m, ConvertibleString LazyByteString s)  =>
-  URI -> (Session -> String -> IO (Response LazyByteString)) -> (s -> m a) -> m a
-apiExecute rawUrl action converter = do
-  result <- cs <$> webExecute rawUrl action
-  converter result
+apiExecute :: (HasAPIClient m, MonadUnliftIO m)  =>
+  URI -> (Session -> String -> IO (Response LazyByteString)) -> (LazyByteString -> m a) -> m a
+apiExecute rawUrl action converter = webExecute rawUrl action >>= converter
 
 webExecute :: (HasAPIClient m, MonadUnliftIO m) =>
   URI -> (Session -> String -> IO (Response LazyByteString)) -> m LazyByteString
@@ -97,12 +92,14 @@ apiGet :: (HasAPIClient m, FromJSON a, MonadUnliftIO m, Exception e) => URI -> (
 apiGet url onError =
   handle onError $ apiExecute url get decodeOrDie
 
-geocodeGet :: (HasAPIClient m, MonadUnliftIO m, Exception e) => StrictText -> (e -> m GoogleGeocodeResult) -> m GoogleGeocodeResult
+geocodeGet ::
+  (HasAPIClient m, MonadUnliftIO m, Exception e) =>
+  StrictText -> (e -> m GoogleGeocodeResult) -> m GoogleGeocodeResult
 geocodeGet addr onError = handle onError $
     case URI.parseURI "https://maps.googleapis.com/maps/api/geocode/json" of
       Nothing -> throwIO err500 { errBody = "Cannot parse the geocoding URI" }
       Just uri -> do
-        let address = URI.escapeURIString URI.isUnescapedInURIComponent (cs addr)
+        let address = URI.escapeURIString URI.isUnescapedInURIComponent (fromText addr)
         let apiKey = "AIzaSyDL1yQ2fFJExMM6CcmsgpklR2Q4c-O4kks"
         let uriWithQuery = uri { uriQuery = "address=" <> address <> "&" <> "key=" <> apiKey <> "&" <> uriQuery uri }
         apiGet uriWithQuery onError

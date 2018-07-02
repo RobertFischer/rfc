@@ -19,6 +19,7 @@ flags:
       cffi: true
       fast: false
       developer: false
+      bytestring-builder: false
   cryptonite:
       support_pclmuldq: true
   zlib:
@@ -32,6 +33,8 @@ packages:
 - './rfc-env'
 - './rfc-redis'
 - './rfc-psql'
+- './rfc-http-client'
+- './rfc-servant'
 extra-deps:  
 - time-units-1.0.0
 - aeson-1.4.0.0

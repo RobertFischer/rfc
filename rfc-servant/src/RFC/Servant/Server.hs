@@ -20,7 +20,7 @@ module RFC.Servant.Server
   , module Servant.HTML.Blaze
   , module Text.Blaze.Html
   , module RFC.Data.IdAnd
-  , module RFC.API
+  , module RFC.Servant.API
   ) where
 
 import           Control.Monad.Trans.AWS
@@ -28,12 +28,12 @@ import           Control.Natural         ( type (~>) )
 import           Data.Aeson              as JSON
 import           Network.AWS             as AWS
 import           Network.Wreq.Session    as Wreq
-import           RFC.API
 import           RFC.Data.IdAnd
 import           RFC.HTTP.Client
 import           RFC.Prelude             hiding ( Handler )
 import qualified RFC.Psql                as Psql
 import qualified RFC.Redis               as Redis
+import           RFC.Servant.API
 import           Servant
 import           Servant.Docs            hiding ( API )
 import           Servant.HTML.Blaze      ( HTML )
@@ -133,9 +133,9 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     case maybeResource of
       Nothing -> throwError $ err404
         { errReasonPhrase = "No resource found for id"
-        , errBody = asUTF8 $ "Could not find a resource with UUID: " <> show uuid
+        , errBody = toUTF8 $ "Could not find a resource with UUID: " <> show uuid
         }
-      Just value -> return $ IdAnd (uuid, value)
+      Just value -> return $ tupleToIdAnd (uuid, value)
   {-# INLINE restFetch #-}
 
   restCreate :: CreateImpl a
@@ -145,7 +145,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
         (Just id) -> restFetch id
         Nothing -> throwIO $ err400
           { errReasonPhrase = "Could not create resource"
-          , errBody = asUTF8 $ show a
+          , errBody = toUTF8 $ show a
           }
   {-# INLINE restCreate #-}
 
@@ -156,13 +156,13 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     case JSON.patch patch $ toJSON original of
       Error str -> throwError $ err400
         { errReasonPhrase = "Error applying patch"
-        , errBody = asUTF8 str
+        , errBody = toUTF8 str
         }
       Success jsonValue ->
         case JSON.eitherDecode' $ JSON.encode jsonValue of
           Left err -> throwError $ err400
             { errReasonPhrase = "Error rebuilding object after patch"
-            , errBody = asUTF8 err
+            , errBody = toUTF8 err
             }
           Right value -> restReplace id value
   {-# INLINE restPatch #-}
@@ -173,7 +173,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
       replaceResource newValue
       restFetch id
     where
-      newValue = IdAnd (id,value)
+      newValue = tupleToIdAnd (id,value)
   {-# INLINE restReplace #-}
 
   restDelete :: Proxy a -> DeleteImpl

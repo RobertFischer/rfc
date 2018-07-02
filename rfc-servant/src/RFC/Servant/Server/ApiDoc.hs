@@ -40,7 +40,7 @@ import qualified Text.Blaze.Html.Renderer.String as Blaze
 import qualified Text.Markdown                   as MD
 
 apiToHtml :: (HasDocs a) => Proxy a -> Html
-apiToHtml = preEscapedToHtml . (MD.markdown mdSettings) . cs . markdown . docs
+apiToHtml = preEscapedToHtml . (MD.markdown mdSettings) . toLazyText . markdown . docs
   where
     mdSettings = def
       { MD.msLinkNewTab = False
@@ -55,12 +55,12 @@ apiToSwagger = toSwagger
 
 apiMiddleware :: (HasDocs a, HasSwagger a) => Proxy a -> Swagger -> Application -> Application
 apiMiddleware api addlSwagger application request callback =
-  case (cs reqMethod, reqPath) of
+  case (reqMethod, reqPath) of
     ("GET", Just doIt) -> doIt
     _                  -> application request callback
   where
     bsToStr :: StrictByteString -> String
-    bsToStr = fromMaybe "" . toUTF8
+    bsToStr = fromMaybe "" . fromUTF8
     html = Blaze.renderHtml $ apiToHtml api
     ascii = apiToAscii api
     swaggerToLbs = Builder.toLazyByteString . fromEncoding . toEncoding
@@ -68,7 +68,7 @@ apiMiddleware api addlSwagger application request callback =
     reqMethod = fmap charToUpper . bsToStr $ requestMethod request
     pathInfo = fmap charToLower . bsToStr $ rawPathInfo request
     reqPath =
-      case cs pathInfo of
+      case pathInfo of
         "swagger.json"  -> Just serveSwagger
         "/swagger.json" -> Just serveSwagger
         "api.html"      -> Just serveHtml
@@ -78,13 +78,13 @@ apiMiddleware api addlSwagger application request callback =
         _               -> Nothing
     response contentType body = callback $
       responseLBS status200 [(hContentType, contentType)] body
-    serveHtml = response (cs $ UTF8 "text/html") (cs $ UTF8 html)
-    serveTxt = response (cs $ UTF8 "text/plain") (cs $ UTF8 ascii)
-    serveSwagger = response (cs $ UTF8 "application/json") swagger
+    serveHtml = response (toUTF8 "text/html") (toUTF8 html)
+    serveTxt = response (toUTF8 "text/plain") (toUTF8 ascii)
+    serveSwagger = response (toUTF8 "application/json") swagger
 
 
 instance ToSample () where
-  toSamples _ = [(cs "No value", ())]
+  toSamples _ = [(toText "No value", ())]
 
 swaggerSchemaOptions :: SchemaOptions
 swaggerSchemaOptions = SchemaOptions

@@ -1,0 +1,27 @@
+name: rfc-http-client
+version: 0.0.0.1
+synopsis: The HTTP client extensions from the Robert Fischer Commons.
+description: >
+  Provides best-of-breed support for HTTP client calls in Haskell.
+category: Web
+github: RobertFischer/rfc/rfc-http-client
+author: Robert Fischer
+license: MIT
+
+_common: !include "../package.common.yaml"
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - base >= 4.10
+  - lens >= 4.16
+  - aeson >= 1.4
+  - scientific >= 0.3
+  - vector >= 0.12
+  - servant-server >= 0.13
+  - network-uri >= 2.6
+  - http-client-tls >= 0.3
+  - http-client >= 0.5
+  - wreq >= 0.5
+  - http-types >= 0.12

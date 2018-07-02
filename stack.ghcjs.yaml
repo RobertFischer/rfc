@@ -12,6 +12,11 @@ flags:
   miso:
     tests: false
     examples: false
+  aeson:
+    developer: false
+    fast: false
+    bytestring-builder: false
+    cffi: false
 
 packages:
 - './rfc-prelude'
