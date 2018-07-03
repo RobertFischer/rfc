@@ -1,5 +1,5 @@
 name: rfc-prelude
-version: 0.0.0.1
+version: 0.0.0.2
 synopsis: The Prelude from the Robert Fischer Commons.
 description: >
   A Prelude deriving from @Classy-Prelude@ which provides additional useful bits of 
@@ -14,21 +14,21 @@ _common: !include package.common.yaml
 <<: *defaults
 
 dependencies:
-  - aeson >= 1.4
-  - base >= 4.10 && < 5
-  - bifunctors >= 5.5
+  - aeson >= 1.1
+  - base >= 4.9 && < 5
+  - bifunctors >= 5.4 
   - bytestring >= 0.10
   - classy-prelude >= 1.4
   - containers >= 0.5
   - data-default >= 0.7
   - http-api-data >= 0.3
   - integer-logarithms >= 1.0
-  - lens >= 4.16 
+  - lens >= 4.15
   - monad-control >= 1.0
   - network-uri >= 2.6
   - text >= 1.2
   - text-conversions >= 0.3
-  - time >= 1.8
+  - time >= 1.6
   - time-units >= 1.0
   - transformers >= 0.5
   - tuple >= 0.3
