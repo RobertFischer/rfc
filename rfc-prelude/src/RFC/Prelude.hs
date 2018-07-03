@@ -34,7 +34,7 @@ module RFC.Prelude
   ) where
 
 import           ClassyPrelude                hiding
-  ( Day, fail, fromList, map, readMay, toList, unpack, (++) )
+  ( Day, fail, fromList, map, pack, readMay, toList, unpack, (++) )
 import           Control.Monad                ( forever, void, (<=<), (>=>) )
 import           Control.Monad.Fail           ( MonadFail, fail )
 import           Control.Monad.Trans.Control

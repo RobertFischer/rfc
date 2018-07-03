@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP           #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP #-}
 
 module RFC.Prelude.JSON
 ( jsonOptions

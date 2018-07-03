@@ -12,6 +12,9 @@
 module RFC.Prelude.String
   ( module RFC.Prelude.String
   , module Data.Text.Conversions
+#if VERSION_rfc_ghcjs
+  , JSString
+#endif
   ) where
 
 import           ClassyPrelude          hiding ( fail )
@@ -27,6 +30,11 @@ import qualified Data.Text.Lazy.Builder as LTBuilder
 import           Network.URI            ( URI (..), parseURIReference, uriToString )
 import           RFC.Prelude.Instances  ()
 
+#if VERSION_rfc_ghcjs
+import           Data.JSString          ( JSString )
+import qualified Data.JSString          as JStr
+#endif
+
 #if VERSION_servant_docs
 import           Servant.Docs
 #endif
@@ -40,12 +48,25 @@ type StrictByteString = SB.ByteString
 type ShortByteString = Sbs.ShortByteString
 type LazyTextBuilder = LTBuilder.Builder
 
-toString :: (ToText a) => a -> String
-toString = ST.unpack . toText
-{-# INLINE toString #-}
-{-# SPECIALIZE INLINE toString :: String -> String     #-}
-{-# SPECIALIZE INLINE toString :: LazyText -> String   #-}
-{-# SPECIALIZE INLINE toString :: StrictText -> String #-}
+toChars :: (ToText a) => a -> String
+toChars = ST.unpack . toText
+{-# INLINE toChars #-}
+{-# SPECIALIZE INLINE toChars :: String -> String     #-}
+{-# SPECIALIZE INLINE toChars :: LazyText -> String   #-}
+{-# SPECIALIZE INLINE toChars :: StrictText -> String #-}
+#if VERSION_rfc_ghcjs
+{-# SPECIALIZE INLINE toChars :: JSString -> String #-}
+#endif
+
+fromChars :: (FromText a) => String -> a
+fromChars = fromText . toText
+{-# INLINE fromChars #-}
+{-# SPECIALIZE INLINE fromChars :: String -> String   #-}
+{-# SPECIALIZE INLINE fromChars :: String -> LazyText #-}
+{-# SPECIALIZE INLINE fromChars :: String -> StrictText #-}
+#if VERSION_rfc_ghcjs
+{-# SPECIALIZE INLINE fromChars :: String -> JSString #-}
+#endif
 
 toStrictText :: (ToText a) => a -> StrictText
 toStrictText = toText
@@ -53,6 +74,9 @@ toStrictText = toText
 {-# SPECIALIZE INLINE toStrictText :: String -> StrictText     #-}
 {-# SPECIALIZE INLINE toStrictText :: LazyText -> StrictText   #-}
 {-# SPECIALIZE INLINE toStrictText :: StrictText -> StrictText #-}
+#if VERSION_rfc_ghcjs
+{-# SPECIALIZE INLINE toStrictText :: JSString -> StrictText   #-}
+#endif
 
 toLazyText :: (ToText a) => a -> LazyText
 toLazyText = LT.fromStrict . toText
@@ -157,8 +181,16 @@ instance ToSample LazyText where
 
 #endif
 
-
 instance {-# OVERLAPPING #-} ToText LazyTextBuilder where
   toText = toText . LTBuilder.toLazyText
   {-# INLINE toText #-}
 
+#if VERSION_rfc_ghcjs
+instance {-# OVERLAPPING #-} ToText JSString where
+  toText = toText . JStr.unpack
+  {-# INLINE toText #-}
+
+instance {-# OVERLAPPING #-} FromText JSString where
+  fromText = JStr.pack . fromText
+  {-# INLINE fromText #-}
+#endif

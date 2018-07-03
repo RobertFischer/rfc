@@ -2,7 +2,7 @@
 
 cd `dirname $0`/..
 
-stack exec -- hlint -j -c --cross ./src
+stack exec -- hlint -j -c --cross ./*/src
 stack build --stack-yaml=./stack.ghcjs.yaml --fast
 stack build --fast
 

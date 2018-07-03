@@ -50,11 +50,11 @@
     - TupleSections
     - TypeApplications
     - TypeFamilies
-    - TypeFamilyDependencies
     - TypeOperators  
     - RebindableSyntax
     - MonadFailDesugaring
     - DisambiguateRecordFields
+    # - TypeFamilyDependencies  -- Not supported in 8.0.2
 
   ghc-options: 
     - -Wall

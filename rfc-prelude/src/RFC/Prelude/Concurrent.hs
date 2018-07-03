@@ -19,6 +19,8 @@ import           Data.Foldable               ( foldrM )
 import           UnliftIO.Async
 import           UnliftIO.Concurrent
 
+{-# ANN module "HLint: ignore Use if" #-}
+
 -- |Executes all the IO actions simultaneously and returns the original data structure with the arguments replaced
 --  by the results of the execution.
 doConcurrently :: (Traversable t, MonadUnliftIO m) => t (m a) -> m (t a)
@@ -43,7 +45,7 @@ filterConcurrently test actions = do
     foldImpl !promise results = do
       result <- wait promise
       return $ case test result of
-        True  -> (pure result) <> results
+        True -> (pure result) <> results
         False -> results
 {-# INLINABLE filterConcurrently #-}
 {-# SPECIALIZE INLINE filterConcurrently :: (MonadUnliftIO m) => (a -> Bool) -> [m a] -> m [a] #-}
