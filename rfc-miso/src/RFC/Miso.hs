@@ -1,14 +1,15 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# OPTIONS_GHC -fno-warn-dodgy-exports  #-}
 
 module RFC.Miso
   ( module RFC.Miso.String
+#ifdef VERSION_rfc_ghcjs
   , module RFC.GHCJS
-  , module RFC.Miso.Routing
-  , module RFC.Miso.Component
+#endif
   ) where
 
-import           RFC.GHCJS
-import           RFC.Miso.Component
-import           RFC.Miso.Routing
 import           RFC.Miso.String
+#ifdef VERSION_rfc_ghcjs
+import           RFC.GHCJS
+#endif

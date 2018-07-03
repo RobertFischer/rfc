@@ -1,0 +1,17 @@
+name: rfc-ghcjs
+version: 0.0.0.1
+synopsis: GHCJS extensions provided by the Robert Fischer Commons.
+description: >
+  Provides various experimental extensions for the GHCJS compiler for front end development.
+category: Web
+github: RobertFischer/rfc/rfc-ghcjs
+author: Robert Fischer
+license: MIT
+
+_common: !include package.common.yaml
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - base >= 4 && < 5

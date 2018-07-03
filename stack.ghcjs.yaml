@@ -9,6 +9,12 @@ setup-info:
         sha1: 9e9d68ae01aca1b02fcbb03e5b891a7e2118a9db
 
 flags:  
+  rfc-prelude:
+    production: false
+  rfc-miso:
+    production: false
+  rfc-ghcjs:
+    production: false
   miso:
     tests: false
     examples: false
@@ -19,7 +25,9 @@ flags:
     cffi: false
 
 packages:
+- './rfc-ghcjs'
+- './rfc-miso'
 - './rfc-prelude'
 extra-deps: 
-- git: git@github.com:dmjio/miso.git
-  commit: d6fd3fa96cf5adca9052460328be888c64df52d8
+- miso-0.20.1.0
+

@@ -14,9 +14,9 @@ module RFC.Miso.String
   , module Miso.String
   ) where
 
-import           Miso.String          (MisoString, ToMisoString (..))
+import           Miso.String          ( MisoString, ToMisoString (..) )
 import           RFC.Data.UUID        ()
-import           RFC.String           ()
+import           RFC.Prelude.String   ()
 
 #ifdef GHCJS
 import qualified Data.JSString        as JSString
@@ -92,5 +92,4 @@ instance {-# OVERLAPPING #-} ToText MisoString where
   toText :: MisoString -> Text
   toText = fromMisoString
   {-# INLINE toText #-}
-
 #endif

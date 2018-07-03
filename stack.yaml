@@ -5,6 +5,18 @@ require-stack-version: ! '>=1.6'
 flags:
   rfc-prelude:
       production: false
+  rfc-env:
+      production: false
+  rfc-miso:
+      production: false
+  rfc-redis:
+      production: false
+  rfc-psql:
+      production: false
+  rfc-http-client:
+      production: false
+  rfc-servant:
+      production: false
   wai-cli:
       tls: false
   postgresql-typed:
@@ -26,11 +38,15 @@ flags:
       non-blocking-ffi: true
   tls:
       compat: false
+  miso:
+    examples: false
+    tests: false
 
 extra-package-dbs: []
 packages:
 - './rfc-prelude'
 - './rfc-env'
+- './rfc-miso'
 - './rfc-redis'
 - './rfc-psql'
 - './rfc-http-client'
@@ -38,3 +54,4 @@ packages:
 extra-deps:  
 - time-units-1.0.0
 - aeson-1.4.0.0
+- miso-0.20.1.0
