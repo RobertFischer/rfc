@@ -8,13 +8,13 @@ github: RobertFischer/rfc/rfc-http-client
 author: Robert Fischer
 license: MIT
 
-_common: !include "../package.common.yaml"
+_common: !include package.common.yaml
 
 <<: *defaults
 
 dependencies:
   - rfc-prelude 
-  - base >= 4.10
+  - base >= 4.10 && < 5
   - lens >= 4.16
   - aeson >= 1.4
   - scientific >= 0.3
