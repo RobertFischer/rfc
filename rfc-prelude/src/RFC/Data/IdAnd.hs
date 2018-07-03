@@ -12,6 +12,7 @@
 module RFC.Data.IdAnd
   ( idAndsToMap
   , IdAnd(..)
+  , Id(..)
   , idAndToId
   , idAndToValue
   , valuesToIdAnd
