@@ -1,28 +1,25 @@
-resolver: lts-9.21
-compiler: ghcjs-0.2.1.9009021_ghc-8.0.2
+resolver: nightly-2018-05-10
+compiler: ghcjs-0.2.0.9011009_ghc-8.4.1
 compiler-check: match-exact
 setup-info:
   ghcjs:
     source:
-      ghcjs-0.2.1.9009021_ghc-8.0.2:
-        url: https://github.com/matchwood/ghcjs-stack-dist/raw/develop/ghcjs-0.2.1.9009021.tar.gz
-        sha1: db8cd3252e47dbef3db7d1cf0d6d997e8d029f84
+      ghcjs-0.2.0.9011009_ghc-8.4.1:
+        url: https://github.com/alexanderkjeldaas/ghcjs/releases/download/fghcjs-8.4.1/ghcjs.tar.gz
+        sha1: 9e9d68ae01aca1b02fcbb03e5b891a7e2118a9db
 
 flags:  
-  rfc: 
-    development: true
   miso:
     tests: false
     examples: false
+  aeson:
+    developer: false
+    fast: false
+    bytestring-builder: false
+    cffi: false
 
 packages:
-- '.'
+- './rfc-prelude'
 extra-deps: 
-- classy-prelude-1.4.0
-- servant-0.12.1
-- time-units-1.0.0
-- unliftio-0.2.7.0
-- unliftio-core-0.1.1.0
-- basic-prelude-0.7.0
 - git: git@github.com:dmjio/miso.git
   commit: d6fd3fa96cf5adca9052460328be888c64df52d8

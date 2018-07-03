@@ -1,1 +1,40 @@
-./stack.nightly.yaml
+compiler-check: newer-minor
+resolver: lts-11.16
+require-stack-version: ! '>=1.6'
+
+flags:
+  rfc-prelude:
+      production: false
+  wai-cli:
+      tls: false
+  postgresql-typed:
+      hdbc: false
+  postgresql-binary:
+      hdbc: false
+  base:
+      integer-gmp: true
+  http-api-data:
+      use-text-show: true
+  aeson:
+      cffi: true
+      fast: false
+      developer: false
+      bytestring-builder: false
+  cryptonite:
+      support_pclmuldq: true
+  zlib:
+      non-blocking-ffi: true
+  tls:
+      compat: false
+
+extra-package-dbs: []
+packages:
+- './rfc-prelude'
+- './rfc-env'
+- './rfc-redis'
+- './rfc-psql'
+- './rfc-http-client'
+- './rfc-servant'
+extra-deps:  
+- time-units-1.0.0
+- aeson-1.4.0.0
