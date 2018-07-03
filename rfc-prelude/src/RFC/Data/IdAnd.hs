@@ -5,6 +5,7 @@
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 
@@ -57,7 +58,7 @@ import           Data.Swagger
 #endif
 
 newtype Id a = Id { idToUUID :: UUID }
-  deriving (Eq, Ord, Show, Generic, Typeable)
+  deriving (Eq, Ord, Show, Generic, Typeable, FromJSONKey, ToJSONKey)
 
 -- |Represents something which has an ID.
 newtype IdAnd a = IdAnd (Id a, a)
@@ -174,10 +175,15 @@ instance (FromJSON a) => FromJSON (Map UUID (IdAnd a)) where
 
   parseJSON invalid = typeMismatch "Map UUID (IdAnd a)" invalid
 
+instance (FromJSON a) => FromJSON (Map (Id a) (IdAnd a)) where
+  parseJSON = Map.mapKeys Id <$> parseJSON
 
 instance (ToJSON a) => ToJSON (Map UUID (IdAnd a)) where
   toJSON =
     Object . HashMap.fromList . fmap (\(k,v) -> (UUID.toText k, toJSON v)) . Map.toList
+
+instance (ToJSON a) => ToJSON (Map (Id a) (IdAnd a)) where
+  toJSON = toJSON . (Map.mapKeys Id)
 
 #endif
 #endif
