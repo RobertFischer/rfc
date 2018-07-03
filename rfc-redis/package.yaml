@@ -9,13 +9,13 @@ github: RobertFischer/rfc/rfc-redis
 author: Robert Fischer
 license: MIT
 
-_common: !include "../package.common.yaml"
+_common: !include package.common.yaml
 
 <<: *defaults
 
 dependencies:
   - rfc-prelude 
   - rfc-env
-  - base >= 4.10
+  - base >= 4.10 && < 5
   - hedis >= 0.10
   - time >= 1.8
