@@ -101,3 +101,8 @@
         - -Werror 
         - -dcore-lint 
         - -dcmm-lint
+
+  when:
+  - condition: impl(ghcjs) && flag(production)
+    ghc-options:
+      - -dedupe
