@@ -40,8 +40,16 @@ type StrictByteString = SB.ByteString
 type ShortByteString = Sbs.ShortByteString
 type LazyTextBuilder = LTBuilder.Builder
 
+toString :: (ToText a) => a -> String
+toString = ST.unpack . toText
+{-# INLINE toString #-}
+{-# SPECIALIZE INLINE toString :: String -> String     #-}
+{-# SPECIALIZE INLINE toString :: LazyText -> String   #-}
+{-# SPECIALIZE INLINE toString :: StrictText -> String #-}
+
 toStrictText :: (ToText a) => a -> StrictText
 toStrictText = toText
+{-# INLINE toStrictText #-}
 {-# SPECIALIZE INLINE toStrictText :: String -> StrictText     #-}
 {-# SPECIALIZE INLINE toStrictText :: LazyText -> StrictText   #-}
 {-# SPECIALIZE INLINE toStrictText :: StrictText -> StrictText #-}
@@ -104,6 +112,8 @@ emptyString = fromText $ toText ""
 emptyUTF8 :: (FromText (UTF8 a)) => a
 emptyUTF8 = unUTF8 . fromText $ toText ""
 {-# INLINE emptyUTF8 #-}
+{-# SPECIALIZE INLINE emptyUTF8 :: LazyByteString #-}
+{-# SPECIALIZE INLINE emptyUTF8 :: StrictByteString #-}
 
 instance {-# OVERLAPPING #-} ToText Char where
   toText c = toText [c]
