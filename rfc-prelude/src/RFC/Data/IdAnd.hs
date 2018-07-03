@@ -126,6 +126,7 @@ idAndsToMap :: [IdAnd a] -> RefMap a
 idAndsToMap list = Map.fromList $ idAndToPair <$> list
 {-# INLINEABLE idAndsToMap #-}
 
+
 instance (FromJSON a) => FromJSON (IdAnd a) where
   parseJSON = JSON.withObject "IdAnd" $ \o -> do
     id <- o .: "id"
@@ -136,6 +137,10 @@ instance (FromJSON a) => FromJSON (IdAnd a) where
 instance (ToJSON a) => ToJSON (IdAnd a) where
   toJSON (IdAnd (Id id,value)) = object [ "id".=id, "value".=value ]
   {-# INLINEABLE toJSON #-}
+
+instance ToText (Id a) where
+  toText (Id uuid) = toText uuid
+  {-# INLINE toText #-}
 
 instance (FromJSON a) => FromJSON (Id a) where
   parseJSON = fmap Id . parseJSON
