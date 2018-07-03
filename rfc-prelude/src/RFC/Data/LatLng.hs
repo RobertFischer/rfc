@@ -13,8 +13,8 @@ module RFC.Data.LatLng
   , lngLat
   ) where
 
-import           RFC.JSON    as JSON
 import           RFC.Prelude
+import           RFC.Prelude.JSON as JSON
 
 type Latitude = Double
 type Longitude = Double
