@@ -9,7 +9,7 @@ github: RobertFischer/rfc/rfc-servant
 author: Robert Fischer
 license: MIT
 
-_common: !include "../package.common.yaml"
+_common: !include package.common.yaml
 
 <<: *defaults
 
@@ -18,7 +18,7 @@ dependencies:
   - rfc-redis
   - rfc-psql
   - rfc-http-client
-  - base >= 4.10
+  - base >= 4.10 && < 5
   - data-default >= 0.7
   - aeson >= 1.4
   - binary >= 0.8
