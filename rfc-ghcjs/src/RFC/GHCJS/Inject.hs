@@ -13,7 +13,7 @@ module RFC.GHCJS.Inject
 
 import           Data.JSString
 import           Network.URI
-import           RFC.Prelude   hiding ( pack )
+import           RFC.Prelude
 
 -- | Injects a String of CSS declarations as an inline <style type="text/css"> element.
 injectStylesheet :: String -> IO ()

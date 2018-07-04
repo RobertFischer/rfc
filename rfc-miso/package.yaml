@@ -20,6 +20,10 @@ dependencies:
   - mono-traversable >= 1.0
 
 when:
-  condition: impl(ghcjs)
-  dependencies:
-    - rfc-ghcjs
+  - *when_production
+  - *when_ghcjs
+  - *when_ghcjs_and_production
+  - *when_not_ghcjs_and_production
+  - condition: impl(ghcjs)
+    dependencies:
+      - rfc-ghcjs

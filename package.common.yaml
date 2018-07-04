@@ -1,18 +1,8 @@
-- &flags_production
-  production:
-    description: If true, disables failing on warnings and enables aggressive optimizations.
-    manual: true
-    default: false
-
 - &defaults
   author: Robert Fischer
   maintainer: smokejumperit+rfc@gmail.com
   license: MIT
   license-file: LICENSE
-
-
-  flags:
-    <<: *flags_production
 
   library:
     source-dirs:
@@ -80,8 +70,39 @@
     - -Widentities
     - -j
 
-  when:
-  - condition: flag(production)
+  flags: &default_flags
+    production:
+      description: If true, disables failing on warnings and enables aggressive optimizations.
+      manual: true
+      default: false
+
+  when: 
+  - &when_ghcjs
+    condition: impl(ghcjs)
+    then:
+      cpp-options: -DCLIENT -DGHCJS -DGHCJS_BROWSER -DBROWSER
+    else:
+      default-extensions: 
+        - RebindableSyntax
+        - TypeFamilyDependencies  
+  - &when_not_ghcjs_and_production
+    condition: flag(production) && !impl(ghcjs)
+    then:
+      ghc-options:
+        - -fllvm
+    else:
+      cpp-options: # Need to put something in here which doesn't do any harm
+        - -DGHCJS_OR_NOT_PRODUCTION
+  - &when_ghcjs_and_production
+    condition: impl(ghcjs) && flag(production)
+    then: # For some reason, it is requiring me to put a 'then' in here, or it complains about not knowing 'ghc-options'.
+      ghc-options:
+        - -dedupe
+    else:
+      cpp-options: # Need to put something in here which doesn't do any harm....
+        - -DNOT_GHCJS_NOR_PRODUCTION
+  - &when_production
+    condition: flag(production)
     then:
       ghc-options:
         - -feager-blackholing 
@@ -104,13 +125,3 @@
         - -Werror 
         - -dcore-lint 
         - -dcmm-lint
-  - condition: impl(ghcjs) && flag(production)
-    ghc-options:
-      - -dedupe
-  - condition: impl(ghcjs)
-    then:
-      cpp-options: -DCLIENT -DGHCJS -DGHCJS_BROWSER -DBROWSER
-    else:
-      default-extensions: 
-        - RebindableSyntax
-        - TypeFamilyDependencies  
