@@ -4,4 +4,4 @@ module RFC.Miso
   ( module RFC.Miso.String
   ) where
 
-import           RFC.Miso.String
+import           RFC.Miso.String hiding ( (<>) )
