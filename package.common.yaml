@@ -1,14 +1,18 @@
+- &flags_production
+  production:
+    description: If true, disables failing on warnings and enables aggressive optimizations.
+    manual: true
+    default: false
+
 - &defaults
   author: Robert Fischer
   maintainer: smokejumperit+rfc@gmail.com
   license: MIT
   license-file: LICENSE
 
+
   flags:
-    production:
-      description: If true, disables failing on warnings and enables aggressive optimizations.
-      manual: true
-      default: false
+    <<: *flags_production
 
   library:
     source-dirs:
@@ -54,7 +58,6 @@
     - RebindableSyntax
     - MonadFailDesugaring
     - DisambiguateRecordFields
-    # - TypeFamilyDependencies  -- Not supported in 8.0.2
 
   ghc-options: 
     - -Wall
@@ -101,8 +104,13 @@
         - -Werror 
         - -dcore-lint 
         - -dcmm-lint
-
-  when:
   - condition: impl(ghcjs) && flag(production)
     ghc-options:
       - -dedupe
+  - condition: impl(ghcjs)
+    then:
+      cpp-options: -DCLIENT -DGHCJS -DGHCJS_BROWSER -DBROWSER
+    else:
+      default-extensions: 
+        - RebindableSyntax
+        - TypeFamilyDependencies  
