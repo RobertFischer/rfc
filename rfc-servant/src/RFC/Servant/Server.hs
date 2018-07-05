@@ -84,26 +84,19 @@ apiCtxToHandler apiClient redisPool psqlPool awsEnv = toHandler
         withAws = runAWST awsEnv
 {-# INLINE apiCtxToHandler #-}
 
-type FetchAllImpl a = ApiCtx (RefMap a)
 type FetchAllAPI a = JGet (RefMap a)
-type FetchImpl a = UUID -> ApiCtx (IdAnd a)
-type FetchAPI a = Capture "id" UUID :> JGet (IdAnd a)
-type CreateImpl a = a -> ApiCtx (IdAnd a)
+type FetchAllImpl a = ServerT (FetchAllAPI a) ApiCtx
+type FetchAPI a = Capture "id" (Id a) :> JGet (IdAnd a)
+type FetchImpl a = ServerT (FetchAPI a) ApiCtx
 type CreateAPI a = JReqBody a :> JPost (IdAnd a)
---type PatchImpl a = UUID -> JSON.Patch -> ApiCtx (IdAnd a)
+type CreateImpl a = ServerT (CreateAPI a) ApiCtx
 --type PatchAPI a = Capture "id" UUID :> ReqBody '[JSON] JSON.Patch :> Patch '[JSON] (IdAnd a)
-type ReplaceImpl a = UUID -> a -> ApiCtx (IdAnd a)
-type ReplaceAPI a = Capture "id" UUID :> JReqBody a :> JPost (IdAnd a)
-type DeleteImpl = UUID -> ApiCtx ()
-type DeleteAPI a = Capture "id" UUID :> JDelete ()
+--type PatchImpl a = ServerT (PatchAPI a) ApiCtx
+type ReplaceAPI a = Capture "id" (Id a) :> JReqBody a :> JPost (IdAnd a)
+type ReplaceImpl a = ServerT (ReplaceAPI a) ApiCtx
+type DeleteAPI a = Capture "id" (Id a) :> JDelete ()
+type DeleteImpl a = ServerT (DeleteAPI a) ApiCtx
 
-type ServerImpl a =
-  (FetchAllImpl a)
-  :<|> (FetchImpl a)
-  :<|> (CreateImpl a)
-  -- :<|> (PatchImpl a)
-  :<|> (ReplaceImpl a)
-  :<|> DeleteImpl
 type ServerAPI a =
   (FetchAllAPI a)
   :<|> (FetchAPI a)
@@ -112,16 +105,16 @@ type ServerAPI a =
   :<|> (ReplaceAPI a)
   :<|> (DeleteAPI a)
 
+type ServerImpl a = ServerT (ServerAPI a) ApiCtx
 
 class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
 
-
   -- | Provide all UUID of all the children of this resource.
   --   The graph of all resources to children should form a directed acyclic graph.
-  resourceChildIds :: IdAnd (Proxy a) -> ApiCtx [UUID]
+  resourceChildIds :: Id a -> ApiCtx [UUID]
 
   -- | Update the child id for the parent at the first 'UUID' argument from the second 'UUID' argument to the third 'UUID' argument.
-  resourceUpdateChildId :: IdAnd (Proxy a) -> UUID -> UUID -> ApiCtx ()
+  resourceUpdateChildId :: Id a -> UUID -> UUID -> ApiCtx ()
 
   restFetchAll :: FetchAllImpl a
   restFetchAll = idAndsToMap <$> fetchAllResources
@@ -135,7 +128,7 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
         { errReasonPhrase = "No resource found for id"
         , errBody = toUTF8 $ "Could not find a resource with UUID: " <> show uuid
         }
-      Just value -> return $ tupleToIdAnd (uuid, value)
+      Just value -> return $ IdAnd (uuid, value)
   {-# INLINE restFetch #-}
 
   restCreate :: CreateImpl a
@@ -170,13 +163,11 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
 
   restReplace :: ReplaceImpl a
   restReplace id value = do
-      replaceResource newValue
+      replaceResource id value
       restFetch id
-    where
-      newValue = tupleToIdAnd (id,value)
   {-# INLINE restReplace #-}
 
-  restDelete :: Proxy a -> DeleteImpl
+  restDelete :: DeleteImpl a
   restDelete = deleteResource
 
   restServer :: ServerImpl a
@@ -186,10 +177,10 @@ class (FromJSON a, ToJSON a, Show a) => ResourceDefinition a where
     :<|> restCreate
     -- :<|> restPatch
     :<|> restReplace
-    :<|> (restDelete (Proxy::Proxy a))
+    :<|> restDelete
 
-  fetchResource :: UUID -> ApiCtx (Maybe a)
+  fetchResource :: Id a -> ApiCtx (Maybe a)
   fetchAllResources :: ApiCtx [IdAnd a]
-  createResource :: a -> ApiCtx (Maybe UUID)
-  replaceResource :: (IdAnd a) -> ApiCtx ()
-  deleteResource :: Proxy a -> UUID -> ApiCtx ()
+  createResource :: a -> ApiCtx (Maybe (Id a))
+  replaceResource :: Id a -> a -> ApiCtx ()
+  deleteResource :: Id a -> ApiCtx ()
