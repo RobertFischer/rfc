@@ -190,19 +190,27 @@ instance (ToJSON a) => ToJSON (Map (Id a) (IdAnd a)) where
 #endif
 
 #ifdef VERSION_swagger2
-instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
+
+instance (ToSchema a) => ToSchema (Id a) where
+  declareNamedSchema _ = do
+    NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
+    let aMaybeName =  _namedSchemaName
+    return . NamedSchema ((`mappend` " UUID") <$> aMaybeName) $
+      mempty
+        & type_ .~ SwaggerString
+
+instance (ToSchema a) => ToSchema (IdAnd a) where
   declareNamedSchema _ = do
     NamedSchema{..} <- declareNamedSchema (Proxy :: Proxy a)
     let aMaybeName =  _namedSchemaName
     aSchema <- declareSchemaRef (Proxy :: Proxy a)
-    idSchema <- declareSchemaRef (Proxy :: Proxy UUID)
-    let maybeSample = safeHead $ toSamples (Proxy :: Proxy (IdAnd a))
+    idSchema <- declareSchemaRef (Proxy :: Proxy (Id a))
     return . NamedSchema (fmap (\name -> "IdAnd " <> name) aMaybeName) $
       mempty
         & type_ .~ SwaggerObject
         & properties .~ [("id", idSchema), ("value", aSchema)]
         & required .~ ["id", "value"]
-        & example .~ (toJSON . snd <$> maybeSample)
+
 #endif
 
 #ifdef VERSION_servant_docs
