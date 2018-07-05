@@ -99,7 +99,7 @@ instance ToHttpApiData JSON.Value where
 
 #ifdef VERSION_swagger2
 instance Swag.ToSchema Value where
-  declareNamedSchema _ = return . Swag.NamedSchema (Just $ cs "Value") $ mempty
+  declareNamedSchema _ = return . Swag.NamedSchema (Just $ fromChars "Value") $ mempty
 #endif
 
 #endif

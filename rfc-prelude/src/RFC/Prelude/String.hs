@@ -12,7 +12,7 @@
 module RFC.Prelude.String
   ( module RFC.Prelude.String
   , module Data.Text.Conversions
-#if VERSION_rfc_ghcjs
+#ifdef VERSION_rfc_ghcjs
   , JSString
 #endif
   ) where
@@ -30,12 +30,12 @@ import qualified Data.Text.Lazy.Builder as LTBuilder
 import           Network.URI            ( URI (..), parseURIReference, uriToString )
 import           RFC.Prelude.Instances  ()
 
-#if VERSION_rfc_ghcjs
-import           Data.JSString          ( JSString )
+#ifdef VERSION_rfc_ghcjs
 import qualified Data.JSString          as JStr
+import           RFC.GHCJS.JSString
 #endif
 
-#if VERSION_servant_docs
+#ifdef VERSION_servant_docs
 import           Servant.Docs
 #endif
 
@@ -54,7 +54,7 @@ toChars = ST.unpack . toText
 {-# SPECIALIZE INLINE toChars :: String -> String     #-}
 {-# SPECIALIZE INLINE toChars :: LazyText -> String   #-}
 {-# SPECIALIZE INLINE toChars :: StrictText -> String #-}
-#if VERSION_rfc_ghcjs
+#ifdef VERSION_rfc_ghcjs
 {-# SPECIALIZE INLINE toChars :: JSString -> String #-}
 #endif
 
@@ -64,7 +64,7 @@ fromChars = fromText . toText
 {-# SPECIALIZE INLINE fromChars :: String -> String   #-}
 {-# SPECIALIZE INLINE fromChars :: String -> LazyText #-}
 {-# SPECIALIZE INLINE fromChars :: String -> StrictText #-}
-#if VERSION_rfc_ghcjs
+#ifdef VERSION_rfc_ghcjs
 {-# SPECIALIZE INLINE fromChars :: String -> JSString #-}
 #endif
 
@@ -74,7 +74,7 @@ toStrictText = toText
 {-# SPECIALIZE INLINE toStrictText :: String -> StrictText     #-}
 {-# SPECIALIZE INLINE toStrictText :: LazyText -> StrictText   #-}
 {-# SPECIALIZE INLINE toStrictText :: StrictText -> StrictText #-}
-#if VERSION_rfc_ghcjs
+#ifdef VERSION_rfc_ghcjs
 {-# SPECIALIZE INLINE toStrictText :: JSString -> StrictText   #-}
 #endif
 
@@ -171,13 +171,13 @@ instance {-# OVERLAPS #-} (MonadFail f) => FromText (f URI) where
       Just uri -> return uri
   {-# INLINE fromText #-}
 
-#if VERSION_servant_docs
+#ifdef VERSION_servant_docs
 
 instance ToSample StrictText where
   toSamples _ = singleSample $ toText "This is arbitrary text"
 
 instance ToSample LazyText where
-  toSamples _ = singleSample $ toText "This is arbitrary text"
+  toSamples _ = singleSample $ toLazyText "This is arbitrary text"
 
 #endif
 
@@ -185,7 +185,7 @@ instance {-# OVERLAPPING #-} ToText LazyTextBuilder where
   toText = toText . LTBuilder.toLazyText
   {-# INLINE toText #-}
 
-#if VERSION_rfc_ghcjs
+#ifdef VERSION_rfc_ghcjs
 instance {-# OVERLAPPING #-} ToText JSString where
   toText = toText . JStr.unpack
   {-# INLINE toText #-}

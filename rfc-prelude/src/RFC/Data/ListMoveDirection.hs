@@ -7,13 +7,13 @@ module RFC.Data.ListMoveDirection (
   module RFC.Data.ListMoveDirection
 ) where
 
-import           Data.Aeson         as Aeson
-import           Data.Text          as Text
+import           Data.Aeson          as Aeson
+import           Data.Text           as Text
 import           RFC.Prelude
 
-#ifndef GHCJS_BROWSER
+#ifdef VERSION_servant_docs
 
-import           RFC.Servant.ApiDoc (ToSchemaRFC)
+import           Data.Swagger.Schema
 import           Servant.Docs
 
 instance ToSample ListMoveDirection where
@@ -22,7 +22,7 @@ instance ToSample ListMoveDirection where
     , ("Down/backward/towards tail", TowardsTail)
     ]
 
-instance ToSchemaRFC ListMoveDirection where
+instance ToSchema ListMoveDirection
 
 #endif
 
@@ -44,35 +44,44 @@ instance FromJSON ListMoveDirection where
       let head = return TowardsHead
       let tail = return TowardsTail
       case Text.strip $ Text.toUpper t of
-        "UP"           -> head
-        "DOWN"         -> tail
-
-        "FORWARD"      -> head
-        "BACKWARD"     -> tail
-
-        "FRONT"        -> head
-        "BACK"         -> tail
+        "-"            -> head
+        "+"            -> tail
 
         "-1"           -> head
         "+1"           -> tail
 
-        "-"            -> head
-        "+"            -> tail
+        "BACK"         -> tail
+        "FRONT"        -> head
+
+        "BACKWARD"     -> tail
+        "BACKWARDS"    -> tail
+        "FORWARD"      -> head
+        "FORWARDS"     -> head
+
+        "HEADWARD"     -> head
+        "HEADWARDS"    -> head
+        "TAILWARD"     -> tail
+        "TAILWARDS"    -> tail
+
+        "UP"           -> head
+        "DOWN"         -> tail
+
+        "TOWARDFRONT"  -> head
+        "TOWARDSFRONT" -> head
+        "TOWARDBACK"   -> tail
+        "TOWARDSBACK"  -> tail
 
         "TOWARDSSTART" -> head
         "TOWARDSTART"  -> head
+        "TOWARDEND"    -> tail
         "TOWARDSEND"   -> tail
 
-        "TOWARDSFRONT" -> head
-        "TOWARDSBACK"  -> tail
-
+        "TOWARDHEAD"   -> head
         "TOWARDSHEAD"  -> head
         "TOWARDSTAIL"  -> tail
+        "TOWARDTAIL"   -> tail
 
-        "HEADWARDS"    -> head
-        "TAILWARDS"    -> tail
-
-        _              -> fail . cs $ Text.append "Could not parse string to direction: " t
+        _              -> fail . toChars $ "Could not parse string to direction: " <> t
 
 instance ToJSON ListMoveDirection where
   toJSON dir = Aeson.String (

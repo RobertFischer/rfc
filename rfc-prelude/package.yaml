@@ -35,3 +35,15 @@ dependencies:
   - unliftio >= 0.2
   - unliftio-core >= 0.1
   - uuid-types >= 1.0
+
+when:
+  - *when_production
+  - *when_ghcjs
+  - *when_ghcjs_and_production
+  - *when_not_ghcjs_and_production
+  - condition: "!impl(ghcjs)"
+    dependencies:
+      - servant >= 0.13
+      - servant-server >= 0.13
+      - servant-docs >= 0.11
+      - swagger2 >= 2.2

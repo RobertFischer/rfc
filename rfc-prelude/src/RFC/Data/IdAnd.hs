@@ -48,7 +48,7 @@ import qualified Data.UUID.Types   as UUID
 #endif
 
 -- TODO Make this check more precise
-#ifdef VERSION_servant_doc
+#ifdef VERSION_servant_docs
 import qualified Data.List         as List
 import qualified Data.UUID.Types   as UUID
 import           Servant.Docs
@@ -205,7 +205,7 @@ instance (ToSchema a, ToJSON a, ToSample a) => ToSchema (IdAnd a) where
         & example .~ (toJSON . snd <$> maybeSample)
 #endif
 
-#ifdef VERSION_servant_doc
+#ifdef VERSION_servant_docs
 uuidList :: [UUID]
 uuidList = List.cycle $ fromMaybe UUID.nil . UUID.fromString <$>
   [ "4fc2ffac-9100-41d6-94e1-c33a545e9ba2"
