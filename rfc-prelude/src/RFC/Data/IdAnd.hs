@@ -33,29 +33,33 @@ module RFC.Data.IdAnd
 import           RFC.Prelude
 
 
-import           Data.Aeson        as JSON
-import qualified Data.Map          as Map
-import           Data.Proxy        ( Proxy (..) )
+import           Data.Aeson                      as JSON
+import qualified Data.Map                        as Map
+import           Data.Proxy                      ( Proxy (..) )
 
 #ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,0,0)
-  -- Don't need the backflips for maps
+  -- Don't need the backflips for refmaps
 #else
-import           Data.Aeson.Types  ( Parser, typeMismatch )
-import qualified Data.HashMap.Lazy as HashMap
-import qualified Data.UUID.Types   as UUID
+import           Data.Aeson.Types                ( Parser, typeMismatch )
+import qualified Data.HashMap.Lazy               as HashMap
+import qualified Data.UUID.Types                 as UUID
 #endif
 #endif
 
--- TODO Make this check more precise
 #ifdef VERSION_servant_docs
-import qualified Data.List         as List
-import qualified Data.UUID.Types   as UUID
+import qualified Data.List                       as List
+import qualified Data.UUID.Types                 as UUID
 import           Servant.Docs
 #endif
+
 #ifdef VERSION_swagger2
-import           Control.Lens      hiding ( (.=) )
+import           Control.Lens                    hiding ( (.=) )
 import           Data.Swagger
+#endif
+
+#ifdef VERSION_postgresql_typed
+import           Database.PostgreSQL.Typed.Types
 #endif
 
 newtype Id a = Id { idToUUID :: UUID }
@@ -187,6 +191,29 @@ instance (ToJSON a) => ToJSON (Map (Id a) (IdAnd a)) where
   toJSON = toJSON . (Map.mapKeys Id)
 
 #endif
+#endif
+
+#ifdef VERSION_postgresql_typed
+instance {-# OVERLAPS #-} PGParameter "uuid" (Id a) where
+  pgEncode t (Id uuid) = pgEncode t uuid
+  {-# INLINE pgEncode #-}
+
+  pgLiteral t (Id uuid) = pgLiteral t uuid
+  {-# INLINE pgLiteral #-}
+
+  pgEncodeValue env t (Id uuid) = pgEncodeValue env t uuid
+  {-# INLINE pgEncodeValue #-}
+
+instance {-# OVERLAPS #-} PGColumn "uuid" (Id a) where
+  pgDecode = Id . pgDecode
+  {-# INLINE pgDecode #-}
+
+  pgDecodeBinary = Id . pgDecodeBinary
+  {-# INLINE pgDecodeBinary #-}
+
+  pgDecodeValue = Id . pgDecodeValue
+  {-# INLINE pgDecodeValue #-}
+
 #endif
 
 #ifdef VERSION_swagger2
