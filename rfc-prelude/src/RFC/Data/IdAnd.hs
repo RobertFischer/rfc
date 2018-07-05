@@ -58,7 +58,7 @@ import           Control.Lens                    hiding ( (.=) )
 import           Data.Swagger
 #endif
 
-#ifdef VERSION_postgresql_typed
+#ifdef VERSION_rfc_psql
 import           Database.PostgreSQL.Typed.Types
 #endif
 
@@ -193,7 +193,7 @@ instance (ToJSON a) => ToJSON (Map (Id a) (IdAnd a)) where
 #endif
 #endif
 
-#ifdef VERSION_postgresql_typed
+#ifdef VERSION_rfc_psql
 instance {-# OVERLAPS #-} PGParameter "uuid" (Id a) where
   pgEncode t (Id uuid) = pgEncode t uuid
   {-# INLINE pgEncode #-}
