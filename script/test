@@ -2,9 +2,16 @@
 
 cd `dirname $0`/..
 
+echo "Start HLint check"
 stack exec -- hlint -j -c --cross ./*/src/*
+echo "HLint check successful"
+
+echo "Start dirty build test"
 stack build --stack-yaml=./stack.ghcjs.yaml --fast
 stack build --fast
+echo "Dirty build test successful"
 
+echo "Start clean build test"
 stack clean --stack-yaml=./stack.ghcjs.yaml && stack build --stack-yaml=./stack.ghcjs.yaml --fast
 stack clean && stack build --fast
+echo "Clean build test successful"
