@@ -33,33 +33,35 @@ module RFC.Data.IdAnd
 import           RFC.Prelude
 
 
-import           Data.Aeson                      as JSON
-import qualified Data.Map                        as Map
-import           Data.Proxy                      ( Proxy (..) )
+import           Data.Aeson        as JSON
+import qualified Data.Map          as Map
+import           Data.Proxy        ( Proxy (..) )
 
 #ifdef VERSION_aeson
 #if MIN_VERSION_aeson(1,0,0)
   -- Don't need the backflips for refmaps
 #else
-import           Data.Aeson.Types                ( Parser, typeMismatch )
-import qualified Data.HashMap.Lazy               as HashMap
-import qualified Data.UUID.Types                 as UUID
+import           Data.Aeson.Types  ( Parser, typeMismatch )
+import qualified Data.HashMap.Lazy as HashMap
+import qualified Data.UUID.Types   as UUID
 #endif
 #endif
 
 #ifdef VERSION_servant_docs
-import qualified Data.List                       as List
-import qualified Data.UUID.Types                 as UUID
+import qualified Data.List         as List
+import qualified Data.UUID.Types   as UUID
 import           Servant.Docs
 #endif
 
 #ifdef VERSION_swagger2
-import           Control.Lens                    hiding ( (.=) )
+import           Control.Lens      hiding ( (.=) )
 import           Data.Swagger
 #endif
 
-#ifdef VERSION_rfc_psql
-import           Database.PostgreSQL.Typed.Types
+#ifdef VERSION_servant
+import           Data.Bifunctor    ( second )
+import           RFC.Data.UUID     ()
+import           Servant.API       ( FromHttpApiData (..), ToHttpApiData (..) )
 #endif
 
 newtype Id a = Id { idToUUID :: UUID }
@@ -193,29 +195,6 @@ instance (ToJSON a) => ToJSON (Map (Id a) (IdAnd a)) where
 #endif
 #endif
 
-#ifdef VERSION_rfc_psql
-instance {-# OVERLAPS #-} PGParameter "uuid" (Id a) where
-  pgEncode t (Id uuid) = pgEncode t uuid
-  {-# INLINE pgEncode #-}
-
-  pgLiteral t (Id uuid) = pgLiteral t uuid
-  {-# INLINE pgLiteral #-}
-
-  pgEncodeValue env t (Id uuid) = pgEncodeValue env t uuid
-  {-# INLINE pgEncodeValue #-}
-
-instance {-# OVERLAPS #-} PGColumn "uuid" (Id a) where
-  pgDecode = Id . pgDecode
-  {-# INLINE pgDecode #-}
-
-  pgDecodeBinary = Id . pgDecodeBinary
-  {-# INLINE pgDecodeBinary #-}
-
-  pgDecodeValue = Id . pgDecodeValue
-  {-# INLINE pgDecodeValue #-}
-
-#endif
-
 #ifdef VERSION_swagger2
 
 instance (ToSchema a) => ToSchema (Id a) where
@@ -237,6 +216,33 @@ instance (ToSchema a) => ToSchema (IdAnd a) where
         & type_ .~ SwaggerObject
         & properties .~ [("id", idSchema), ("value", aSchema)]
         & required .~ ["id", "value"]
+
+#endif
+
+#ifdef VERSION_servant
+
+instance {-# OVERLAPS #-} ToHttpApiData (Id a) where
+  toUrlPiece (Id uuid) = toUrlPiece uuid
+  {-# INLINE toUrlPiece #-}
+
+  toEncodedUrlPiece (Id uuid) = toEncodedUrlPiece uuid
+  {-# INLINE toEncodedUrlPiece #-}
+
+  toHeader (Id uuid) = toHeader uuid
+  {-# INLINE toHeader #-}
+
+  toQueryParam (Id uuid) = toQueryParam uuid
+  {-# INLINE toQueryParam #-}
+
+instance {-# OVERLAPS #-} FromHttpApiData (Id a) where
+  parseUrlPiece = second Id . parseUrlPiece
+  {-# INLINE parseUrlPiece #-}
+
+  parseHeader = second Id . parseHeader
+  {-# INLINE parseHeader #-}
+
+  parseQueryParam = second Id . parseQueryParam
+  {-# INLINE parseQueryParam #-}
 
 #endif
 
