@@ -1,0 +1,28 @@
+name: rfc-wai
+version: 0.0.0.1
+synopsis: The WAI extensions from the Robert Fischer Commons.
+description: >
+  Various capabilities supporting @WAI@ development, including an application runner.
+category: Web
+github: RobertFischer/rfc/rfc-wai
+
+_common: !include package.common.yaml
+
+<<: *defaults
+
+dependencies:
+  - rfc-prelude 
+  - rfc-env
+  - base >= 4.10 && < 5
+  - wai >= 3.2
+  - network >= 2.6
+  - http-types >= 0.12
+  - warp >= 3.2
+  #- wai-middleware-cache >= 0.3
+  #- wai-middleware-metrics >= 0.2
+  #- wai-middleware-gunzip >= 0.0.2
+  - wai-extra >= 3.0
+  - wai-cors >= 0.2
+  - wai-cli >= 0.1
+  - temporary >= 1.2
+  - mtl >= 2.2

@@ -41,6 +41,8 @@ flags:
   miso:
     examples: false
     tests: false
+  wai-cli:
+    tls: false
 
 extra-package-dbs: []
 packages:
@@ -51,6 +53,8 @@ packages:
 - './rfc-psql'
 - './rfc-http-client'
 - './rfc-servant'
+- './rfc-wai'
 extra-deps:  
-- time-units-1.0.0
 - miso-0.20.1.0
+- time-units-1.0.0
+

@@ -7,53 +7,39 @@ module RFC.Wai
   , module Network.Wai
   ) where
 
-import           Control.Logger.Simple                     hiding ((<>))
-import           Control.Monad.State.Lazy                  hiding (fail, mapM_)
+import           Control.Monad.State.Lazy                  hiding ( fail, mapM_ )
 import           Network
 import           Network.HTTP.Types.Header
 import           Network.HTTP.Types.Method
 import           Network.Socket
 import           Network.Wai
-import           Network.Wai.Cli                           hiding (socket)
+import           Network.Wai.Cli                           hiding ( socket )
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Handler.Warp.Internal
 import           Network.Wai.Middleware.AcceptOverride
-import           Network.Wai.Middleware.Approot            (envFallback)
+import           Network.Wai.Middleware.Approot            ( envFallback )
 import           Network.Wai.Middleware.Autohead
 import           Network.Wai.Middleware.Cors
 import           Network.Wai.Middleware.Gzip
 import           Network.Wai.Middleware.Jsonp
 import           Network.Wai.Middleware.MethodOverridePost
-import           Network.Wai.Middleware.RequestLogger      (logStdout,
-                                                            logStdoutDev)
-import           RFC.Env                                   (FromEnv (..),
-                                                            decodeEnv, envMaybe,
-                                                            isDevelopment,
-                                                            showEnv, (.!=))
-import           RFC.Log
+import           Network.Wai.Middleware.RequestLogger      ( logStdout, logStdoutDev )
+import           RFC.Env
+  ( FromEnv (..), decodeEnv, envMaybe, isDevelopment, showEnv, (.!=) )
 import           RFC.Prelude
-import           System.IO.Temp                            (createTempDirectory, getCanonicalTemporaryDirectory)
-
-logStartup :: String -> IO ()
-logStartup = logInfo . cs
+import           System.IO.Temp
+  ( createTempDirectory, getCanonicalTemporaryDirectory )
 
 runApplication :: Int -> Application -> IO ()
-runApplication port app = withLogging . withSocketsDo $ do
-  logStartup $
-    "Initializing environment. Is this a development environment? " <>
-    (if isDevelopment then "yes" else "NO!")
+runApplication port app = withSocketsDo $ do
   showEnv
-  logStartup "Inferring Warp settings from the environment"
   rawWarpSettingsResult <- decodeEnv :: IO (Either String Settings)
   case rawWarpSettingsResult of
     Left err -> fail $ "Error while inferring Warp settings: " <> err
     Right origWarpSettings -> do
-      logStartup "Instantiating middleware"
       middlewares <- defaultMiddleware
       let warpSettings = origWarpSettings { settingsPort = port }
-      logStartup "Configuring socket"
       reuseSocket <- bindSocketReusePort port
-      logStartup $ "Running the app gracefully on port " <> (show port)
       runGraceful
         ServeNormally
         (`runSettingsSocket` reuseSocket)
@@ -93,13 +79,9 @@ instance FromEnv Settings where
 
 defaultMiddleware :: IO Middleware
 defaultMiddleware = do
-  logStartup "Inferring the application root"
   approot <- envFallback
-  logStartup "Looking up temporary directory"
   tmpDir <- getTmpDir
-  logStartup $ "Creating a temporary directory for gzip caching under " <> tmpDir
   gzipDir <- mkGzipDir tmpDir
-  logStartup $ "Created gzip caching directory: " <> gzipDir
   return $
     methodOverridePost .
     acceptOverride .
@@ -111,9 +93,7 @@ defaultMiddleware = do
     (if isDev then logStdoutDev else logStdout)
   where
     isDev = isDevelopment
-    handleError msg e = do
-      logError . cs $ "Error while: " <> msg
-      logError . cs . show $ e
+    handleError _ e = do
       throwIO e
     getTmpDir = catchAnyDeep getCanonicalTemporaryDirectory (handleError "getting temp dir")
     mkGzipDir tmpDir = catchAnyDeep (createTempDirectory tmpDir "wai-gzip-middleware") (handleError "making temp dir")
