@@ -1,5 +1,5 @@
 compiler-check: newer-minor
-resolver: lts-11.16
+resolver: lts-12.0
 require-stack-version: ! '>=1.6'
 
 flags:
@@ -25,8 +25,6 @@ flags:
       hdbc: false
   base:
       integer-gmp: true
-  http-api-data:
-      use-text-show: true
   aeson:
       cffi: true
       fast: false
@@ -41,8 +39,6 @@ flags:
   miso:
     examples: false
     tests: false
-  wai-cli:
-    tls: false
 
 extra-package-dbs: []
 packages:
@@ -54,7 +50,6 @@ packages:
 - './rfc-http-client'
 - './rfc-servant'
 - './rfc-wai'
-extra-deps:  
-- miso-0.20.1.0
+extra-deps: 
 - time-units-1.0.0
 

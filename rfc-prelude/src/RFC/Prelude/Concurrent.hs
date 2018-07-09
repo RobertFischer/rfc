@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
@@ -37,7 +38,17 @@ doConcurrently_ = mapConcurrently_ id
 {-# INLINE doConcurrently_ #-}
 
 -- |Executes all the IO actions simultaneously and then filters the results based on the filter function.
-filterConcurrently :: (Traversable t, Applicative t, Semigroup (t a), Monoid (t a), MonadUnliftIO m) => (a -> Bool) -> t (m a) -> m (t a)
+filterConcurrently ::
+#ifdef MIN_VERSION_GLASGOW_HASKELL
+#if MIN_VERSION_GLASGOW_HASKELL(8,4,0,0)
+  (Traversable t, Applicative t, Monoid (t a), MonadUnliftIO m) =>
+#else
+  (Traversable t, Applicative t, Semigroup (t a), Monoid (t a), MonadUnliftIO m) =>
+#endif
+#else
+  (Traversable t, Applicative t, Semigroup (t a), Monoid (t a), MonadUnliftIO m) =>
+#endif
+  (a -> Bool) -> t (m a) -> m (t a)
 filterConcurrently test actions = do
     !asyncActions <- mapM async actions
     foldrM foldImpl mempty asyncActions

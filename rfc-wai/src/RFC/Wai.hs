@@ -93,8 +93,7 @@ defaultMiddleware = do
     (if isDev then logStdoutDev else logStdout)
   where
     isDev = isDevelopment
-    handleError _ e = do
-      throwIO e
+    handleError _ = throwIO
     getTmpDir = catchAnyDeep getCanonicalTemporaryDirectory (handleError "getting temp dir")
     mkGzipDir tmpDir = catchAnyDeep (createTempDirectory tmpDir "wai-gzip-middleware") (handleError "making temp dir")
     corsConfig = simpleCorsResourcePolicy

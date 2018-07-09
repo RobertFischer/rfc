@@ -21,13 +21,13 @@ module RFC.Data.IdAnd
   , idAndToPair
   , RefMap
   , refMapElems
-  , refMapToMap
   , refMapIds
   , toRefMap
   , emptyRefMap
   , refMapUUIDs
   , refMapProxy
   , idProxy
+  , idAndToUUID
   ) where
 
 import           RFC.Prelude
@@ -97,10 +97,6 @@ refMapIds :: RefMap a -> [Id a]
 refMapIds = Map.keys
 {-# INLINE refMapIds #-}
 
-refMapToMap :: RefMap a -> Map.Map UUID (IdAnd a)
-refMapToMap = Map.mapKeys idToUUID
-{-# INLINE refMapToMap #-}
-
 toRefMap :: [IdAnd a] -> RefMap a
 toRefMap = Map.fromList . fmap (\idAnd@(IdAnd(id,_)) -> (id,idAnd))
 {-# INLINEABLE toRefMap #-}
@@ -113,16 +109,16 @@ idAndToId :: IdAnd a -> Id a
 idAndToId (IdAnd(id,_)) = id
 {-# INLINE idAndToId #-}
 
-tupleToIdAnd :: (UUID, a) -> IdAnd a
-tupleToIdAnd (id,a) = IdAnd (Id id, a)
+tupleToIdAnd :: (Id a, a) -> IdAnd a
+tupleToIdAnd = IdAnd
 {-# INLINE tupleToIdAnd #-}
 
-valuesToIdAnd :: UUID -> a -> IdAnd a
-valuesToIdAnd id a = IdAnd(Id id,a)
+valuesToIdAnd :: Id a -> a -> IdAnd a
+valuesToIdAnd id a = IdAnd(id,a)
 {-# INLINE valuesToIdAnd #-}
 
-idAndToTuple :: IdAnd a -> (UUID, a)
-idAndToTuple (IdAnd (Id id,val)) = (id,val)
+idAndToTuple :: IdAnd a -> (Id a, a)
+idAndToTuple (IdAnd tuple) = tuple
 {-# INLINE idAndToTuple #-}
 
 idAndToPair :: IdAnd a -> (Id a, IdAnd a)
@@ -133,6 +129,9 @@ idAndsToMap :: [IdAnd a] -> RefMap a
 idAndsToMap list = Map.fromList $ idAndToPair <$> list
 {-# INLINEABLE idAndsToMap #-}
 
+idAndToUUID :: IdAnd a -> UUID
+idAndToUUID (IdAnd(id,_)) = idToUUID id
+{-# INLINE idAndToUUID #-}
 
 instance (FromJSON a) => FromJSON (IdAnd a) where
   parseJSON = JSON.withObject "IdAnd" $ \o -> do
@@ -161,7 +160,7 @@ instance (ToJSON a) => ToJSON (Id a) where
 #if MIN_VERSION_aeson(1,0,0)
   -- Have Mpa instances automatically created
 #else
-instance (FromJSON a) => FromJSON (Map UUID (IdAnd a)) where
+instance (FromJSON a) => FromJSON (Map (Id a) (IdAnd a)) where
   parseJSON (Object obj) =
       Map.fromList <$> listInParser
     where

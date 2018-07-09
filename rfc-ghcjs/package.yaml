@@ -29,3 +29,5 @@ dependencies:
   - network-uri >= 2.6
   - ghcjs-base
   - text >= 1.2
+  - random >= 1.1
+  - aeson

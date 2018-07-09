@@ -8,8 +8,14 @@ module RFC.GHCJS
   , module RFC.GHCJS.Console
   , module RFC.GHCJS.Navigation
   , module RFC.GHCJS.JSString
+  , module GHCJS.Nullable
+  , module GHCJS.Types
+  , module GHCJS.Marshal.Pure
   ) where
 
+import           GHCJS.Marshal.Pure
+import           GHCJS.Nullable
+import           GHCJS.Types
 import           RFC.GHCJS.Console
 import           RFC.GHCJS.Cookie
 import           RFC.GHCJS.Inject
