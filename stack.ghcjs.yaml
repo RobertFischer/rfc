@@ -23,7 +23,7 @@ packages:
 extra-deps: 
 - basic-prelude-0.7.0
 - classy-prelude-1.4.0
-- miso-0.20.1.0
+- miso-0.21.1.0
 - time-units-1.0.0
 - unliftio-0.2.7.0
 - unliftio-core-0.1.1.0
