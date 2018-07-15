@@ -14,7 +14,7 @@ _common: !include package.common.yaml
 
 dependencies:
   - rfc-prelude 
-  - miso >= 0.20
+  - miso >= 0.21
   - base >= 4 && < 5
   - text >= 1.2
   - mono-traversable >= 1.0
