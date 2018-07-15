@@ -74,7 +74,7 @@
     production:
       description: If true, disables failing on warnings and enables aggressive optimizations.
       manual: true
-      default: false
+      default: true
 
   when: 
   - &when_ghcjs
