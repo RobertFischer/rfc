@@ -18,6 +18,7 @@ flags:
 
 packages:
 - './rfc-ghcjs'
+- './rfc-env'
 - './rfc-miso'
 - './rfc-prelude'
 extra-deps: 
@@ -27,3 +28,4 @@ extra-deps:
 - time-units-1.0.0
 - unliftio-0.2.7.0
 - unliftio-core-0.1.1.0
+
