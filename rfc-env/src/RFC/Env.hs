@@ -4,36 +4,30 @@
 
 module RFC.Env
   ( isDevelopment
+  , forDevOnly
+  , ifDev
+#ifndef GHCJS
   , readHost
   , readPort
   , readAppSlug
-  , forDevOnly
   , envWithDefault
   , envWithDevDefault
   , module System.Envy
+#endif
   ) where
 
-import           Control.Applicative
-import           Data.Time.Clock
-import           Data.Word
-import           Network             ( PortID (..) )
 import           RFC.Prelude
+
+#ifndef GHCJS
+import           Control.Monad      ( when )
+import           Network            ( PortID (..) )
 import           System.Environment
 import           System.Envy
-import           Text.Read           ( readEither, readMaybe )
+import           Text.Read          ( readEither, readMaybe )
+#endif
 
-envWithDefault :: Var a => String -> a -> Parser a
-envWithDefault name defaultValue = fromMaybe defaultValue <$> envMaybe name
-{-# INLINE envWithDefault #-}
-
-envWithDevDefault :: Var a => String -> a -> Parser a
-envWithDevDefault name defaultValue =
-  if isDevelopment then
-    envWithDefault name defaultValue
-  else
-    env name
-{-# INLINE envWithDevDefault #-}
-
+-- | Returns @true@ if this module was compiled with the @DEVELOPMENT@ flag
+--   on.
 isDevelopment :: Bool
 isDevelopment =
 #ifdef DEVELOPMENT
@@ -43,6 +37,8 @@ isDevelopment =
 #endif
 {-# INLINE isDevelopment #-}
 
+-- | Returns @Just a@ if 'isDevelopment' returns @true@;
+--   returns @Nothing@ otherwise.
 forDevOnly :: a -> Maybe a
 forDevOnly defaultValue =
   if isDevelopment then
@@ -50,6 +46,25 @@ forDevOnly defaultValue =
   else
     Nothing
 {-# INLINE forDevOnly #-}
+
+-- | Returns the monad only if 'isDevelopment' returns @true@;
+--   returns @return ()@ otherwise.
+ifDev :: (Monad m) => m () -> m ()
+ifDev = when isDevelopment
+{-# INLINE ifDev #-}
+
+#ifndef GHCJS
+envWithDefault :: Var a => String -> a -> Parser a
+envWithDefault name defaultValue = fromMaybe defaultValue <$> envMaybe name
+{-# INLINEABLE envWithDefault #-}
+
+envWithDevDefault :: Var a => String -> a -> Parser a
+envWithDevDefault name defaultValue =
+  if isDevelopment then
+    envWithDefault name defaultValue
+  else
+    env name
+{-# INLINEABLE envWithDevDefault #-}
 
 readAppSlug :: (MonadIO m, MonadFail m) => m String
 readAppSlug = readEnvStringWithDevDefault "APP_SLUG" "dev"
@@ -67,7 +82,7 @@ readPort = readEnvWithDevDefault "PORT"
 readEnvStringWithDefault :: (MonadIO m) => String -> String -> m String
 readEnvStringWithDefault name defaultValue =
   fromMaybe defaultValue <$> readEnvString name
-{-# INLINE readEnvStringWithDefault #-}
+{-# INLINEABLE readEnvStringWithDefault #-}
 
 readEnvStringWithDevDefault :: (MonadIO m, MonadFail m) => String -> String -> m String
 readEnvStringWithDevDefault =
@@ -80,13 +95,13 @@ readEnvStringWithDevDefault =
         Left err -> fail err
         Right x  -> return x
     )
-{-# INLINE readEnvStringWithDevDefault #-}
+{-# INLINEABLE readEnvStringWithDevDefault #-}
 
 readEnvWithDefault :: (MonadIO m, Read a) => String -> a -> m a
 readEnvWithDefault name defaultValue = do
   maybeVal <- readEnvString name
   return . fromMaybe defaultValue $ maybeVal >>= readMaybe
-{-# INLINE readEnvWithDefault #-}
+{-# INLINEABLE readEnvWithDefault #-}
 
 readEnvWithDevDefault :: (MonadIO m, MonadFail m, Read a) => String -> a -> m a
 readEnvWithDevDefault =
@@ -99,7 +114,7 @@ readEnvWithDevDefault =
         Left err -> fail err
         Right x  -> return x
     )
-{-# INLINE readEnvWithDevDefault #-}
+{-# INLINEABLE readEnvWithDevDefault #-}
 
 readEnvString :: (MonadIO m1, MonadFail m2) => String -> m1 (m2 String)
 readEnvString name = do
@@ -107,7 +122,7 @@ readEnvString name = do
   return $ case result of
     Nothing -> fail $ "No value set for environment variable: " <> name
     Just x  -> return x
-{-# INLINE readEnvString #-}
+{-# INLINEABLE readEnvString #-}
 
 readEnv :: (MonadIO m1, MonadFail m2, Read a) => String -> m1 (m2 a)
 readEnv name = do
@@ -118,7 +133,7 @@ readEnv name = do
       case readEither val of
         Left err -> fail $ "Error parsing value from environment variable. " <> name <> " = " <> (show val) <> " => " <> err
         Right result -> return result
-{-# INLINE readEnv #-}
+{-# INLINEABLE readEnv #-}
 
 instance Var NominalDiffTime where
   toVar :: NominalDiffTime -> String
@@ -127,7 +142,7 @@ instance Var NominalDiffTime where
 
   fromVar :: String -> Maybe NominalDiffTime
   fromVar var = fromInteger <$> readMaybe var
-  {-# INLINE fromVar #-}
+  {-# INLINEABLE fromVar #-}
 
 instance Var PortID where
   toVar (PortNumber portNum) = toVar $ toInteger portNum
@@ -135,4 +150,5 @@ instance Var PortID where
   {-# INLINE toVar #-}
 
   fromVar = fmap (PortNumber . fromInteger) . fromVar
-  {-# INLINE fromVar #-}
+  {-# INLINEABLE fromVar #-}
+#endif
