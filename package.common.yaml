@@ -100,7 +100,7 @@
         - -dedupe
     else:
       cpp-options: # Need to put something in here which doesn't do any harm....
-        - -DNOT_GHCJS_NOR_PRODUCTION
+        - -DNOT_GHCJS_OR_NOT_PRODUCTION
   - &when_production
     condition: flag(production)
     then:
