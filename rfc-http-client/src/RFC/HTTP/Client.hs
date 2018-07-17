@@ -100,8 +100,12 @@ geocodeGet addr onError = handle onError $
       Nothing -> throwIO err500 { errBody = "Cannot parse the geocoding URI" }
       Just uri -> do
         let address = URI.escapeURIString URI.isUnescapedInURIComponent (fromText addr)
-        let apiKey = "AIzaSyDL1yQ2fFJExMM6CcmsgpklR2Q4c-O4kks"
-        let uriWithQuery = uri { uriQuery = "address=" <> address <> "&" <> "key=" <> apiKey <> "&" <> uriQuery uri }
+        let apiKey = "AIzaSyD_pe9DkE2GwqMLcbHTfDta0He_OSb6qDo"
+        let prefix = case uriQuery uri of
+              "" -> "?"
+              qry@('?':_) -> qry
+              qry -> ('?':qry) <> "&"
+        let uriWithQuery = uri { uriQuery = prefix <> "address=" <> address <> "&" <> "key=" <> apiKey }
         apiGet uriWithQuery onError
 
 class HasAPIClient m where
