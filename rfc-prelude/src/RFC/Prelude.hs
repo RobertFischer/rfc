@@ -130,7 +130,7 @@ safeHead xs =
   case Foldable.toList xs of
     []    -> fail "Attempted to head an empty list"
     (x:_) -> return x
-{-# INLINE safeHead #-}
+{-# INLINEABLE safeHead #-}
 {-# SPECIALIZE INLINE safeHead :: [a] -> Maybe a #-}
 {-# SPECIALIZE INLINE safeHead :: [a] -> IO a #-}
 
@@ -139,7 +139,7 @@ lg z
   | z > 0 = toInteger $ integerLog2 z
   | z == 0 = 0
   | otherwise = toInteger $ integerLog2 (-1 * z)
-{-# INLINE lg #-}
+{-# INLINEABLE lg #-}
 
 lg' :: (Integral z, Integral z') => z -> z'
 lg' = fromInteger . lg . toInteger
