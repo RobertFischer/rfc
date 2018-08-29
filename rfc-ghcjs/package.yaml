@@ -1,5 +1,5 @@
 name: rfc-ghcjs
-version: 0.0.0.1
+version: 0.1.0.0
 synopsis: GHCJS extensions provided by the Robert Fischer Commons.
 description: >
   Provides various experimental extensions for the GHCJS compiler for front end development.
@@ -13,10 +13,7 @@ _common: !include package.common.yaml
 <<: *defaults
 
 when:
-  - *when_production
   - *when_ghcjs
-  - *when_ghcjs_and_production
-  - *when_not_ghcjs_and_production
   - condition: impl(ghcjs)
     then:
       buildable: true

@@ -1,21 +1,9 @@
 compiler-check: newer-minor
-resolver: lts-12.0
+resolver: lts-12.8
 require-stack-version: ! '>=1.6'
 
 flags:
-  rfc-prelude:
-      production: false
   rfc-env:
-      production: false
-  rfc-miso:
-      production: false
-  rfc-redis:
-      production: false
-  rfc-psql:
-      production: false
-  rfc-http-client:
-      production: false
-  rfc-servant:
       production: false
   wai-cli:
       tls: false

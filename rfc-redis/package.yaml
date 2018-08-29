@@ -1,5 +1,5 @@
 name: rfc-redis
-version: 0.0.0.1
+version: 0.1.0.0
 synopsis: The Redis extensions from the Robert Fischer Commons.
 description: >
   Various capabilities supporting @Redis@/@Hedis@ development, including some simplification

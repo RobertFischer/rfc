@@ -1,5 +1,5 @@
 name: rfc-miso
-version: 0.0.0.1
+version: 0.1.0.0
 synopsis: Miso extensions provided by the Robert Fischer Commons.
 description: >
   Provides various experimental extensions for the Miso front end development framework.
@@ -20,10 +20,7 @@ dependencies:
   - mono-traversable >= 1.0
 
 when:
-  - *when_production
   - *when_ghcjs
-  - *when_ghcjs_and_production
-  - *when_not_ghcjs_and_production
   - condition: impl(ghcjs)
     dependencies:
       - rfc-ghcjs

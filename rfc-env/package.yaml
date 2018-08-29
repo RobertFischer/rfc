@@ -1,5 +1,5 @@
 name: rfc-env
-version: 0.0.0.1
+version: 0.0.0.2
 synopsis: Environment variable support from the Robert Fischer Commons.
 description: >
   For GHCJS (and GHC), provides a simple way to check if you are on development.
@@ -22,12 +22,45 @@ dependencies:
   - base >= 4.9 && < 5
   - time
 
+flags:
+  production:
+    description: If true, disables the development flag in the codebase.
+    manual: true
+    default: true
+
 when:
-  - *when_production
   - *when_ghcjs
-  - *when_ghcjs_and_production
-  - *when_not_ghcjs_and_production
   - condition: "!impl(ghcjs)"
     dependencies:
       - envy
       - network
+  - condition: impl(ghcjs) && flag(production)
+    then: # For some reason, it is requiring me to put a 'then' in here, or it complains about not knowing 'ghc-options'.
+      ghc-options:
+        - -dedupe
+    else:
+      cpp-options: # Need to put something in here which doesn't do any harm....
+        - -DNOT_GHCJS_OR_NOT_PRODUCTION
+  - condition: flag(production)
+    then:
+      ghc-options:
+        - -feager-blackholing 
+        - -funbox-strict-fields 
+        - -fstatic-argument-transformation
+        - -flate-dmd-anal 
+        - -fexpose-all-unfoldings 
+        - -fspecialise-aggressively 
+        - -fexcess-precision 
+        - -fmax-simplifier-iterations=15
+        - -fsimplifier-phases=4
+        - -fstrictness-before=3
+        - -funfolding-keeness-factor=1.5
+        - -funfolding-use-threshold=150
+    else:
+      cpp-options:
+        - -DDEVELOPMENT
+      ghc-options:
+        - -freverse-errors
+        - -Werror 
+        - -dcore-lint 
+        - -dcmm-lint

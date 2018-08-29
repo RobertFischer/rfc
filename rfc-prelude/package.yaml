@@ -1,5 +1,5 @@
 name: rfc-prelude
-version: 0.0.0.2
+version: 0.1.0.0
 synopsis: The Prelude from the Robert Fischer Commons.
 description: >
   A Prelude deriving from @Classy-Prelude@ which provides additional useful bits of 
@@ -37,10 +37,7 @@ dependencies:
   - uuid-types >= 1.0
 
 when:
-  - *when_production
   - *when_ghcjs
-  - *when_ghcjs_and_production
-  - *when_not_ghcjs_and_production
   - condition: "!impl(ghcjs)"
     dependencies:
       - servant >= 0.13

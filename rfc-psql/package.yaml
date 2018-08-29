@@ -1,5 +1,5 @@
 name: rfc-psql
-version: 0.0.0.1
+version: 0.1.0.0
 synopsis: The PostgreSQL extensions from the Robert Fischer Commons.
 description: >
   Provides best-of-breed support for PostgreSQL, currently based on @postgresql-typed@.

@@ -1,5 +1,5 @@
 name: rfc-servant
-version: 0.0.0.1
+version: 0.1.0.0
 synopsis: The Servant extensions from the Robert Fischer Commons.
 description: >
   Various capabilities supporting @Servant@ development, including creating the concept of a 
