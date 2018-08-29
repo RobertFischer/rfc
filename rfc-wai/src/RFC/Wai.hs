@@ -50,17 +50,22 @@ runApplication port app = withSocketsDo $ do
 bindSocketReusePort :: Port -> IO Socket
 bindSocketReusePort p =
   bracketOnError (socket AF_INET Stream defaultProtocol) close $ \sock -> do
-    mapM_ (uncurry $ setSocketOption sock) $ filter (isSupportedSocketOption . fst)
-          [ (KeepAlive, 1)
-#ifndef DEVELOPMENT
-          , (RecvBuffer, 1024)
-          , (ReuseAddr, 1)
-          , (ReusePort, 1) -- <-- Here we add the SO_REUSEPORT flag.
-#endif
-          ]
+    mapM_ (uncurry $ setSocketOption sock) $ filter (isSupportedSocketOption . fst) opts
     bind sock $ SockAddrInet (fromIntegral p) iNADDR_ANY
     listen sock (min 2048 maxListenQueue)
     return sock
+  where
+    baseOpts = [ (KeepAlive, 1) ]
+    devOpts = []
+    prodOpts = [ (RecvBuffer, 8 * 1024) , (ReuseAddr, 1) , (ReusePort, 1) ]
+    opts = baseOpts <>
+      (if isDevelopment then
+        devOpts
+      else
+        prodOpts
+      )
+{-# INLINEABLE bindSocketReusePort #-}
+
 
 instance FromEnv Settings where
   fromEnv = do
